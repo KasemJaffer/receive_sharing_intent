@@ -32,21 +32,18 @@ class ShareViewController: SLComposeServiceViewController {
                         attachment.loadItem(forTypeIdentifier: contentType, options: nil) { [weak self] data, error in
                             
                             if error == nil, let url = data as? URL, let this = self {
-                                
-                                // Prefix check: image is shared from Photos app
-                                if url.path.hasPrefix("/var/mobile/Media/") {
-                                    for component in url.path.components(separatedBy: "/") where component.contains("IMG_") {
-                                        
-                                        // photo: /var/mobile/Media/DCIM/101APPLE/IMG_1320.PNG
-                                        // edited photo: /var/mobile/Media/PhotoData/Mutations/DCIM/101APPLE/IMG_1309/Adjustments/FullSizeRender.jpg
-                                        
-                                        // cut file's suffix if have, get file name like IMG_1309.
-                                        let fileName = component.components(separatedBy: ".").first!
-                                        if let asset = this.imageAssetDictionary[fileName] {
-                                            this.imagesData.append( asset.localIdentifier)
-                                        }
-                                        break
+
+                                for component in url.path.components(separatedBy: "/") where component.contains("IMG_") {
+
+                                    // photo: /var/mobile/Media/DCIM/101APPLE/IMG_1320.PNG
+                                    // edited photo: /var/mobile/Media/PhotoData/Mutations/DCIM/101APPLE/IMG_1309/Adjustments/FullSizeRender.jpg
+
+                                    // cut file's suffix if have, get file name like IMG_1309.
+                                    let fileName = component.components(separatedBy: ".").first!
+                                    if let asset = this.imageAssetDictionary[fileName] {
+                                        this.imagesData.append( asset.localIdentifier)
                                     }
+                                    break
                                 }
                                 
                                 // If this is the last item, save imagesData in userDefaults and redirect to host app

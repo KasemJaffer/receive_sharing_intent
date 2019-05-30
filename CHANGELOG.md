@@ -1,3 +1,3 @@
-## 0.9.0
+## 0.9.1
 
-* Initial release.
+* Fix issue where sharing in iOS simulator does not work

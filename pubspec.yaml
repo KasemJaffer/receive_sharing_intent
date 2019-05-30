@@ -1,6 +1,6 @@
 name: receive_sharing_intent
 description: A flutter plugin that enables flutter apps to receive sharing photos from other apps.
-version: 0.9.0
+version: 0.9.1
 author: Kasem SAEED<kasem.jaffer@gmail.com>
 homepage: https://github.com/KasemJaffer/receive_sharing_intent
 
