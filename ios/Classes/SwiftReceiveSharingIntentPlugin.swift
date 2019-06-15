@@ -4,12 +4,17 @@ import UIKit
 public class SwiftReceiveSharingIntentPlugin: NSObject, FlutterPlugin, FlutterStreamHandler {
 
     static let kMessagesChannel = "receive_sharing_intent/messages";
-    static let kEventsChannel = "receive_sharing_intent/events";
+    static let kEventsChannelImage = "receive_sharing_intent/events-image";
+    static let kEventsChannelLink = "receive_sharing_intent/events-link";
 
     private var initialIntentData: [String]? = nil
     private var latestIntentData: [String]? = nil
+    
+    private var initialLink: String? = nil
+    private var latestLink: String? = nil
 
-    private var _eventSink: FlutterEventSink? = nil;
+    private var _eventSinkImage: FlutterEventSink? = nil;
+    private var _eventSinkLink: FlutterEventSink? = nil;
 
 
     public static func register(with registrar: FlutterPluginRegistrar) {
@@ -18,8 +23,12 @@ public class SwiftReceiveSharingIntentPlugin: NSObject, FlutterPlugin, FlutterSt
         let channel = FlutterMethodChannel(name: kMessagesChannel, binaryMessenger: registrar.messenger())
         registrar.addMethodCallDelegate(instance, channel: channel)
 
-        let chargingChannel = FlutterEventChannel(name: kEventsChannel, binaryMessenger: registrar.messenger())
-        chargingChannel.setStreamHandler(instance)
+        let chargingChannelImage = FlutterEventChannel(name: kEventsChannelImage, binaryMessenger: registrar.messenger())
+        chargingChannelImage.setStreamHandler(instance)
+        
+        let chargingChannelLink = FlutterEventChannel(name: kEventsChannelLink, binaryMessenger: registrar.messenger())
+        chargingChannelLink.setStreamHandler(instance)
+        
         registrar.addApplicationDelegate(instance)
     }
 
@@ -27,23 +36,34 @@ public class SwiftReceiveSharingIntentPlugin: NSObject, FlutterPlugin, FlutterSt
 
         if(call.method == "getInitialIntentData") {
             result(self.initialIntentData);
+        } else if(call.method == "getInitialLink") {
+            result(self.initialLink);
         } else {
             result(FlutterMethodNotImplemented);
         }
     }
 
     public func application(_ application: UIApplication, didFinishLaunchingWithOptions launchOptions: [AnyHashable : Any] = [:]) -> Bool {
-        let url = launchOptions[UIApplicationLaunchOptionsKey.url] as? URL
-        return handleUrl(url: url, setInitialData: true)
+        if let url = launchOptions[UIApplicationLaunchOptionsKey.url] as? URL {
+            return handleUrl(url: url, setInitialData: true)
+        } else if let activityDictionary = launchOptions[UIApplicationLaunchOptionsKey.userActivityDictionary] as? [AnyHashable: Any] { //Universal link
+            for key in activityDictionary.keys {
+                if let userActivity = activityDictionary[key] as? NSUserActivity {
+                    if let url = userActivity.webpageURL {
+                        return handleUrl(url: url, setInitialData: true)
+                    }
+                }
+            }
+        }
+        return false
     }
-
 
     public func application(_ application: UIApplication, open url: URL, options: [UIApplicationOpenURLOptionsKey : Any] = [:]) -> Bool {
         return handleUrl(url: url, setInitialData: false)
     }
 
     public func application(_ application: UIApplication, continue userActivity: NSUserActivity, restorationHandler: @escaping ([Any]) -> Void) -> Bool {
-        return handleUrl(url: userActivity.webpageURL, setInitialData: _eventSink==nil)
+        return handleUrl(url: userActivity.webpageURL, setInitialData: true)
     }
 
     private func handleUrl(url: URL?, setInitialData: Bool) -> Bool {
@@ -56,23 +76,43 @@ public class SwiftReceiveSharingIntentPlugin: NSObject, FlutterPlugin, FlutterSt
                 if(setInitialData) {
                     initialIntentData = sharedArray
                 }
-                _eventSink?(latestIntentData)
-                return true
+                _eventSinkImage?(latestIntentData)
+            } else {
+                latestLink = url.absoluteString
+                if(setInitialData) {
+                    initialLink = latestLink
+                }
+                _eventSinkLink?(latestLink)
+               
             }
+            return true
         }
 
         latestIntentData = nil
+        latestLink = nil
         return false
     }
 
 
     public func onListen(withArguments arguments: Any?, eventSink events: @escaping FlutterEventSink) -> FlutterError? {
-        _eventSink = events;
+        if (arguments as! String? == "image") {
+            _eventSinkImage = events;
+        } else if (arguments as! String? == "link") {
+            _eventSinkLink = events;
+        } else {
+            return FlutterError.init(code: "NO_SUCH_ARGUMENT", message: "No such argument\(String(describing: arguments))", details: nil);
+        }
         return nil;
     }
 
     public func onCancel(withArguments arguments: Any?) -> FlutterError? {
-        _eventSink = nil;
+        if (arguments as! String? == "image") {
+            _eventSinkImage = nil;
+        } else if (arguments as! String? == "link") {
+            _eventSinkLink = nil;
+        } else {
+            return FlutterError.init(code: "NO_SUCH_ARGUMENT", message: "No such argument as \(String(describing: arguments))", details: nil);
+        }
         return nil;
     }
 }
