@@ -1,4 +1,4 @@
-## 0.9.2
+## 1.0.0
 
 * Add support for urls
 
