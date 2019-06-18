@@ -12,7 +12,8 @@ class MyApp extends StatefulWidget {
 
 class _MyAppState extends State<MyApp> {
   StreamSubscription _intentDataStreamSubscription;
-  List<Uri> _sharedFiles;
+  List<String> _sharedFiles;
+  String _sharedText;
 
   @override
   void initState() {
@@ -20,19 +21,35 @@ class _MyAppState extends State<MyApp> {
 
     // For sharing images coming from outside the app while the app is in the memory
     _intentDataStreamSubscription =
-        ReceiveSharingIntent.getIntentDataStreamAsUri().listen(
-            (List<Uri> uris) {
+        ReceiveSharingIntent.getIntentDataStream().listen((List<String> value) {
       setState(() {
-        _sharedFiles = uris;
+        _sharedFiles = value;
       });
     }, onError: (err) {
       print("Latest Intent Data error: $err");
     });
 
     // For sharing images coming from outside the app while the app is closed
-    ReceiveSharingIntent.getInitialIntentDataAsUri().then((List<Uri> uris) {
+    ReceiveSharingIntent.getInitialIntentData().then((List<String> value) {
       setState(() {
-        _sharedFiles = uris;
+        _sharedFiles = value;
+      });
+    });
+
+    // For sharing or opening urls/text coming from outside the app while the app is in the memory
+    _intentDataStreamSubscription =
+        ReceiveSharingIntent.getLinkStream().listen((String value) {
+      setState(() {
+        _sharedText = value;
+      });
+    }, onError: (err) {
+      print("Latest Intent Data error: $err");
+    });
+
+    // For sharing or opening urls/text coming from outside the app while the app is closed
+    ReceiveSharingIntent.getInitialLink().then((String value) {
+      setState(() {
+        _sharedText = value;
       });
     });
   }
@@ -45,13 +62,22 @@ class _MyAppState extends State<MyApp> {
 
   @override
   Widget build(BuildContext context) {
+    const textStyleBold = const TextStyle(fontWeight: FontWeight.bold);
     return MaterialApp(
       home: Scaffold(
         appBar: AppBar(
           title: const Text('Plugin example app'),
         ),
         body: Center(
-          child: Text('Number of shared files: ${_sharedFiles?.length ?? 0}'),
+          child: Column(
+            children: <Widget>[
+              Text("Shared files:", style: textStyleBold),
+              Text(_sharedFiles?.join(",") ?? ""),
+              SizedBox(height: 100),
+              Text("Shared urls/text:", style: textStyleBold),
+              Text(_sharedText ?? "")
+            ],
+          ),
         ),
       ),
     );

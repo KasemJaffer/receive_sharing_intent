@@ -70,20 +70,30 @@ public class SwiftReceiveSharingIntentPlugin: NSObject, FlutterPlugin, FlutterSt
         if let url = url {
             let appDomain = Bundle.main.bundleIdentifier!
             let userDefaults = UserDefaults(suiteName: "group.\(appDomain)")
-            if let key = url.absoluteString.components(separatedBy: "dataUrl=").last,
-                let sharedArray = userDefaults?.object(forKey: key) as? [String] {
-                latestIntentData = sharedArray
-                if(setInitialData) {
-                    initialIntentData = sharedArray
+            if url.fragment == "image" {
+                if let key = url.host?.components(separatedBy: "=").last,
+                    let sharedArray = userDefaults?.object(forKey: key) as? [String] {
+                    latestIntentData = sharedArray
+                    if(setInitialData) {
+                        initialIntentData = latestIntentData
+                    }
+                    _eventSinkImage?(latestIntentData)
                 }
-                _eventSinkImage?(latestIntentData)
+            } else if url.fragment == "text" {
+                if let key = url.host?.components(separatedBy: "=").last,
+                    let sharedArray = userDefaults?.object(forKey: key) as? [String] {
+                    latestLink =  sharedArray.joined(separator: ",")
+                    if(setInitialData) {
+                        initialLink = latestLink
+                    }
+                    _eventSinkImage?(latestLink)
+                }
             } else {
                 latestLink = url.absoluteString
                 if(setInitialData) {
                     initialLink = latestLink
                 }
                 _eventSinkLink?(latestLink)
-               
             }
             return true
         }

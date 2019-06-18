@@ -97,7 +97,9 @@ class ReceiveSharingIntentPlugin(val registrar: Registrar) :
                 latestIntentData = value
                 changeReceiverImage?.onReceive(context, intent)
             }
-            intent.action == Intent.ACTION_VIEW -> {
+            (intent.type == null || intent.type?.startsWith("text") == true)
+                    && (intent.action == Intent.ACTION_SEND
+                    || intent.action == Intent.ACTION_VIEW) -> {
                 val value = intent.dataString
                 if (initial) initialLink = value
                 latestLink = value
@@ -131,7 +133,9 @@ class ReceiveSharingIntentPlugin(val registrar: Registrar) :
                     intent?.type?.startsWith("image") == true
                             && (intent.action == Intent.ACTION_SEND
                             || intent.action == Intent.ACTION_SEND_MULTIPLE) -> getImageUris(intent)
-                    intent?.action == Intent.ACTION_VIEW -> intent.dataString
+                    (intent?.type == null || intent.type?.startsWith("text") == true)
+                            && (intent?.action == Intent.ACTION_SEND
+                            || intent?.action == Intent.ACTION_VIEW) -> intent.dataString
                     else -> null
                 }
 
