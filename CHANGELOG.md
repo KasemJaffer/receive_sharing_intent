@@ -1,3 +1,7 @@
+## 1.0.1
+
+* Bug fixes and updated api name
+
 ## 1.0.0
 
 * Add support for urls
