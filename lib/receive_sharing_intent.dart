@@ -9,7 +9,7 @@ class ReceiveSharingIntent {
   static const EventChannel _eChannelImage = const EventChannel(
       "receive_sharing_intent/events-image");
   static const EventChannel _eChannelLink = const EventChannel(
-      "receive_sharing_intent/events-link");
+      "receive_sharing_intent/events-text");
 
   static Stream<List<String>> _streamImage;
   static Stream<String> _streamLink;
@@ -28,8 +28,8 @@ class ReceiveSharingIntent {
   ///
   ///   * the initially stored link (possibly null), on successful invocation;
   ///   * a [PlatformException], if the invocation failed in the platform plugin.
-  static Future<String> getInitialLink() async {
-    return await _mChannel.invokeMethod('getInitialLink');
+  static Future<String> getInitialText() async {
+    return await _mChannel.invokeMethod('getInitialText');
   }
 
   /// A convenience method that returns the initially stored image uri
@@ -48,8 +48,8 @@ class ReceiveSharingIntent {
   ///
   /// If the link is not valid as a URI or URI reference,
   /// a [FormatException] is thrown.
-  static Future<Uri> getInitialLinkAsUri() async {
-    final String data = await getInitialLink();
+  static Future<Uri> getInitialTextAsUri() async {
+    final String data = await getInitialText();
     if (data == null) return null;
     return Uri.parse(data);
   }
@@ -105,11 +105,11 @@ class ReceiveSharingIntent {
   /// only when stream listener count changes from 1 to 0.
   ///
   /// If the app was stared by a link intent or user activity the stream will
-  /// not emit that initial one - query either the `getInitialLink` instead.
-  static Stream<String> getLinkStream() {
+  /// not emit that initial one - query either the `getInitialText` instead.
+  static Stream<String> getTextStream() {
     if (_streamLink == null) {
       _streamLink = _eChannelLink
-          .receiveBroadcastStream("link")
+          .receiveBroadcastStream("text")
           .cast<String>();
     }
     return _streamLink;
@@ -146,9 +146,9 @@ class ReceiveSharingIntent {
   /// Refer to `getLinkStream` about error/exception details.
   ///
   /// If the app was started by a share intent or user activity the stream will
-  /// not emit that initial uri - query either the `getInitialLinkAsUri` instead.
+  /// not emit that initial uri - query either the `getInitialTextAsUri` instead.
   static Stream<Uri> getLinkStreamAsUri() {
-    return getLinkStream().transform<Uri>(
+    return getTextStream().transform<Uri>(
       new StreamTransformer<String, Uri>.fromHandlers(
         handleData: (String data, EventSink<Uri> sink) {
           if (data == null) {

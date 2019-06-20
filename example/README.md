@@ -21,7 +21,26 @@ android/app/src/main/manifest.xml
             android:configChanges="orientation|keyboardHidden|keyboard|screenSize|locale|layoutDirection|fontScale|screenLayout|density|uiMode"
             android:hardwareAccelerated="true"
             android:windowSoftInputMode="adjustResize">
+            
+            <intent-filter>
+               <action android:name="android.intent.action.VIEW" />
+               <category android:name="android.intent.category.DEFAULT" />
+               <category android:name="android.intent.category.BROWSABLE" />
+               <!--TODO:  Add this filter, if you want support opening urls into your app-->
+               <data
+                   android:scheme="https"
+                   android:host="example.com"
+                   android:pathPrefix="/invite"/>
+            </intent-filter>
+            
+             <!--TODO: Add this filter, if you want to support sharing text into your app-->
+            <intent-filter>
+               <action android:name="android.intent.action.SEND" />
+               <category android:name="android.intent.category.DEFAULT" />
+               <data android:mimeType="text/*" />
+            </intent-filter>
 
+            <!--TODO: Add this filter, if you want to support sharing images into your app-->
             <intent-filter>
                 <action android:name="android.intent.action.SEND" />
                 <category android:name="android.intent.category.DEFAULT" />
@@ -83,6 +102,13 @@ ios/Share Extension/info.plist
         <dict>
             <key>NSExtensionActivationRule</key>
             <dict>
+                <!--TODO: Add this flag, if you want to support sharing text into your app-->
+                <key>NSExtensionActivationSupportsText</key>
+                <true/>
+                <!--TODO: Add this tag, if you want to support sharing urls into your app-->
+            	<key>NSExtensionActivationSupportsWebURLWithMaxCount</key>
+            	<string>1</string>
+            	<!--TODO: Add this flag, if you want to support sharing images into your app-->
                 <key>NSExtensionActivationSupportsImageWithMaxCount</key>
                 <integer>100</integer>
             </dict>
@@ -95,9 +121,21 @@ ios/Share Extension/info.plist
 ....
 ```
 
-ios/Share Extension/ShareViewContriller.swift
-```swift
 
+ios/Runner/Runner.entitlements
+```xml
+....
+    <!--TODO:  Add this tag, if you want support opening urls into your app-->
+    <key>com.apple.developer.associated-domains</key>
+    <array>
+        <string>applinks:example.com</string>
+    </array>
+....
+```
+
+
+ios/Share Extension/ShareViewController.swift
+```swift
 import UIKit
 import Social
 import MobileCoreServices
@@ -105,8 +143,11 @@ import Photos
 
 class ShareViewController: SLComposeServiceViewController {
 
-    let sharedKey = "ImageSharePhotoKey"
-    var imagesData: [String] = []
+    let sharedKey = "ShareKey"
+    var sharedData: [String] = []
+    let imageContentType = kUTTypeImage as String
+    let textContentType = kUTTypeText as String
+    let urlContentType = kUTTypeURL as String
     
     override func isContentValid() -> Bool {
         return true
@@ -116,56 +157,23 @@ class ShareViewController: SLComposeServiceViewController {
         // This is called after the user selects Post. Do the upload of contentText and/or NSExtensionContext attachments.
         
         if let content = extensionContext!.inputItems[0] as? NSExtensionItem {
-            let contentType = kUTTypeImage as String
-            
             if let contents = content.attachments {
                 for (index, attachment) in (contents as! [NSItemProvider]).enumerated() {
-                    if attachment.hasItemConformingToTypeIdentifier(contentType) {
-                        attachment.loadItem(forTypeIdentifier: contentType, options: nil) { [weak self] data, error in
-                            
-                            if error == nil, let url = data as? URL, let this = self {
-
-                                for component in url.path.components(separatedBy: "/") where component.contains("IMG_") {
-                                    
-                                    // photo: /var/mobile/Media/DCIM/101APPLE/IMG_1320.PNG
-                                    // edited photo: /var/mobile/Media/PhotoData/Mutations/DCIM/101APPLE/IMG_1309/Adjustments/FullSizeRender.jpg
-                                    
-                                    // cut file's suffix if have, get file name like IMG_1309.
-                                    let fileName = component.components(separatedBy: ".").first!
-                                    if let asset = this.imageAssetDictionary[fileName] {
-                                        this.imagesData.append( asset.localIdentifier)
-                                    }
-                                    break
-                                }
-                                
-                                // If this is the last item, save imagesData in userDefaults and redirect to host app
-                                if index == (content.attachments?.count)! - 1 {
-                                     // TODO: IMPROTANT: This should be your host app bundle identiefier
-                                    let hostAppBundleIdentiefier = "com.kasem.sharing"
-                                    let userDefaults = UserDefaults(suiteName: "group.\(hostAppBundleIdentiefier)")
-                                    userDefaults?.set(this.imagesData, forKey: this.sharedKey)
-                                    userDefaults?.synchronize()
-                                    this.redirectToHostApp()
-                                    this.extensionContext!.completeRequest(returningItems: [], completionHandler: nil)
-                                }
-                                
-                            } else {
-                                print("GETTING ERROR")
-                                let alert = UIAlertController(title: "Error", message: "Error loading image", preferredStyle: .alert)
-                                
-                                let action = UIAlertAction(title: "Error", style: .cancel) { _ in
-                                    self?.dismiss(animated: true, completion: nil)
-                                }
-                                
-                                alert.addAction(action)
-                                self?.present(alert, animated: true, completion: nil)
-                                self?.extensionContext!.completeRequest(returningItems: [], completionHandler: nil)
-                            }
-                        }
+                    
+                    if attachment.hasItemConformingToTypeIdentifier(imageContentType) {
+                        handleImages(content: content, attachment: attachment, index: index)
+                    } else if attachment.hasItemConformingToTypeIdentifier(textContentType) {
+                        handleText(content: content, attachment: attachment, index: index)
+                    } else if attachment.hasItemConformingToTypeIdentifier(urlContentType) {
+                        handleUrl(content: content, attachment: attachment, index: index)
                     }
                 }
             }
         }
+    }
+    
+    override func didSelectPost() {
+        print("didSelectPost");
     }
     
     override func configurationItems() -> [Any]! {
@@ -173,8 +181,104 @@ class ShareViewController: SLComposeServiceViewController {
         return []
     }
     
-    private func redirectToHostApp() {
-        let url = URL(string: "SharePhotos://dataUrl=\(sharedKey)")
+    private func handleText (content: NSExtensionItem, attachment: NSItemProvider, index: Int) {
+        attachment.loadItem(forTypeIdentifier: textContentType, options: nil) { [weak self] data, error in
+            
+            if error == nil, let item = data as? String, let this = self {
+                
+                this.sharedData.append( item)
+                
+                // If this is the last item, save imagesData in userDefaults and redirect to host app
+                if index == (content.attachments?.count)! - 1 {
+                    // TODO: IMPROTANT: This should be your host app bundle identiefier
+                    let hostAppBundleIdentiefier = "com.kasem.sharing"
+                    let userDefaults = UserDefaults(suiteName: "group.\(hostAppBundleIdentiefier)")
+                    userDefaults?.set(this.sharedData, forKey: this.sharedKey)
+                    userDefaults?.synchronize()
+                    this.redirectToHostApp(type: .text)
+                    this.extensionContext!.completeRequest(returningItems: [], completionHandler: nil)
+                }
+                
+            } else {
+                self?.dismissWithError()
+            }
+        }
+    }
+    
+    private func handleUrl (content: NSExtensionItem, attachment: NSItemProvider, index: Int) {
+        attachment.loadItem(forTypeIdentifier: urlContentType, options: nil) { [weak self] data, error in
+            
+            if error == nil, let item = data as? URL, let this = self {
+                
+                this.sharedData.append(item.absoluteString)
+                
+                // If this is the last item, save imagesData in userDefaults and redirect to host app
+                if index == (content.attachments?.count)! - 1 {
+                    // TODO: IMPROTANT: This should be your host app bundle identiefier
+                    let hostAppBundleIdentiefier = "com.kasem.sharing"
+                    let userDefaults = UserDefaults(suiteName: "group.\(hostAppBundleIdentiefier)")
+                    userDefaults?.set(this.sharedData, forKey: this.sharedKey)
+                    userDefaults?.synchronize()
+                    this.redirectToHostApp(type: .text)
+                    this.extensionContext!.completeRequest(returningItems: [], completionHandler: nil)
+                }
+                
+            } else {
+                self?.dismissWithError()
+            }
+        }
+    }
+    
+    private func handleImages (content: NSExtensionItem, attachment: NSItemProvider, index: Int){
+        attachment.loadItem(forTypeIdentifier: imageContentType, options: nil) { [weak self] data, error in
+            
+            if error == nil, let url = data as? URL, let this = self {
+                
+                for component in url.path.components(separatedBy: "/") where component.contains("IMG_") {
+                    
+                    // photo: /var/mobile/Media/DCIM/101APPLE/IMG_1320.PNG
+                    // edited photo: /var/mobile/Media/PhotoData/Mutations/DCIM/101APPLE/IMG_1309/Adjustments/FullSizeRender.jpg
+                    
+                    // cut file's suffix if have, get file name like IMG_1309.
+                    let fileName = component.components(separatedBy: ".").first!
+                    if let asset = this.imageAssetDictionary[fileName] {
+                        this.sharedData.append( asset.localIdentifier)
+                    }
+                    break
+                }
+                
+                // If this is the last item, save imagesData in userDefaults and redirect to host app
+                if index == (content.attachments?.count)! - 1 {
+                    // TODO: IMPROTANT: This should be your host app bundle identiefier
+                    let hostAppBundleIdentiefier = "com.kasem.sharing"
+                    let userDefaults = UserDefaults(suiteName: "group.\(hostAppBundleIdentiefier)")
+                    userDefaults?.set(this.sharedData, forKey: this.sharedKey)
+                    userDefaults?.synchronize()
+                    this.redirectToHostApp(type: .image)
+                    this.extensionContext!.completeRequest(returningItems: [], completionHandler: nil)
+                }
+                
+            } else {
+                self?.dismissWithError()
+            }
+        }
+    }
+    
+    private func dismissWithError(){
+        print("GETTING ERROR")
+        let alert = UIAlertController(title: "Error", message: "Error loading image", preferredStyle: .alert)
+        
+        let action = UIAlertAction(title: "Error", style: .cancel) { _ in
+            self.dismiss(animated: true, completion: nil)
+        }
+        
+        alert.addAction(action)
+        present(alert, animated: true, completion: nil)
+        extensionContext!.completeRequest(returningItems: [], completionHandler: nil)
+    }
+    
+    private func redirectToHostApp(type: RedirectType) {
+        let url = URL(string: "SharePhotos://dataUrl=\(sharedKey)#\(type)")
         var responder = self as UIResponder?
         let selectorOpenURL = sel_registerName("openURL:")
         
@@ -184,6 +288,11 @@ class ShareViewController: SLComposeServiceViewController {
             }
             responder = responder!.next
         }
+    }
+    
+    enum RedirectType {
+        case image
+        case text
     }
     
     /// Key is the matched asset's original file name without suffix. E.g. IMG_193
@@ -216,7 +325,7 @@ class ShareViewController: SLComposeServiceViewController {
 #### 4. Compiling issues and their fixes
 
 * Error: App does not build after adding Share Extension?
-* Fix: Check Build Settings of your share extension and remove everything that tries to import Cocoapods from your main project. i.e. under `Linking/Other Linker Flags` 
+* Fix: Check Build Settings of your share extension and remove everything that tries to import Cocoapods from your main project. i.e. remove everything under `Linking/Other Linker Flags` 
 
 * You might need to disable bitcode for the extension target
 
@@ -243,7 +352,8 @@ class MyApp extends StatefulWidget {
 
 class _MyAppState extends State<MyApp> {
   StreamSubscription _intentDataStreamSubscription;
-  List<Uri> _sharedFiles;
+  List<String> _sharedFiles;
+  String _sharedText;
 
   @override
   void initState() {
@@ -251,16 +361,36 @@ class _MyAppState extends State<MyApp> {
 
     // For sharing images coming from outside the app while the app is in the memory
     _intentDataStreamSubscription =
-        ReceiveSharingIntent.getIntentDataStreamAsUri().listen(
-            (List<Uri> uris) {
-      _sharedFiles = uris;
+        ReceiveSharingIntent.getIntentDataStream().listen((List<String> value) {
+      setState(() {
+        _sharedFiles = value;
+      });
     }, onError: (err) {
-      print("Latest Intent Data error: $err");
+      print("getIntentDataStream error: $err");
     });
 
     // For sharing images coming from outside the app while the app is closed
-    ReceiveSharingIntent.getInitialIntentDataAsUri().then((List<Uri> uris) {
-      _sharedFiles = uris;
+    ReceiveSharingIntent.getInitialIntentData().then((List<String> value) {
+      setState(() {
+        _sharedFiles = value;
+      });
+    });
+
+    // For sharing or opening urls/text coming from outside the app while the app is in the memory
+    _intentDataStreamSubscription =
+        ReceiveSharingIntent.getTextStream().listen((String value) {
+      setState(() {
+        _sharedText = value;
+      });
+    }, onError: (err) {
+      print("getLinkStream error: $err");
+    });
+
+    // For sharing or opening urls/text coming from outside the app while the app is closed
+    ReceiveSharingIntent.getInitialText().then((String value) {
+      setState(() {
+        _sharedText = value;
+      });
     });
   }
 
@@ -272,13 +402,22 @@ class _MyAppState extends State<MyApp> {
 
   @override
   Widget build(BuildContext context) {
+    const textStyleBold = const TextStyle(fontWeight: FontWeight.bold);
     return MaterialApp(
       home: Scaffold(
         appBar: AppBar(
           title: const Text('Plugin example app'),
         ),
         body: Center(
-          child: Text('Number of shared files: ${_sharedFiles?.length ?? 0}'),
+          child: Column(
+            children: <Widget>[
+              Text("Shared files:", style: textStyleBold),
+              Text(_sharedFiles?.join(",") ?? ""),
+              SizedBox(height: 100),
+              Text("Shared urls/text:", style: textStyleBold),
+              Text(_sharedText ?? "")
+            ],
+          ),
         ),
       ),
     );

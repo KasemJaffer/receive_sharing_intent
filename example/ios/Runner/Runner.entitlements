@@ -6,7 +6,7 @@
     <string>development</string>
     <key>com.apple.developer.associated-domains</key>
     <array>
-        <string>applinks:getpool.io</string>
+        <string>applinks:example.com</string>
     </array>
 	<key>com.apple.security.application-groups</key>
 	<array>

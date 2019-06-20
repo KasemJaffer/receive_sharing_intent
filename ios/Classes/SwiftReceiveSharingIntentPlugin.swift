@@ -5,7 +5,7 @@ public class SwiftReceiveSharingIntentPlugin: NSObject, FlutterPlugin, FlutterSt
 
     static let kMessagesChannel = "receive_sharing_intent/messages";
     static let kEventsChannelImage = "receive_sharing_intent/events-image";
-    static let kEventsChannelLink = "receive_sharing_intent/events-link";
+    static let kEventsChannelLink = "receive_sharing_intent/events-text";
 
     private var initialIntentData: [String]? = nil
     private var latestIntentData: [String]? = nil
@@ -36,7 +36,7 @@ public class SwiftReceiveSharingIntentPlugin: NSObject, FlutterPlugin, FlutterSt
 
         if(call.method == "getInitialIntentData") {
             result(self.initialIntentData);
-        } else if(call.method == "getInitialLink") {
+        } else if(call.method == "getInitialText") {
             result(self.initialLink);
         } else {
             result(FlutterMethodNotImplemented);
@@ -86,7 +86,7 @@ public class SwiftReceiveSharingIntentPlugin: NSObject, FlutterPlugin, FlutterSt
                     if(setInitialData) {
                         initialLink = latestLink
                     }
-                    _eventSinkImage?(latestLink)
+                    _eventSinkLink?(latestLink)
                 }
             } else {
                 latestLink = url.absoluteString
@@ -107,7 +107,7 @@ public class SwiftReceiveSharingIntentPlugin: NSObject, FlutterPlugin, FlutterSt
     public func onListen(withArguments arguments: Any?, eventSink events: @escaping FlutterEventSink) -> FlutterError? {
         if (arguments as! String? == "image") {
             _eventSinkImage = events;
-        } else if (arguments as! String? == "link") {
+        } else if (arguments as! String? == "text") {
             _eventSinkLink = events;
         } else {
             return FlutterError.init(code: "NO_SUCH_ARGUMENT", message: "No such argument\(String(describing: arguments))", details: nil);
@@ -118,7 +118,7 @@ public class SwiftReceiveSharingIntentPlugin: NSObject, FlutterPlugin, FlutterSt
     public func onCancel(withArguments arguments: Any?) -> FlutterError? {
         if (arguments as! String? == "image") {
             _eventSinkImage = nil;
-        } else if (arguments as! String? == "link") {
+        } else if (arguments as! String? == "text") {
             _eventSinkLink = nil;
         } else {
             return FlutterError.init(code: "NO_SUCH_ARGUMENT", message: "No such argument as \(String(describing: arguments))", details: nil);

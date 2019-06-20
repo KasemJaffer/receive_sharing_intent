@@ -26,7 +26,7 @@ class _MyAppState extends State<MyApp> {
         _sharedFiles = value;
       });
     }, onError: (err) {
-      print("Latest Intent Data error: $err");
+      print("getIntentDataStream error: $err");
     });
 
     // For sharing images coming from outside the app while the app is closed
@@ -38,16 +38,16 @@ class _MyAppState extends State<MyApp> {
 
     // For sharing or opening urls/text coming from outside the app while the app is in the memory
     _intentDataStreamSubscription =
-        ReceiveSharingIntent.getLinkStream().listen((String value) {
+        ReceiveSharingIntent.getTextStream().listen((String value) {
       setState(() {
         _sharedText = value;
       });
     }, onError: (err) {
-      print("Latest Intent Data error: $err");
+      print("getLinkStream error: $err");
     });
 
     // For sharing or opening urls/text coming from outside the app while the app is closed
-    ReceiveSharingIntent.getInitialLink().then((String value) {
+    ReceiveSharingIntent.getInitialText().then((String value) {
       setState(() {
         _sharedText = value;
       });

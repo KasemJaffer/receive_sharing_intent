@@ -19,13 +19,13 @@ class ReceiveSharingIntentPlugin(val registrar: Registrar) :
         PluginRegistry.NewIntentListener {
 
     private var changeReceiverImage: BroadcastReceiver? = null
-    private var changeReceiverLink: BroadcastReceiver? = null
+    private var changeReceiverText: BroadcastReceiver? = null
 
     private var initialIntentData: ArrayList<String>? = null
     private var latestIntentData: ArrayList<String>? = null
 
-    private var initialLink: String? = null
-    private var latestLink: String? = null
+    private var initialText: String? = null
+    private var latestText: String? = null
 
     init {
         handleIntent(registrar.context(), registrar.activity().intent, true)
@@ -34,14 +34,14 @@ class ReceiveSharingIntentPlugin(val registrar: Registrar) :
     override fun onListen(arguments: Any?, events: EventChannel.EventSink) {
         when (arguments) {
             "image" -> changeReceiverImage = createChangeReceiver(events)
-            "link" -> changeReceiverLink = createChangeReceiver(events)
+            "text" -> changeReceiverText = createChangeReceiver(events)
         }
     }
 
     override fun onCancel(arguments: Any?) {
         when (arguments) {
             "image" -> changeReceiverImage = null
-            "link" -> changeReceiverLink = null
+            "text" -> changeReceiverText = null
         }
     }
 
@@ -53,7 +53,7 @@ class ReceiveSharingIntentPlugin(val registrar: Registrar) :
     companion object {
         private val MESSAGES_CHANNEL = "receive_sharing_intent/messages"
         private val EVENTS_CHANNEL_IMAGE = "receive_sharing_intent/events-image"
-        private val EVENTS_CHANNEL_LINK = "receive_sharing_intent/events-link"
+        private val EVENTS_CHANNEL_TEXT = "receive_sharing_intent/events-text"
 
         @JvmStatic
         fun registerWith(registrar: Registrar) {
@@ -70,8 +70,8 @@ class ReceiveSharingIntentPlugin(val registrar: Registrar) :
             val eChannelImage = EventChannel(registrar.messenger(), EVENTS_CHANNEL_IMAGE)
             eChannelImage.setStreamHandler(instance)
 
-            val eChannelLink = EventChannel(registrar.messenger(), EVENTS_CHANNEL_LINK)
-            eChannelLink.setStreamHandler(instance)
+            val eChannelText = EventChannel(registrar.messenger(), EVENTS_CHANNEL_TEXT)
+            eChannelText.setStreamHandler(instance)
 
             registrar.addNewIntentListener(instance)
         }
@@ -81,7 +81,7 @@ class ReceiveSharingIntentPlugin(val registrar: Registrar) :
     override fun onMethodCall(call: MethodCall, result: Result) {
         when {
             call.method == "getInitialIntentData" -> result.success(initialIntentData)
-            call.method == "getInitialLink" -> result.success(initialLink)
+            call.method == "getInitialText" -> result.success(initialText)
             else -> result.notImplemented()
         }
     }
@@ -90,7 +90,7 @@ class ReceiveSharingIntentPlugin(val registrar: Registrar) :
         when {
             intent.type?.startsWith("image") == true
                     && (intent.action == Intent.ACTION_SEND
-                    || intent.action == Intent.ACTION_SEND_MULTIPLE) -> {
+                    || intent.action == Intent.ACTION_SEND_MULTIPLE) -> { // Sharing images
 
                 val value = getImageUris(intent)
                 if (initial) initialIntentData = value
@@ -98,12 +98,17 @@ class ReceiveSharingIntentPlugin(val registrar: Registrar) :
                 changeReceiverImage?.onReceive(context, intent)
             }
             (intent.type == null || intent.type?.startsWith("text") == true)
-                    && (intent.action == Intent.ACTION_SEND
-                    || intent.action == Intent.ACTION_VIEW) -> {
+                    && intent.action == Intent.ACTION_SEND -> { // Sharing text
+                val value = intent.getStringExtra(Intent.EXTRA_TEXT)
+                if (initial) initialText = value
+                latestText = value
+                changeReceiverText?.onReceive(context, intent)
+            }
+            intent.action == Intent.ACTION_VIEW -> { // Opening URL
                 val value = intent.dataString
-                if (initial) initialLink = value
-                latestLink = value
-                changeReceiverLink?.onReceive(context, intent)
+                if (initial) initialText = value
+                latestText = value
+                changeReceiverText?.onReceive(context, intent)
             }
         }
     }
@@ -134,8 +139,8 @@ class ReceiveSharingIntentPlugin(val registrar: Registrar) :
                             && (intent.action == Intent.ACTION_SEND
                             || intent.action == Intent.ACTION_SEND_MULTIPLE) -> getImageUris(intent)
                     (intent?.type == null || intent.type?.startsWith("text") == true)
-                            && (intent?.action == Intent.ACTION_SEND
-                            || intent?.action == Intent.ACTION_VIEW) -> intent.dataString
+                            && intent?.action == Intent.ACTION_SEND -> intent.getStringExtra(Intent.EXTRA_TEXT)
+                    intent?.action == Intent.ACTION_VIEW -> intent.dataString
                     else -> null
                 }
 

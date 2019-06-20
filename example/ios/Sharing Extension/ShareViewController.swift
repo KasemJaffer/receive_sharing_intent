@@ -13,10 +13,11 @@ import Photos
 
 class ShareViewController: SLComposeServiceViewController {
 
-    let sharedKey = "ImageSharePhotoKey"
+    let sharedKey = "ShareKey"
     var sharedData: [String] = []
     let imageContentType = kUTTypeImage as String
-    let textContentType = kUTTypePropertyList as String
+    let textContentType = kUTTypeText as String
+    let urlContentType = kUTTypeURL as String
     
     override func isContentValid() -> Bool {
         return true
@@ -33,6 +34,8 @@ class ShareViewController: SLComposeServiceViewController {
                         handleImages(content: content, attachment: attachment, index: index)
                     } else if attachment.hasItemConformingToTypeIdentifier(textContentType) {
                         handleText(content: content, attachment: attachment, index: index)
+                    } else if attachment.hasItemConformingToTypeIdentifier(urlContentType) {
+                        handleUrl(content: content, attachment: attachment, index: index)
                     }
                 }
             }
@@ -54,6 +57,30 @@ class ShareViewController: SLComposeServiceViewController {
             if error == nil, let item = data as? String, let this = self {
                 
                 this.sharedData.append( item)
+                
+                // If this is the last item, save imagesData in userDefaults and redirect to host app
+                if index == (content.attachments?.count)! - 1 {
+                    // TODO: IMPROTANT: This should be your host app bundle identiefier
+                    let hostAppBundleIdentiefier = "com.kasem.sharing"
+                    let userDefaults = UserDefaults(suiteName: "group.\(hostAppBundleIdentiefier)")
+                    userDefaults?.set(this.sharedData, forKey: this.sharedKey)
+                    userDefaults?.synchronize()
+                    this.redirectToHostApp(type: .text)
+                    this.extensionContext!.completeRequest(returningItems: [], completionHandler: nil)
+                }
+                
+            } else {
+                self?.dismissWithError()
+            }
+        }
+    }
+    
+    private func handleUrl (content: NSExtensionItem, attachment: NSItemProvider, index: Int) {
+        attachment.loadItem(forTypeIdentifier: urlContentType, options: nil) { [weak self] data, error in
+            
+            if error == nil, let item = data as? URL, let this = self {
+                
+                this.sharedData.append(item.absoluteString)
                 
                 // If this is the last item, save imagesData in userDefaults and redirect to host app
                 if index == (content.attachments?.count)! - 1 {
