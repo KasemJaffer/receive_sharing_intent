@@ -1,6 +1,5 @@
 package com.kasem.receive_sharing_intent
 
-import android.content.BroadcastReceiver
 import android.content.Context
 import android.content.Intent
 import android.net.Uri
@@ -18,14 +17,14 @@ class ReceiveSharingIntentPlugin(val registrar: Registrar) :
         EventChannel.StreamHandler,
         PluginRegistry.NewIntentListener {
 
-    private var changeReceiverImage: BroadcastReceiver? = null
-    private var changeReceiverText: BroadcastReceiver? = null
-
     private var initialIntentData: ArrayList<String>? = null
     private var latestIntentData: ArrayList<String>? = null
 
     private var initialText: String? = null
     private var latestText: String? = null
+
+    private var eventSinkImage: EventChannel.EventSink? = null
+    private var eventSinkText: EventChannel.EventSink? = null
 
     init {
         handleIntent(registrar.context(), registrar.activity().intent, true)
@@ -33,15 +32,15 @@ class ReceiveSharingIntentPlugin(val registrar: Registrar) :
 
     override fun onListen(arguments: Any?, events: EventChannel.EventSink) {
         when (arguments) {
-            "image" -> changeReceiverImage = createChangeReceiver(events)
-            "text" -> changeReceiverText = createChangeReceiver(events)
+            "image" -> eventSinkImage = events
+            "text" -> eventSinkText = events
         }
     }
 
     override fun onCancel(arguments: Any?) {
         when (arguments) {
-            "image" -> changeReceiverImage = null
-            "text" -> changeReceiverText = null
+            "image" -> eventSinkImage = null
+            "text" -> eventSinkText = null
         }
     }
 
@@ -95,20 +94,20 @@ class ReceiveSharingIntentPlugin(val registrar: Registrar) :
                 val value = getImageUris(intent)
                 if (initial) initialIntentData = value
                 latestIntentData = value
-                changeReceiverImage?.onReceive(context, intent)
+                eventSinkImage?.success(latestIntentData)
             }
             (intent.type == null || intent.type?.startsWith("text") == true)
                     && intent.action == Intent.ACTION_SEND -> { // Sharing text
                 val value = intent.getStringExtra(Intent.EXTRA_TEXT)
                 if (initial) initialText = value
                 latestText = value
-                changeReceiverText?.onReceive(context, intent)
+                eventSinkText?.success(latestText)
             }
             intent.action == Intent.ACTION_VIEW -> { // Opening URL
                 val value = intent.dataString
                 if (initial) initialText = value
                 latestText = value
-                changeReceiverText?.onReceive(context, intent)
+                eventSinkText?.success(latestText)
             }
         }
     }
@@ -127,29 +126,6 @@ class ReceiveSharingIntentPlugin(val registrar: Registrar) :
                 if (value != null) ArrayList(value) else null
             }
             else -> null
-        }
-    }
-
-    private fun createChangeReceiver(events: EventChannel.EventSink): BroadcastReceiver {
-
-        return object : BroadcastReceiver() {
-            override fun onReceive(context: Context?, intent: Intent?) {
-                val value: Any? = when {
-                    intent?.type?.startsWith("image") == true
-                            && (intent.action == Intent.ACTION_SEND
-                            || intent.action == Intent.ACTION_SEND_MULTIPLE) -> getImageUris(intent)
-                    (intent?.type == null || intent.type?.startsWith("text") == true)
-                            && intent?.action == Intent.ACTION_SEND -> intent.getStringExtra(Intent.EXTRA_TEXT)
-                    intent?.action == Intent.ACTION_VIEW -> intent.dataString
-                    else -> null
-                }
-
-                if (value == null) {
-                    events.error("UNAVAILABLE", "Link unavailable", null)
-                } else {
-                    events.success(value)
-                }
-            }
         }
     }
 }

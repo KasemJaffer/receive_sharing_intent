@@ -13,8 +13,8 @@ public class SwiftReceiveSharingIntentPlugin: NSObject, FlutterPlugin, FlutterSt
     private var initialLink: String? = nil
     private var latestLink: String? = nil
 
-    private var _eventSinkImage: FlutterEventSink? = nil;
-    private var _eventSinkLink: FlutterEventSink? = nil;
+    private var eventSinkImage: FlutterEventSink? = nil;
+    private var eventSinkText: FlutterEventSink? = nil;
 
 
     public static func register(with registrar: FlutterPluginRegistrar) {
@@ -77,7 +77,7 @@ public class SwiftReceiveSharingIntentPlugin: NSObject, FlutterPlugin, FlutterSt
                     if(setInitialData) {
                         initialIntentData = latestIntentData
                     }
-                    _eventSinkImage?(latestIntentData)
+                    eventSinkImage?(latestIntentData)
                 }
             } else if url.fragment == "text" {
                 if let key = url.host?.components(separatedBy: "=").last,
@@ -86,14 +86,14 @@ public class SwiftReceiveSharingIntentPlugin: NSObject, FlutterPlugin, FlutterSt
                     if(setInitialData) {
                         initialLink = latestLink
                     }
-                    _eventSinkLink?(latestLink)
+                    eventSinkText?(latestLink)
                 }
             } else {
                 latestLink = url.absoluteString
                 if(setInitialData) {
                     initialLink = latestLink
                 }
-                _eventSinkLink?(latestLink)
+                eventSinkText?(latestLink)
             }
             return true
         }
@@ -106,9 +106,9 @@ public class SwiftReceiveSharingIntentPlugin: NSObject, FlutterPlugin, FlutterSt
 
     public func onListen(withArguments arguments: Any?, eventSink events: @escaping FlutterEventSink) -> FlutterError? {
         if (arguments as! String? == "image") {
-            _eventSinkImage = events;
+            eventSinkImage = events;
         } else if (arguments as! String? == "text") {
-            _eventSinkLink = events;
+            eventSinkText = events;
         } else {
             return FlutterError.init(code: "NO_SUCH_ARGUMENT", message: "No such argument\(String(describing: arguments))", details: nil);
         }
@@ -117,9 +117,9 @@ public class SwiftReceiveSharingIntentPlugin: NSObject, FlutterPlugin, FlutterSt
 
     public func onCancel(withArguments arguments: Any?) -> FlutterError? {
         if (arguments as! String? == "image") {
-            _eventSinkImage = nil;
+            eventSinkImage = nil;
         } else if (arguments as! String? == "text") {
-            _eventSinkLink = nil;
+            eventSinkText = nil;
         } else {
             return FlutterError.init(code: "NO_SUCH_ARGUMENT", message: "No such argument as \(String(describing: arguments))", details: nil);
         }
