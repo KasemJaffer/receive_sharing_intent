@@ -18,10 +18,10 @@ class ReceiveSharingIntent {
   ///
   ///   * the initially stored image uri (possibly null), on successful invocation;
   ///   * a [PlatformException], if the invocation failed in the platform plugin.
-  static Future<List<String>> getInitialIntentData() async {
-    final List<dynamic> initialIntentData =
-    await _mChannel.invokeMethod('getInitialIntentData');
-    return initialIntentData?.map((data) => data.toString())?.toList();
+  static Future<List<String>> getInitialImage() async {
+    final List<dynamic> initialImage =
+    await _mChannel.invokeMethod('getInitialImage');
+    return initialImage?.map((data) => data.toString())?.toList();
   }
 
   /// Returns a [Future], which completes to one of the following:
@@ -37,8 +37,8 @@ class ReceiveSharingIntent {
   ///
   /// If the link is not valid as a URI or URI reference,
   /// a [FormatException] is thrown.
-  static Future<List<Uri>> getInitialIntentDataAsUri() async {
-    final List<String> data = await getInitialIntentData();
+  static Future<List<Uri>> getInitialImageAsUri() async {
+    final List<String> data = await getInitialImage();
     if (data == null) return null;
     return data.map((value) => Uri.parse(value)).toList();
   }
@@ -69,8 +69,8 @@ class ReceiveSharingIntent {
   /// only when stream listener count changes from 1 to 0.
   ///
   /// If the app was stared by a link intent or user activity the stream will
-  /// not emit that initial one - query either the `getInitialIntentData` instead.
-  static Stream<List<String>> getIntentDataStream() {
+  /// not emit that initial one - query either the `getInitialImage` instead.
+  static Stream<List<String>> getImageStream() {
     if (_streamImage == null) {
       final stream = _eChannelImage
           .receiveBroadcastStream("image")
@@ -123,9 +123,9 @@ class ReceiveSharingIntent {
   /// Refer to `getIntentDataStream` about error/exception details.
   ///
   /// If the app was started by a share intent or user activity the stream will
-  /// not emit that initial uri - query either the `getInitialIntentDataAsUri` instead.
-  static Stream<List<Uri>> getIntentDataStreamAsUri() {
-    return getIntentDataStream().transform<List<Uri>>(
+  /// not emit that initial uri - query either the `getInitialImageAsUri` instead.
+  static Stream<List<Uri>> getImageStreamAsUri() {
+    return getImageStream().transform<List<Uri>>(
       new StreamTransformer<List<String>, List<Uri>>.fromHandlers(
         handleData: (List<String> data, EventSink<List<Uri>> sink) {
           if (data == null) {

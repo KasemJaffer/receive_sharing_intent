@@ -12,7 +12,7 @@ import MobileCoreServices
 import Photos
 
 class ShareViewController: SLComposeServiceViewController {
-
+    
     let sharedKey = "ShareKey"
     var sharedData: [String] = []
     let imageContentType = kUTTypeImage as String
@@ -56,7 +56,9 @@ class ShareViewController: SLComposeServiceViewController {
             
             if error == nil, let item = data as? String, let this = self {
                 
-                this.sharedData.append( item)
+//                if let absolute = self?.getAbsolutePath(for: item){
+                    this.sharedData.append(item)
+//                }
                 
                 // If this is the last item, save imagesData in userDefaults and redirect to host app
                 if index == (content.attachments?.count)! - 1 {
@@ -184,4 +186,23 @@ class ShareViewController: SLComposeServiceViewController {
         
         return assetDictionary
     }()
+    
+    private func getAbsolutePath(for identifier: String) -> String? {
+        let phAsset = PHAsset.fetchAssets(withLocalIdentifiers: [identifier], options: .none).firstObject
+        if(phAsset == nil) {
+            return nil
+        }
+        let semaphore = DispatchSemaphore(value: 0)
+        var url: String?
+        let editingOptions = PHContentEditingInputRequestOptions()
+        editingOptions.isNetworkAccessAllowed = true
+        phAsset!.requestContentEditingInput(with: editingOptions) { (input, _) in
+            url = input?.fullSizeImageURL?.absoluteString.replacingOccurrences(of: "file://", with: "")
+            semaphore.signal()
+        }
+        
+        let _ = semaphore.wait()
+        
+        return url
+    }
 }

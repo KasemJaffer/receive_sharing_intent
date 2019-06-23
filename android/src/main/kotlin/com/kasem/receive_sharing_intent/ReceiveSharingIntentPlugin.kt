@@ -17,8 +17,8 @@ class ReceiveSharingIntentPlugin(val registrar: Registrar) :
         EventChannel.StreamHandler,
         PluginRegistry.NewIntentListener {
 
-    private var initialIntentData: ArrayList<String>? = null
-    private var latestIntentData: ArrayList<String>? = null
+    private var initialImage: ArrayList<String>? = null
+    private var latestImage: ArrayList<String>? = null
 
     private var initialText: String? = null
     private var latestText: String? = null
@@ -79,7 +79,7 @@ class ReceiveSharingIntentPlugin(val registrar: Registrar) :
 
     override fun onMethodCall(call: MethodCall, result: Result) {
         when {
-            call.method == "getInitialIntentData" -> result.success(initialIntentData)
+            call.method == "getInitialImage" -> result.success(initialImage)
             call.method == "getInitialText" -> result.success(initialText)
             else -> result.notImplemented()
         }
@@ -91,10 +91,10 @@ class ReceiveSharingIntentPlugin(val registrar: Registrar) :
                     && (intent.action == Intent.ACTION_SEND
                     || intent.action == Intent.ACTION_SEND_MULTIPLE) -> { // Sharing images
 
-                val value = getImageUris(intent)
-                if (initial) initialIntentData = value
-                latestIntentData = value
-                eventSinkImage?.success(latestIntentData)
+                val value = getImageUris(context, intent)
+                if (initial) initialImage = value
+                latestImage = value
+                eventSinkImage?.success(latestImage)
             }
             (intent.type == null || intent.type?.startsWith("text") == true)
                     && intent.action == Intent.ACTION_SEND -> { // Sharing text
@@ -112,17 +112,18 @@ class ReceiveSharingIntentPlugin(val registrar: Registrar) :
         }
     }
 
-    private fun getImageUris(intent: Intent?): ArrayList<String>? {
+    private fun getImageUris(context: Context, intent: Intent?): ArrayList<String>? {
         if (intent == null) return null
 
         return when {
             intent.action == Intent.ACTION_SEND -> {
                 val uri = intent.getParcelableExtra<Uri>(Intent.EXTRA_STREAM)
-                if (uri != null) arrayListOf(uri.toString()) else null
+                val absolute = FileDirectory.getAbsolutePath(context, uri)
+                if (absolute != null) arrayListOf(absolute) else null
             }
             intent.action == Intent.ACTION_SEND_MULTIPLE -> {
                 val uris = intent.getParcelableArrayListExtra<Uri>(Intent.EXTRA_STREAM)
-                val value = uris?.map { it.toString() }?.toList()
+                val value = uris?.mapNotNull { FileDirectory.getAbsolutePath(context, it) }?.toList()
                 if (value != null) ArrayList(value) else null
             }
             else -> null
