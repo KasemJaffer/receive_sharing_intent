@@ -1,3 +1,8 @@
+## 1.1.2
+
+* Return absolute path for images instead of a reference that can be used directly with File.dart
+* Refactor code
+
 ## 1.0.1
 
 * Bug fixes and updated api name
