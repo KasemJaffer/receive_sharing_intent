@@ -1,3 +1,7 @@
+## 1.1.3
+
+* Fix sharing image does not work sometimes on iOS and on Android when sharing from google photos (cloud)
+
 ## 1.1.2
 
 * Return absolute path for images instead of a reference that can be used directly with File.dart

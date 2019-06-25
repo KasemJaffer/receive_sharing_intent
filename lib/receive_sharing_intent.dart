@@ -143,11 +143,11 @@ class ReceiveSharingIntent {
   /// If the value is not valid as a URI or URI reference,
   /// a [FormatException] is thrown.
   ///
-  /// Refer to `getLinkStream` about error/exception details.
+  /// Refer to `getTextStream` about error/exception details.
   ///
   /// If the app was started by a share intent or user activity the stream will
   /// not emit that initial uri - query either the `getInitialTextAsUri` instead.
-  static Stream<Uri> getLinkStreamAsUri() {
+  static Stream<Uri> getTextStreamAsUri() {
     return getTextStream().transform<Uri>(
       new StreamTransformer<String, Uri>.fromHandlers(
         handleData: (String data, EventSink<Uri> sink) {

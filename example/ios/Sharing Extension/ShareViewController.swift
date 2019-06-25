@@ -12,7 +12,8 @@ import MobileCoreServices
 import Photos
 
 class ShareViewController: SLComposeServiceViewController {
-    
+    // TODO: IMPROTANT: This should be your host app bundle identiefier
+    let hostAppBundleIdentifier = "com.kasem.sharing"
     let sharedKey = "ShareKey"
     var sharedData: [String] = []
     let imageContentType = kUTTypeImage as String
@@ -60,9 +61,7 @@ class ShareViewController: SLComposeServiceViewController {
                 
                 // If this is the last item, save imagesData in userDefaults and redirect to host app
                 if index == (content.attachments?.count)! - 1 {
-                    // TODO: IMPROTANT: This should be your host app bundle identiefier
-                    let hostAppBundleIdentiefier = "com.kasem.sharing"
-                    let userDefaults = UserDefaults(suiteName: "group.\(hostAppBundleIdentiefier)")
+                    let userDefaults = UserDefaults(suiteName: "group.\(this.hostAppBundleIdentifier)")
                     userDefaults?.set(this.sharedData, forKey: this.sharedKey)
                     userDefaults?.synchronize()
                     this.redirectToHostApp(type: .text)
@@ -84,9 +83,7 @@ class ShareViewController: SLComposeServiceViewController {
                 
                 // If this is the last item, save imagesData in userDefaults and redirect to host app
                 if index == (content.attachments?.count)! - 1 {
-                    // TODO: IMPROTANT: This should be your host app bundle identiefier
-                    let hostAppBundleIdentiefier = "com.kasem.sharing"
-                    let userDefaults = UserDefaults(suiteName: "group.\(hostAppBundleIdentiefier)")
+                    let userDefaults = UserDefaults(suiteName: "group.\(this.hostAppBundleIdentifier)")
                     userDefaults?.set(this.sharedData, forKey: this.sharedKey)
                     userDefaults?.synchronize()
                     this.redirectToHostApp(type: .text)
@@ -113,6 +110,14 @@ class ShareViewController: SLComposeServiceViewController {
                     let fileName = component.components(separatedBy: ".").first!
                     if let asset = this.imageAssetDictionary[fileName] {
                         this.sharedData.append( asset.localIdentifier)
+                    } else {
+                        // If we could not find the file then copy it
+                        let newPath = FileManager.default
+                            .containerURL(forSecurityApplicationGroupIdentifier: "group.\(this.hostAppBundleIdentifier)")!.appendingPathComponent(fileName)
+                        let copied = this.copyFile(at: url, to: newPath)
+                        if(copied) {
+                            this.sharedData.append(newPath.absoluteString)
+                        }
                     }
                     break
                 }
@@ -184,4 +189,17 @@ class ShareViewController: SLComposeServiceViewController {
         
         return assetDictionary
     }()
+    
+    func copyFile(at srcURL: URL, to dstURL: URL) -> Bool {
+        do {
+            if FileManager.default.fileExists(atPath: dstURL.path) {
+                try FileManager.default.removeItem(at: dstURL)
+            }
+            try FileManager.default.copyItem(at: srcURL, to: dstURL)
+        } catch (let error) {
+            print("Cannot copy item at \(srcURL) to \(dstURL): \(error)")
+            return false
+        }
+        return true
+    }
 }
