@@ -1,3 +1,7 @@
+## 1.1.4
+
+* Add screen recorded demo
+
 ## 1.1.3
 
 * Fix sharing image does not work sometimes on iOS and on Android when sharing from google photos (cloud)
