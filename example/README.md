@@ -1,5 +1,12 @@
 # receive_sharing_intent_example
 
+A flutter plugin that enables flutter apps to receive sharing photos, text and urls from other apps.
+
+Also, supports iOS Share extension and launching the host app automatically. 
+
+![Alt Text](./demo.gif)
+
+# Usage 
 
 ## Android
 
