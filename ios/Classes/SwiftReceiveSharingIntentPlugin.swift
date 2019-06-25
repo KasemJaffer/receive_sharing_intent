@@ -129,6 +129,9 @@ public class SwiftReceiveSharingIntentPlugin: NSObject, FlutterPlugin, FlutterSt
     }
     
     private func getAbsolutePath(for identifier: String) -> String? {
+        if (identifier.starts(with: "file://") || identifier.starts(with: "/var/mobile/Media") || identifier.starts(with: "/private/var/mobile")) {
+            return identifier.replacingOccurrences(of: "file://", with: "")
+        }
         let phAsset = PHAsset.fetchAssets(withLocalIdentifiers: [identifier], options: .none).firstObject
         if(phAsset == nil) {
             return nil
