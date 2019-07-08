@@ -235,48 +235,45 @@ class ShareViewController: SLComposeServiceViewController {
         }
     }
     
-    private func handleImages (content: NSExtensionItem, attachment: NSItemProvider, index: Int){
-        attachment.loadItem(forTypeIdentifier: imageContentType, options: nil) { [weak self] data, error in
-            
-            if error == nil, let url = data as? URL, let this = self {
+     private func handleImages (content: NSExtensionItem, attachment: NSItemProvider, index: Int){
+            attachment.loadItem(forTypeIdentifier: imageContentType, options: nil) { [weak self] data, error in
                 
-                for component in url.path.components(separatedBy: "/") where component.contains("IMG_") {
+                if error == nil, let url = data as? URL, let this = self {
                     
                     // photo: /var/mobile/Media/DCIM/101APPLE/IMG_1320.PNG
                     // edited photo: /var/mobile/Media/PhotoData/Mutations/DCIM/101APPLE/IMG_1309/Adjustments/FullSizeRender.jpg
                     
-                    // cut file's suffix if have, get file name like IMG_1309.
-                    let fileName = component.components(separatedBy: ".").first!
-                    if let asset = this.imageAssetDictionary[fileName] {
-                        this.sharedData.append( asset.localIdentifier)
-                    } else {
-                        // If we could not find the file then copy it
-                        let newPath = FileManager.default
-                            .containerURL(forSecurityApplicationGroupIdentifier: "group.\(this.hostAppBundleIdentifier)")!.appendingPathComponent(fileName)
-                        let copied = this.copyFile(at: url, to: newPath)
-                        if(copied) {
-                            this.sharedData.append(newPath.absoluteString)
-                        }
+                    // Always copy
+                    var fileExtension = url.lastPathComponent.components(separatedBy: ".")[safe: 1]
+                    if fileExtension == nil {
+                        fileExtension = "png"
                     }
-                    break
+                    let newName = UUID().uuidString
+                    let newPath = FileManager.default
+                        .containerURL(forSecurityApplicationGroupIdentifier: "group.\(this.hostAppBundleIdentifier)")!
+                        .appendingPathComponent("\(newName).\(fileExtension!)")
+                    let copied = this.copyFile(at: url, to: newPath)
+                    if(copied) {
+                        this.sharedData.append(newPath.absoluteString)
+                    }
+                    
+                    
+                    // If this is the last item, save imagesData in userDefaults and redirect to host app
+                    if index == (content.attachments?.count)! - 1 {
+                        // TODO: IMPROTANT: This should be your host app bundle identiefier
+                        let hostAppBundleIdentiefier = "com.kasem.sharing"
+                        let userDefaults = UserDefaults(suiteName: "group.\(hostAppBundleIdentiefier)")
+                        userDefaults?.set(this.sharedData, forKey: this.sharedKey)
+                        userDefaults?.synchronize()
+                        this.redirectToHostApp(type: .image)
+                        this.extensionContext!.completeRequest(returningItems: [], completionHandler: nil)
+                    }
+                    
+                } else {
+                    self?.dismissWithError()
                 }
-                
-                // If this is the last item, save imagesData in userDefaults and redirect to host app
-                if index == (content.attachments?.count)! - 1 {
-                    // TODO: IMPROTANT: This should be your host app bundle identiefier
-                    let hostAppBundleIdentiefier = "com.kasem.sharing"
-                    let userDefaults = UserDefaults(suiteName: "group.\(hostAppBundleIdentiefier)")
-                    userDefaults?.set(this.sharedData, forKey: this.sharedKey)
-                    userDefaults?.synchronize()
-                    this.redirectToHostApp(type: .image)
-                    this.extensionContext!.completeRequest(returningItems: [], completionHandler: nil)
-                }
-                
-            } else {
-                self?.dismissWithError()
             }
         }
-    }
     
     private func dismissWithError(){
         print("GETTING ERROR")
@@ -340,6 +337,12 @@ class ShareViewController: SLComposeServiceViewController {
             return false
         }
         return true
+    }
+}
+
+extension Array {
+    subscript (safe index: UInt) -> Element? {
+        return Int(index) < count ? self[Int(index)] : nil
     }
 }
 ```

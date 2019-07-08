@@ -18,6 +18,9 @@ class ReceiveSharingIntent {
   ///
   ///   * the initially stored image uri (possibly null), on successful invocation;
   ///   * a [PlatformException], if the invocation failed in the platform plugin.
+  ///
+  /// NOTE. The returned image on iOS (iOS ONLY) is already copied to a temp folder.
+  /// So, you need to delete the file after you finish using it
   static Future<List<String>> getInitialImage() async {
     final List<dynamic> initialImage =
     await _mChannel.invokeMethod('getInitialImage');
@@ -37,6 +40,9 @@ class ReceiveSharingIntent {
   ///
   /// If the link is not valid as a URI or URI reference,
   /// a [FormatException] is thrown.
+  ///
+  /// NOTE. The returned image on iOS (iOS ONLY) is already copied to a temp folder.
+  /// So, you need to delete the file after you finish using it
   static Future<List<Uri>> getInitialImageAsUri() async {
     final List<String> data = await getInitialImage();
     if (data == null) return null;
@@ -68,7 +74,7 @@ class ReceiveSharingIntent {
   /// stream listener count changes from 0 to 1. Stream deactivation happens
   /// only when stream listener count changes from 1 to 0.
   ///
-  /// If the app was stared by a link intent or user activity the stream will
+  /// If the app was started by a link intent or user activity the stream will
   /// not emit that initial one - query either the `getInitialImage` instead.
   static Stream<List<String>> getImageStream() {
     if (_streamImage == null) {
@@ -104,7 +110,7 @@ class ReceiveSharingIntent {
   /// stream listener count changes from 0 to 1. Stream deactivation happens
   /// only when stream listener count changes from 1 to 0.
   ///
-  /// If the app was stared by a link intent or user activity the stream will
+  /// If the app was started by a link intent or user activity the stream will
   /// not emit that initial one - query either the `getInitialText` instead.
   static Stream<String> getTextStream() {
     if (_streamLink == null) {

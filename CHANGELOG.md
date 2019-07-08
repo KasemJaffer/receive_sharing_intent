@@ -1,3 +1,8 @@
+## 1.1.5
+
+* Example project updated. Check the method [handleImages] in example/Sharing Extension/ShareViewController.swift
+* Fix some images are not successfully shared on iOS
+
 ## 1.1.4
 
 * Add screen recorded demo
