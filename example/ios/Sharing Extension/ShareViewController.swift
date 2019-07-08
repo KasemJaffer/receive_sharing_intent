@@ -12,7 +12,7 @@ import MobileCoreServices
 import Photos
 
 class ShareViewController: SLComposeServiceViewController {
-    // TODO: IMPROTANT: This should be your host app bundle identiefier
+    // TODO: IMPORTANT: This should be your host app bundle identifier
     let hostAppBundleIdentifier = "com.kasem.sharing"
     let sharedKey = "ShareKey"
     var sharedData: [String] = []
@@ -64,8 +64,8 @@ class ShareViewController: SLComposeServiceViewController {
                     let userDefaults = UserDefaults(suiteName: "group.\(this.hostAppBundleIdentifier)")
                     userDefaults?.set(this.sharedData, forKey: this.sharedKey)
                     userDefaults?.synchronize()
-                    this.redirectToHostApp(type: .text)
                     this.extensionContext!.completeRequest(returningItems: [], completionHandler: nil)
+                    this.redirectToHostApp(type: .text)
                 }
                 
             } else {
@@ -86,8 +86,8 @@ class ShareViewController: SLComposeServiceViewController {
                     let userDefaults = UserDefaults(suiteName: "group.\(this.hostAppBundleIdentifier)")
                     userDefaults?.set(this.sharedData, forKey: this.sharedKey)
                     userDefaults?.synchronize()
-                    this.redirectToHostApp(type: .text)
                     this.extensionContext!.completeRequest(returningItems: [], completionHandler: nil)
+                    this.redirectToHostApp(type: .text)
                 }
                 
             } else {
@@ -129,8 +129,8 @@ class ShareViewController: SLComposeServiceViewController {
                     let userDefaults = UserDefaults(suiteName: "group.\(hostAppBundleIdentiefier)")
                     userDefaults?.set(this.sharedData, forKey: this.sharedKey)
                     userDefaults?.synchronize()
-                    this.redirectToHostApp(type: .image)
                     this.extensionContext!.completeRequest(returningItems: [], completionHandler: nil)
+                    this.redirectToHostApp(type: .image)
                 }
                 
             } else {
