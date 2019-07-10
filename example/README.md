@@ -392,6 +392,8 @@ class _MyAppState extends State<MyApp> {
     // For sharing images coming from outside the app while the app is in the memory
     _intentDataStreamSubscription =
         ReceiveSharingIntent.getImageStream().listen((List<String> value) {
+          // Call reset method if you don't want to see this callback again.
+          ReceiveSharingIntent.reset();
       setState(() {
         _sharedFiles = value;
       });
@@ -401,6 +403,8 @@ class _MyAppState extends State<MyApp> {
 
     // For sharing images coming from outside the app while the app is closed
     ReceiveSharingIntent.getInitialImage().then((List<String> value) {
+        // Call reset method if you don't want to see this callback again.
+        ReceiveSharingIntent.reset();
       setState(() {
         _sharedFiles = value;
       });
@@ -409,6 +413,8 @@ class _MyAppState extends State<MyApp> {
     // For sharing or opening urls/text coming from outside the app while the app is in the memory
     _intentDataStreamSubscription =
         ReceiveSharingIntent.getTextStream().listen((String value) {
+        // Call reset method if you don't want to see this callback again.
+        ReceiveSharingIntent.reset();
       setState(() {
         _sharedText = value;
       });
@@ -418,6 +424,8 @@ class _MyAppState extends State<MyApp> {
 
     // For sharing or opening urls/text coming from outside the app while the app is closed
     ReceiveSharingIntent.getInitialText().then((String value) {
+      // Call reset method if you don't want to see this callback again.
+      ReceiveSharingIntent.reset();
       setState(() {
         _sharedText = value;
       });

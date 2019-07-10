@@ -1,3 +1,7 @@
+## 1.2.0+1
+
+* New method added to reset the already consumed callbacks
+
 ## 1.1.5
 
 * Example project updated. Check the method [handleImages] in example/Sharing Extension/ShareViewController.swift
