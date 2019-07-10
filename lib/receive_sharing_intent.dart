@@ -4,12 +4,12 @@ import 'package:flutter/services.dart';
 
 class ReceiveSharingIntent {
   static const MethodChannel _mChannel =
-  const MethodChannel('receive_sharing_intent/messages');
+      const MethodChannel('receive_sharing_intent/messages');
 
-  static const EventChannel _eChannelImage = const EventChannel(
-      "receive_sharing_intent/events-image");
-  static const EventChannel _eChannelLink = const EventChannel(
-      "receive_sharing_intent/events-text");
+  static const EventChannel _eChannelImage =
+      const EventChannel("receive_sharing_intent/events-image");
+  static const EventChannel _eChannelLink =
+      const EventChannel("receive_sharing_intent/events-text");
 
   static Stream<List<String>> _streamImage;
   static Stream<String> _streamLink;
@@ -23,7 +23,7 @@ class ReceiveSharingIntent {
   /// So, you need to delete the file after you finish using it
   static Future<List<String>> getInitialImage() async {
     final List<dynamic> initialImage =
-    await _mChannel.invokeMethod('getInitialImage');
+        await _mChannel.invokeMethod('getInitialImage');
     return initialImage?.map((data) => data.toString())?.toList();
   }
 
@@ -78,9 +78,8 @@ class ReceiveSharingIntent {
   /// not emit that initial one - query either the `getInitialImage` instead.
   static Stream<List<String>> getImageStream() {
     if (_streamImage == null) {
-      final stream = _eChannelImage
-          .receiveBroadcastStream("image")
-          .cast<List<dynamic>>();
+      final stream =
+          _eChannelImage.receiveBroadcastStream("image").cast<List<dynamic>>();
       _streamImage = stream.transform<List<String>>(
         new StreamTransformer<List<dynamic>, List<String>>.fromHandlers(
           handleData: (List<dynamic> data, EventSink<List<String>> sink) {
@@ -114,9 +113,7 @@ class ReceiveSharingIntent {
   /// not emit that initial one - query either the `getInitialText` instead.
   static Stream<String> getTextStream() {
     if (_streamLink == null) {
-      _streamLink = _eChannelLink
-          .receiveBroadcastStream("text")
-          .cast<String>();
+      _streamLink = _eChannelLink.receiveBroadcastStream("text").cast<String>();
     }
     return _streamLink;
   }
@@ -165,5 +162,11 @@ class ReceiveSharingIntent {
         },
       ),
     );
+  }
+
+  /// Call this method if you already consumed the callback
+  /// and don't want the same callback again
+  static void reset() {
+    _mChannel.invokeMethod('reset').then((_) {});
   }
 }

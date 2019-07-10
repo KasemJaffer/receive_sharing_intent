@@ -81,6 +81,13 @@ class ReceiveSharingIntentPlugin(val registrar: Registrar) :
         when {
             call.method == "getInitialImage" -> result.success(initialImage)
             call.method == "getInitialText" -> result.success(initialText)
+            call.method == "reset" -> {
+                initialImage = null
+                latestImage = null
+                initialText = null
+                latestText = null
+                result.success(null)
+            }
             else -> result.notImplemented()
         }
     }

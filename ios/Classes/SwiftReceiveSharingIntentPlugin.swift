@@ -3,7 +3,7 @@ import UIKit
 import Photos
 
 public class SwiftReceiveSharingIntentPlugin: NSObject, FlutterPlugin, FlutterStreamHandler {
-
+    
     static let kMessagesChannel = "receive_sharing_intent/messages";
     static let kEventsChannelImage = "receive_sharing_intent/events-image";
     static let kEventsChannelLink = "receive_sharing_intent/events-text";
@@ -35,11 +35,18 @@ public class SwiftReceiveSharingIntentPlugin: NSObject, FlutterPlugin, FlutterSt
     
     public func handle(_ call: FlutterMethodCall, result: @escaping FlutterResult) {
         
-        if(call.method == "getInitialImage") {
+        switch call.method {
+        case "getInitialImage":
             result(self.initialImage);
-        } else if(call.method == "getInitialText") {
+        case "getInitialText":
             result(self.initialText);
-        } else {
+        case "reset":
+            self.initialImage = nil
+            self.latestImage = nil
+            self.initialText = nil
+            self.latestText = nil
+            result(nil);
+        default:
             result(FlutterMethodNotImplemented);
         }
     }
