@@ -1,4 +1,5 @@
 import 'dart:async';
+import 'dart:convert';
 
 import 'package:flutter/services.dart';
 
@@ -6,25 +7,28 @@ class ReceiveSharingIntent {
   static const MethodChannel _mChannel =
       const MethodChannel('receive_sharing_intent/messages');
 
-  static const EventChannel _eChannelImage =
-      const EventChannel("receive_sharing_intent/events-image");
+  static const EventChannel _eChannelMedia =
+      const EventChannel("receive_sharing_intent/events-media");
   static const EventChannel _eChannelLink =
       const EventChannel("receive_sharing_intent/events-text");
 
-  static Stream<List<String>> _streamImage;
+  static Stream<List<SharedMediaFile>> _streamMedia;
   static Stream<String> _streamLink;
 
   /// Returns a [Future], which completes to one of the following:
   ///
-  ///   * the initially stored image uri (possibly null), on successful invocation;
+  ///   * the initially stored media uri (possibly null), on successful invocation;
   ///   * a [PlatformException], if the invocation failed in the platform plugin.
   ///
-  /// NOTE. The returned image on iOS (iOS ONLY) is already copied to a temp folder.
+  /// NOTE. The returned media on iOS (iOS ONLY) is already copied to a temp folder.
   /// So, you need to delete the file after you finish using it
-  static Future<List<String>> getInitialImage() async {
-    final List<dynamic> initialImage =
-        await _mChannel.invokeMethod('getInitialImage');
-    return initialImage?.map((data) => data.toString())?.toList();
+  static Future<List<SharedMediaFile>> getInitialMedia() async {
+    final String json = await _mChannel.invokeMethod('getInitialMedia');
+    if (json == null) return null;
+    final encoded = jsonDecode(json);
+    return encoded
+        .map<SharedMediaFile>((file) => SharedMediaFile.fromJson(file))
+        .toList();
   }
 
   /// Returns a [Future], which completes to one of the following:
@@ -33,20 +37,6 @@ class ReceiveSharingIntent {
   ///   * a [PlatformException], if the invocation failed in the platform plugin.
   static Future<String> getInitialText() async {
     return await _mChannel.invokeMethod('getInitialText');
-  }
-
-  /// A convenience method that returns the initially stored image uri
-  /// as a new [Uri] object.
-  ///
-  /// If the link is not valid as a URI or URI reference,
-  /// a [FormatException] is thrown.
-  ///
-  /// NOTE. The returned image on iOS (iOS ONLY) is already copied to a temp folder.
-  /// So, you need to delete the file after you finish using it
-  static Future<List<Uri>> getInitialImageAsUri() async {
-    final List<String> data = await getInitialImage();
-    if (data == null) return null;
-    return data.map((value) => Uri.parse(value)).toList();
   }
 
   /// A convenience method that returns the initially stored link
@@ -60,7 +50,7 @@ class ReceiveSharingIntent {
     return Uri.parse(data);
   }
 
-  /// Sets up a broadcast stream for receiving incoming image share change events.
+  /// Sets up a broadcast stream for receiving incoming media share change events.
   ///
   /// Returns a broadcast [Stream] which emits events to listeners as follows:
   ///
@@ -75,24 +65,28 @@ class ReceiveSharingIntent {
   /// only when stream listener count changes from 1 to 0.
   ///
   /// If the app was started by a link intent or user activity the stream will
-  /// not emit that initial one - query either the `getInitialImage` instead.
-  static Stream<List<String>> getImageStream() {
-    if (_streamImage == null) {
+  /// not emit that initial one - query either the `getInitialMedia` instead.
+  static Stream<List<SharedMediaFile>> getMediaStream() {
+    if (_streamMedia == null) {
       final stream =
-          _eChannelImage.receiveBroadcastStream("image").cast<List<dynamic>>();
-      _streamImage = stream.transform<List<String>>(
-        new StreamTransformer<List<dynamic>, List<String>>.fromHandlers(
-          handleData: (List<dynamic> data, EventSink<List<String>> sink) {
+          _eChannelMedia.receiveBroadcastStream("media").cast<String>();
+      _streamMedia = stream.transform<List<SharedMediaFile>>(
+        new StreamTransformer<String, List<SharedMediaFile>>.fromHandlers(
+          handleData: (String data, EventSink<List<SharedMediaFile>> sink) {
             if (data == null) {
               sink.add(null);
             } else {
-              sink.add(data.map((value) => value as String).toList());
+              final encoded = jsonDecode(data);
+              sink.add(encoded
+                  .map<SharedMediaFile>(
+                      (file) => SharedMediaFile.fromJson(file))
+                  .toList());
             }
           },
         ),
       );
     }
-    return _streamImage;
+    return _streamMedia;
   }
 
   /// Sets up a broadcast stream for receiving incoming link change events.
@@ -116,29 +110,6 @@ class ReceiveSharingIntent {
       _streamLink = _eChannelLink.receiveBroadcastStream("text").cast<String>();
     }
     return _streamLink;
-  }
-
-  /// A convenience transformation of the stream to a `Stream<List<Uri>>`.
-  ///
-  /// If the value is not valid as a URI or URI reference,
-  /// a [FormatException] is thrown.
-  ///
-  /// Refer to `getIntentDataStream` about error/exception details.
-  ///
-  /// If the app was started by a share intent or user activity the stream will
-  /// not emit that initial uri - query either the `getInitialImageAsUri` instead.
-  static Stream<List<Uri>> getImageStreamAsUri() {
-    return getImageStream().transform<List<Uri>>(
-      new StreamTransformer<List<String>, List<Uri>>.fromHandlers(
-        handleData: (List<String> data, EventSink<List<Uri>> sink) {
-          if (data == null) {
-            sink.add(null);
-          } else {
-            sink.add(data.map((value) => Uri.parse(value)).toList());
-          }
-        },
-      ),
-    );
   }
 
   /// A convenience transformation of the stream to a `Stream<Uri>`.
@@ -170,3 +141,28 @@ class ReceiveSharingIntent {
     _mChannel.invokeMethod('reset').then((_) {});
   }
 }
+
+class SharedMediaFile {
+  /// Image or Video path.
+  /// NOTE. for iOS only the file is always copied
+  final String path;
+
+  /// Video thumbnail
+  final String thumbnail;
+
+  /// Video duration in milliseconds
+  final int duration;
+
+  /// Whether its a video or image
+  final SharedMediaType type;
+
+  SharedMediaFile(this.path, this.thumbnail, this.duration, this.type);
+
+  SharedMediaFile.fromJson(Map<String, dynamic> json)
+      : path = json['path'],
+        thumbnail = json['thumbnail'],
+        duration = json['duration'],
+        type = SharedMediaType.values[json['type']];
+}
+
+enum SharedMediaType { IMAGE, VIDEO }

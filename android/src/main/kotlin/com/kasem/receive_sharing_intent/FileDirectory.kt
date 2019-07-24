@@ -11,6 +11,9 @@ import android.provider.MediaStore
 import java.io.File
 import java.io.FileOutputStream
 import java.util.*
+import android.webkit.MimeTypeMap
+import android.content.ContentResolver
+import android.media.ThumbnailUtils
 
 
 object FileDirectory {
@@ -60,7 +63,7 @@ object FileDirectory {
                     "audio" -> contentUri = MediaStore.Audio.Media.EXTERNAL_CONTENT_URI
                 }
 
-                if(contentUri==null) return null
+                if (contentUri == null) return null
 
                 val selection = "_id=?"
                 val selectionArgs = arrayOf(split[1])
@@ -88,7 +91,11 @@ object FileDirectory {
                               selectionArgs: Array<String>?): String? {
 
         if (uri.authority != null) {
-            val targetFile = File(context.cacheDir, "IMG_${Date().time}.png")
+            val mimeType = context.contentResolver.getType(uri)
+            val isImage = mimeType?.startsWith("image") == true
+            val prefix = if (isImage) "IMG" else "VID"
+            val type = MimeTypeMap.getSingleton().getExtensionFromMimeType(mimeType)
+            val targetFile = File(context.cacheDir, "${prefix}_${Date().time}.$type")
             context.contentResolver.openInputStream(uri)?.use { input ->
                 FileOutputStream(targetFile).use { fileOut ->
                     input.copyTo(fileOut)

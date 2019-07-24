@@ -5,16 +5,16 @@ import Photos
 public class SwiftReceiveSharingIntentPlugin: NSObject, FlutterPlugin, FlutterStreamHandler {
     
     static let kMessagesChannel = "receive_sharing_intent/messages";
-    static let kEventsChannelImage = "receive_sharing_intent/events-image";
+    static let kEventsChannelMedia = "receive_sharing_intent/events-media";
     static let kEventsChannelLink = "receive_sharing_intent/events-text";
     
-    private var initialImage: [String]? = nil
-    private var latestImage: [String]? = nil
+    private var initialMedia: [SharedMediaFile]? = nil
+    private var latestMedia: [SharedMediaFile]? = nil
     
     private var initialText: String? = nil
     private var latestText: String? = nil
     
-    private var eventSinkImage: FlutterEventSink? = nil;
+    private var eventSinkMedia: FlutterEventSink? = nil;
     private var eventSinkText: FlutterEventSink? = nil;
     
     
@@ -24,8 +24,8 @@ public class SwiftReceiveSharingIntentPlugin: NSObject, FlutterPlugin, FlutterSt
         let channel = FlutterMethodChannel(name: kMessagesChannel, binaryMessenger: registrar.messenger())
         registrar.addMethodCallDelegate(instance, channel: channel)
         
-        let chargingChannelImage = FlutterEventChannel(name: kEventsChannelImage, binaryMessenger: registrar.messenger())
-        chargingChannelImage.setStreamHandler(instance)
+        let chargingChannelMedia = FlutterEventChannel(name: kEventsChannelMedia, binaryMessenger: registrar.messenger())
+        chargingChannelMedia.setStreamHandler(instance)
         
         let chargingChannelLink = FlutterEventChannel(name: kEventsChannelLink, binaryMessenger: registrar.messenger())
         chargingChannelLink.setStreamHandler(instance)
@@ -36,13 +36,13 @@ public class SwiftReceiveSharingIntentPlugin: NSObject, FlutterPlugin, FlutterSt
     public func handle(_ call: FlutterMethodCall, result: @escaping FlutterResult) {
         
         switch call.method {
-        case "getInitialImage":
-            result(self.initialImage);
+        case "getInitialMedia":
+            result(toJson(data: self.initialMedia));
         case "getInitialText":
             result(self.initialText);
         case "reset":
-            self.initialImage = nil
-            self.latestImage = nil
+            self.initialMedia = nil
+            self.latestMedia = nil
             self.initialText = nil
             self.latestText = nil
             result(nil);
@@ -78,15 +78,33 @@ public class SwiftReceiveSharingIntentPlugin: NSObject, FlutterPlugin, FlutterSt
         if let url = url {
             let appDomain = Bundle.main.bundleIdentifier!
             let userDefaults = UserDefaults(suiteName: "group.\(appDomain)")
-            if url.fragment == "image" {
+            if url.fragment == "media" {
                 if let key = url.host?.components(separatedBy: "=").last,
-                    let sharedArray = userDefaults?.object(forKey: key) as? [String] {
-                    let absoluteUrls = sharedArray.compactMap{getAbsolutePath(for: $0)}
-                    latestImage = absoluteUrls
-                    if(setInitialData) {
-                        initialImage = latestImage
+                    let json = userDefaults?.object(forKey: key) as? Data {
+                    let sharedArray = decode(data: json)
+                    let sharedMediaFiles: [SharedMediaFile] = sharedArray.compactMap{
+                        guard let path = getAbsolutePath(for: $0.path) else {
+                            return nil
+                        }
+                       
+                        if ($0.type == .video && $0.thumbnail != nil) {
+                            guard let thumbnail = getAbsolutePath(for: $0.thumbnail!) else {
+                                // If its video and it does not have a thumbnail return nil
+                                return nil
+                            }
+                            return SharedMediaFile.init(path: path, thumbnail: thumbnail, duration: $0.duration, type: $0.type)
+                        } else if ($0.type == .video && $0.thumbnail == nil) {
+                            // If its video and it does not have a thumbnail return nil
+                            return nil
+                        }
+                        
+                        return SharedMediaFile.init(path: path, thumbnail: nil, duration: $0.duration, type: $0.type)
                     }
-                    eventSinkImage?(latestImage)
+                    latestMedia = sharedMediaFiles
+                    if(setInitialData) {
+                        initialMedia = latestMedia
+                    }
+                    eventSinkMedia?(toJson(data: latestMedia))
                 }
             } else if url.fragment == "text" {
                 if let key = url.host?.components(separatedBy: "=").last,
@@ -107,15 +125,15 @@ public class SwiftReceiveSharingIntentPlugin: NSObject, FlutterPlugin, FlutterSt
             return true
         }
         
-        latestImage = nil
+        latestMedia = nil
         latestText = nil
         return false
     }
     
     
     public func onListen(withArguments arguments: Any?, eventSink events: @escaping FlutterEventSink) -> FlutterError? {
-        if (arguments as! String? == "image") {
-            eventSinkImage = events;
+        if (arguments as! String? == "media") {
+            eventSinkMedia = events;
         } else if (arguments as! String? == "text") {
             eventSinkText = events;
         } else {
@@ -125,8 +143,8 @@ public class SwiftReceiveSharingIntentPlugin: NSObject, FlutterPlugin, FlutterSt
     }
     
     public func onCancel(withArguments arguments: Any?) -> FlutterError? {
-        if (arguments as! String? == "image") {
-            eventSinkImage = nil;
+        if (arguments as! String? == "media") {
+            eventSinkMedia = nil;
         } else if (arguments as! String? == "text") {
             eventSinkText = nil;
         } else {
@@ -152,5 +170,39 @@ public class SwiftReceiveSharingIntentPlugin: NSObject, FlutterPlugin, FlutterSt
             url = (info?["PHImageFileURLKey"] as? NSURL)?.absoluteString?.replacingOccurrences(of: "file://", with: "")
         }
         return url
+    }
+    
+    private func decode(data: Data) -> [SharedMediaFile] {
+        let encodedData = try? JSONDecoder().decode([SharedMediaFile].self, from: data)
+        return encodedData!
+    }
+    
+    private func toJson(data: [SharedMediaFile]?) -> String? {
+        if data == nil {
+            return nil
+        }
+        let encodedData = try? JSONEncoder().encode(data)
+         let json = String(data: encodedData!, encoding: .utf8)!
+        return json
+    }
+    
+    class SharedMediaFile: Codable {
+        var path: String;
+        var thumbnail: String?; // video thumbnail
+        var duration: Double?; // video duration in milliseconds
+        var type: SharedMediaType;
+        
+        
+        init(path: String, thumbnail: String?, duration: Double?, type: SharedMediaType) {
+            self.path = path
+            self.thumbnail = thumbnail
+            self.duration = duration
+            self.type = type
+        }
+    }
+    
+    enum SharedMediaType: Int, Codable {
+        case image
+        case video
     }
 }

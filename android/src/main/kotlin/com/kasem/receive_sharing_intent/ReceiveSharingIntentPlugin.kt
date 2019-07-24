@@ -2,7 +2,11 @@ package com.kasem.receive_sharing_intent
 
 import android.content.Context
 import android.content.Intent
+import android.graphics.Bitmap
+import android.media.MediaMetadataRetriever
+import android.media.ThumbnailUtils
 import android.net.Uri
+import android.provider.MediaStore
 import io.flutter.plugin.common.EventChannel
 import io.flutter.plugin.common.MethodCall
 import io.flutter.plugin.common.MethodChannel
@@ -10,20 +14,27 @@ import io.flutter.plugin.common.MethodChannel.MethodCallHandler
 import io.flutter.plugin.common.MethodChannel.Result
 import io.flutter.plugin.common.PluginRegistry
 import io.flutter.plugin.common.PluginRegistry.Registrar
-import java.util.*
+import org.json.JSONArray
+import org.json.JSONObject
+import java.io.File
+import java.io.FileOutputStream
+import java.net.URLConnection
+import android.os.Build
+import android.util.Log
+
 
 class ReceiveSharingIntentPlugin(val registrar: Registrar) :
         MethodCallHandler,
         EventChannel.StreamHandler,
         PluginRegistry.NewIntentListener {
 
-    private var initialImage: ArrayList<String>? = null
-    private var latestImage: ArrayList<String>? = null
+    private var initialMedia: JSONArray? = null
+    private var latestMedia: JSONArray? = null
 
     private var initialText: String? = null
     private var latestText: String? = null
 
-    private var eventSinkImage: EventChannel.EventSink? = null
+    private var eventSinkMedia: EventChannel.EventSink? = null
     private var eventSinkText: EventChannel.EventSink? = null
 
     init {
@@ -32,14 +43,14 @@ class ReceiveSharingIntentPlugin(val registrar: Registrar) :
 
     override fun onListen(arguments: Any?, events: EventChannel.EventSink) {
         when (arguments) {
-            "image" -> eventSinkImage = events
+            "media" -> eventSinkMedia = events
             "text" -> eventSinkText = events
         }
     }
 
     override fun onCancel(arguments: Any?) {
         when (arguments) {
-            "image" -> eventSinkImage = null
+            "media" -> eventSinkMedia = null
             "text" -> eventSinkText = null
         }
     }
@@ -51,7 +62,7 @@ class ReceiveSharingIntentPlugin(val registrar: Registrar) :
 
     companion object {
         private val MESSAGES_CHANNEL = "receive_sharing_intent/messages"
-        private val EVENTS_CHANNEL_IMAGE = "receive_sharing_intent/events-image"
+        private val EVENTS_CHANNEL_MEDIA = "receive_sharing_intent/events-media"
         private val EVENTS_CHANNEL_TEXT = "receive_sharing_intent/events-text"
 
         @JvmStatic
@@ -66,8 +77,8 @@ class ReceiveSharingIntentPlugin(val registrar: Registrar) :
             val mChannel = MethodChannel(registrar.messenger(), MESSAGES_CHANNEL)
             mChannel.setMethodCallHandler(instance)
 
-            val eChannelImage = EventChannel(registrar.messenger(), EVENTS_CHANNEL_IMAGE)
-            eChannelImage.setStreamHandler(instance)
+            val eChannelMedia = EventChannel(registrar.messenger(), EVENTS_CHANNEL_MEDIA)
+            eChannelMedia.setStreamHandler(instance)
 
             val eChannelText = EventChannel(registrar.messenger(), EVENTS_CHANNEL_TEXT)
             eChannelText.setStreamHandler(instance)
@@ -79,11 +90,11 @@ class ReceiveSharingIntentPlugin(val registrar: Registrar) :
 
     override fun onMethodCall(call: MethodCall, result: Result) {
         when {
-            call.method == "getInitialImage" -> result.success(initialImage)
+            call.method == "getInitialMedia" -> result.success(initialMedia?.toString())
             call.method == "getInitialText" -> result.success(initialText)
             call.method == "reset" -> {
-                initialImage = null
-                latestImage = null
+                initialMedia = null
+                latestMedia = null
                 initialText = null
                 latestText = null
                 result.success(null)
@@ -94,14 +105,14 @@ class ReceiveSharingIntentPlugin(val registrar: Registrar) :
 
     private fun handleIntent(context: Context, intent: Intent, initial: Boolean) {
         when {
-            intent.type?.startsWith("image") == true
+            (intent.type?.startsWith("image") == true || intent.type?.startsWith("video") == true)
                     && (intent.action == Intent.ACTION_SEND
-                    || intent.action == Intent.ACTION_SEND_MULTIPLE) -> { // Sharing images
+                    || intent.action == Intent.ACTION_SEND_MULTIPLE) -> { // Sharing images or videos
 
-                val value = getImageUris(context, intent)
-                if (initial) initialImage = value
-                latestImage = value
-                eventSinkImage?.success(latestImage)
+                val value = getMediaUris(context, intent)
+                if (initial) initialMedia = value
+                latestMedia = value
+                eventSinkMedia?.success(latestMedia?.toString())
             }
             (intent.type == null || intent.type?.startsWith("text") == true)
                     && intent.action == Intent.ACTION_SEND -> { // Sharing text
@@ -119,21 +130,71 @@ class ReceiveSharingIntentPlugin(val registrar: Registrar) :
         }
     }
 
-    private fun getImageUris(context: Context, intent: Intent?): ArrayList<String>? {
+    private fun getMediaUris(context: Context, intent: Intent?): JSONArray? {
         if (intent == null) return null
 
         return when {
             intent.action == Intent.ACTION_SEND -> {
                 val uri = intent.getParcelableExtra<Uri>(Intent.EXTRA_STREAM)
-                val absolute = FileDirectory.getAbsolutePath(context, uri)
-                if (absolute != null) arrayListOf(absolute) else null
+                val path = FileDirectory.getAbsolutePath(context, uri)
+                if (path != null) {
+                    val type = getMediaType(path)
+                    val thumbnail = getThumbnail(context, path, type)
+                    val duration = getDuration(path, type)
+                    JSONArray().put(
+                            JSONObject()
+                                    .put("path", path)
+                                    .put("type", type)
+                                    .put("thumbnail", thumbnail)
+                                    .put("duration", duration)
+                    )
+                } else null
             }
             intent.action == Intent.ACTION_SEND_MULTIPLE -> {
                 val uris = intent.getParcelableArrayListExtra<Uri>(Intent.EXTRA_STREAM)
-                val value = uris?.mapNotNull { FileDirectory.getAbsolutePath(context, it) }?.toList()
-                if (value != null) ArrayList(value) else null
+                val value = uris?.mapNotNull { uri ->
+                    val path = FileDirectory.getAbsolutePath(context, uri) ?: return@mapNotNull null
+                    val type = getMediaType(path)
+                    val thumbnail = getThumbnail(context, path, type)
+                    val duration = getDuration(path, type)
+                    return@mapNotNull JSONObject()
+                            .put("path", path)
+                            .put("type", type)
+                            .put("thumbnail", thumbnail)
+                            .put("duration", duration)
+                }?.toList()
+                if (value != null) JSONArray(value) else null
             }
             else -> null
         }
+    }
+
+    private fun getMediaType(path: String?): Int {
+        val mimeType = URLConnection.guessContentTypeFromName(path)
+        val isImage = mimeType?.startsWith("image") == true
+        return if (isImage) 0 else 1
+    }
+
+    private fun getThumbnail(context: Context, path: String, type: Int): String? {
+        if (type != 1) return null // get video thumbnail only
+
+        val videoFile = File(path)
+        val targetFile = File(context.cacheDir, "${videoFile.name}.png")
+        val bitmap = ThumbnailUtils.createVideoThumbnail(path, MediaStore.Video.Thumbnails.MINI_KIND)
+                ?: return null
+        FileOutputStream(targetFile).use { out ->
+            bitmap.compress(Bitmap.CompressFormat.PNG, 100, out)
+        }
+        bitmap.recycle()
+        return targetFile.path
+    }
+
+    private fun getDuration(path: String, type: Int): Long? {
+        if (type != 1) return null // get duration for video only
+        val retriever = MediaMetadataRetriever()
+        retriever.setDataSource(path)
+        val duration = retriever.extractMetadata(MediaMetadataRetriever.METADATA_KEY_DURATION).toLongOrNull()
+        retriever.release()
+        return duration
     }
 }

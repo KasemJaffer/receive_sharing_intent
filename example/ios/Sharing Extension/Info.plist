@@ -24,6 +24,11 @@
 	<dict>
 		<key>NSExtensionAttributes</key>
 		<dict>
+            <key>PHSupportedMediaTypes</key>
+            <array>
+                <string>Video</string>
+                <string>Image</string>
+            </array>
 			<key>NSExtensionActivationRule</key>
 			<dict>
                 <key>NSExtensionActivationSupportsText</key>
@@ -32,6 +37,8 @@
 				<string>1</string>
 				<key>NSExtensionActivationSupportsImageWithMaxCount</key>
 				<integer>100</integer>
+                <key>NSExtensionActivationSupportsMovieWithMaxCount</key>
+                <integer>100</integer>
 			</dict>
 		</dict>
 		<key>NSExtensionMainStoryboard</key>

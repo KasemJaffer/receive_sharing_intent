@@ -1,3 +1,18 @@
+## 1.3.0
+
+* Video support. 
+
+# Breaking changes
+### Updated
+* `ShareViewController.swift` Please copy the whole class again as there are many code changes.
+* `getInitialImage` changed to `getInitialMedia` for images and videos
+* `getImageStream` changed to `getMediaStream` for images and videos
+* both `getInitialMedia` and `getMediaStream` now return video duration and thumbnail along with the shared file path
+
+### Removed
+* `getInitialImageAsUri`
+* `getImageStreamAsUri`
+
 ## 1.2.0+1
 
 * New method added to reset the already consumed callbacks
