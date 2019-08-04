@@ -52,9 +52,9 @@ public class SwiftReceiveSharingIntentPlugin: NSObject, FlutterPlugin, FlutterSt
     }
     
     public func application(_ application: UIApplication, didFinishLaunchingWithOptions launchOptions: [AnyHashable : Any] = [:]) -> Bool {
-        if let url = launchOptions[UIApplicationLaunchOptionsKey.url] as? URL {
+        if let url = launchOptions[UIApplication.LaunchOptionsKey.url] as? URL {
             return handleUrl(url: url, setInitialData: true)
-        } else if let activityDictionary = launchOptions[UIApplicationLaunchOptionsKey.userActivityDictionary] as? [AnyHashable: Any] { //Universal link
+        } else if let activityDictionary = launchOptions[UIApplication.LaunchOptionsKey.userActivityDictionary] as? [AnyHashable: Any] { //Universal link
             for key in activityDictionary.keys {
                 if let userActivity = activityDictionary[key] as? NSUserActivity {
                     if let url = userActivity.webpageURL {
@@ -66,7 +66,7 @@ public class SwiftReceiveSharingIntentPlugin: NSObject, FlutterPlugin, FlutterSt
         return false
     }
     
-    public func application(_ application: UIApplication, open url: URL, options: [UIApplicationOpenURLOptionsKey : Any] = [:]) -> Bool {
+    public func application(_ application: UIApplication, open url: URL, options: [UIApplication.OpenURLOptionsKey : Any] = [:]) -> Bool {
         return handleUrl(url: url, setInitialData: false)
     }
     
@@ -86,7 +86,7 @@ public class SwiftReceiveSharingIntentPlugin: NSObject, FlutterPlugin, FlutterSt
                         guard let path = getAbsolutePath(for: $0.path) else {
                             return nil
                         }
-                       
+                        
                         if ($0.type == .video && $0.thumbnail != nil) {
                             guard let thumbnail = getAbsolutePath(for: $0.thumbnail!) else {
                                 // If its video and it does not have a thumbnail return nil
@@ -182,7 +182,7 @@ public class SwiftReceiveSharingIntentPlugin: NSObject, FlutterPlugin, FlutterSt
             return nil
         }
         let encodedData = try? JSONEncoder().encode(data)
-         let json = String(data: encodedData!, encoding: .utf8)!
+        let json = String(data: encodedData!, encoding: .utf8)!
         return json
     }
     
