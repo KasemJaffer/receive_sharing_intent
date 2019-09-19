@@ -23,8 +23,8 @@ class _MyAppState extends State<MyApp> {
     _intentDataStreamSubscription = ReceiveSharingIntent.getMediaStream()
         .listen((List<SharedMediaFile> value) {
       setState(() {
-        print("Shared:" + (_sharedFiles?.map((f) => f.path)?.join(",") ?? ""));
         _sharedFiles = value;
+        print("Shared:" + (_sharedFiles?.map((f) => f.path)?.join(",") ?? ""));
       });
     }, onError: (err) {
       print("getIntentDataStream error: $err");
@@ -34,6 +34,7 @@ class _MyAppState extends State<MyApp> {
     ReceiveSharingIntent.getInitialMedia().then((List<SharedMediaFile> value) {
       setState(() {
         _sharedFiles = value;
+        print("Shared:" + (_sharedFiles?.map((f) => f.path)?.join(",") ?? ""));
       });
     });
 
@@ -42,6 +43,7 @@ class _MyAppState extends State<MyApp> {
         ReceiveSharingIntent.getTextStream().listen((String value) {
       setState(() {
         _sharedText = value;
+        print("Shared: $_sharedText");
       });
     }, onError: (err) {
       print("getLinkStream error: $err");
@@ -51,6 +53,7 @@ class _MyAppState extends State<MyApp> {
     ReceiveSharingIntent.getInitialText().then((String value) {
       setState(() {
         _sharedText = value;
+        print("Shared: $_sharedText");
       });
     });
   }
