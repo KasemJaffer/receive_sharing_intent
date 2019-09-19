@@ -114,6 +114,12 @@ class ReceiveSharingIntentPlugin(val registrar: Registrar) :
                 latestMedia = value
                 eventSinkMedia?.success(latestMedia?.toString())
             }
+            intent.type?.startsWith("application") == true -> {
+                val value = getPdfUris(context, intent)
+                if (initial) initialMedia = value
+                latestMedia = value
+                eventSinkMedia?.success(latestMedia?.toString())
+            }
             (intent.type == null || intent.type?.startsWith("text") == true)
                     && intent.action == Intent.ACTION_SEND -> { // Sharing text
                 val value = intent.getStringExtra(Intent.EXTRA_TEXT)
@@ -168,6 +174,27 @@ class ReceiveSharingIntentPlugin(val registrar: Registrar) :
             else -> null
         }
     }
+    private fun getPdfUris(context: Context, intent: Intent?): JSONArray? {
+        if (intent == null) return null
+
+        return when {
+            intent.action == Intent.ACTION_SEND -> {
+                val uri = intent.getParcelableExtra<Uri>(Intent.EXTRA_STREAM)
+                val path = FileDirectory.getAbsolutePath(context, uri)
+                if (path != null) {
+                    val type = getMediaType(path)
+                    JSONArray().put(
+                            JSONObject()
+                                    .put("path", path)
+                                    .put("type", type)
+                                    .put("thumbnail", null)
+                                    .put("duration", null)
+                    )
+                } else null
+            }
+            else -> null
+        }
+    }
 
     private fun getMediaType(path: String?): Int {
         val mimeType = URLConnection.guessContentTypeFromName(path)
@@ -198,3 +225,4 @@ class ReceiveSharingIntentPlugin(val registrar: Registrar) :
         return duration
     }
 }
+
