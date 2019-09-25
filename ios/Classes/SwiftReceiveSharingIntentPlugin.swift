@@ -88,14 +88,10 @@ public class SwiftReceiveSharingIntentPlugin: NSObject, FlutterPlugin, FlutterSt
                         }
                        
                         if ($0.type == .video && $0.thumbnail != nil) {
-                            guard let thumbnail = getAbsolutePath(for: $0.thumbnail!) else {
-                                // If its video and it does not have a thumbnail return nil
-                                return nil
-                            }
+                            let thumbnail = getAbsolutePath(for: $0.thumbnail!)
                             return SharedMediaFile.init(path: path, thumbnail: thumbnail, duration: $0.duration, type: $0.type)
                         } else if ($0.type == .video && $0.thumbnail == nil) {
-                            // If its video and it does not have a thumbnail return nil
-                            return nil
+                            return SharedMediaFile.init(path: path, thumbnail: nil, duration: $0.duration, type: $0.type)
                         }
                         
                         return SharedMediaFile.init(path: path, thumbnail: nil, duration: $0.duration, type: $0.type)
