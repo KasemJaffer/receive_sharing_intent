@@ -1,6 +1,6 @@
 # receive_sharing_intent_example
 
-A flutter plugin that enables flutter apps to receive sharing photos, text and urls from other apps.
+A flutter plugin that enables flutter apps to receive sharing photos, videos, text and urls from other apps.
 
 Also, supports iOS Share extension and launching the host app automatically. 
 
@@ -107,6 +107,7 @@ ios/Runner/info.plist
 - Using xcode, go to File/New/Target and Choose "Share Extension"
 - Give it a name i.e. "Share Extension"
 
+##### Make sure the deployment target for Runner.app and the share extension is the same. 
 
 ##### Add the following code:
 ios/Share Extension/info.plist

@@ -1,3 +1,7 @@
+## 1.3.1
+
+* Fixed iOS 13 bugs
+
 ## 1.3.0
 
 * Video support. 
