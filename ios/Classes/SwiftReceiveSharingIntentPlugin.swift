@@ -161,16 +161,28 @@ public class SwiftReceiveSharingIntentPlugin: NSObject, FlutterPlugin, FlutterSt
         if(phAsset == nil) {
             return nil
         }
-        var url: String?
-        
-        let options = PHImageRequestOptions()
-        options.isSynchronous = true
-        options.isNetworkAccessAllowed = true
-        PHImageManager.default().requestImageData(for: phAsset!, options: options) { (data, fileName, orientation, info) in
-            url = (info?["PHImageFileURLKey"] as? NSURL)?.absoluteString?.replacingOccurrences(of: "file://", with: "")
-        }
+        let (url, _) = getFullSizeImageURLAndOrientation(for: phAsset!)
         return url
     }
+    
+    private func getFullSizeImageURLAndOrientation(for asset: PHAsset)-> (String?, Int) {
+           var url: String? = nil
+           var orientation: Int = 0
+           let group = DispatchGroup()
+           group.enter()
+           DispatchQueue.main.async {
+               let options2 = PHContentEditingInputRequestOptions()
+               options2.isNetworkAccessAllowed = true
+               asset.requestContentEditingInput(with: options2){(input, info) in
+                   orientation = Int(input?.fullSizeImageOrientation ?? 0)
+                   url = input?.fullSizeImageURL?.path
+                   group.leave()
+               }
+           }
+           group.wait()
+           
+           return (url, orientation)
+       }
     
     private func decode(data: Data) -> [SharedMediaFile] {
         let encodedData = try? JSONDecoder().decode([SharedMediaFile].self, from: data)
