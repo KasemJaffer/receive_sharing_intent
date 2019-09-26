@@ -1,3 +1,7 @@
+## 1.3.1+1
+
+* Remove unnecessary code
+
 ## 1.3.1
 
 * Fixed iOS 13 bugs
