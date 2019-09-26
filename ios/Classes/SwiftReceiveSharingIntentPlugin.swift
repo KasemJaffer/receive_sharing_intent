@@ -164,18 +164,15 @@ public class SwiftReceiveSharingIntentPlugin: NSObject, FlutterPlugin, FlutterSt
     private func getFullSizeImageURLAndOrientation(for asset: PHAsset)-> (String?, Int) {
            var url: String? = nil
            var orientation: Int = 0
-           let group = DispatchGroup()
-           group.enter()
-           DispatchQueue.main.async {
-               let options2 = PHContentEditingInputRequestOptions()
-               options2.isNetworkAccessAllowed = true
-               asset.requestContentEditingInput(with: options2){(input, info) in
-                   orientation = Int(input?.fullSizeImageOrientation ?? 0)
-                   url = input?.fullSizeImageURL?.path
-                   group.leave()
-               }
+           let semaphore = DispatchSemaphore(value: 0)
+           let options2 = PHContentEditingInputRequestOptions()
+           options2.isNetworkAccessAllowed = true
+           asset.requestContentEditingInput(with: options2){(input, info) in
+               orientation = Int(input?.fullSizeImageOrientation ?? 0)
+               url = input?.fullSizeImageURL?.path
+               semaphore.signal()
            }
-           group.wait()
+           semaphore.wait()
            
            return (url, orientation)
        }
