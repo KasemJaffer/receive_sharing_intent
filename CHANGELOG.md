@@ -1,3 +1,10 @@
+## 1.3.2
+
+* Fix Some photos and videos have wrong extension names
+* Fix sharing dialog doesn't close properly
+
+Note. Both fixes require you to update your Sharing Extension Class (please check check that in the example project)
+
 ## 1.3.1+1
 
 * Remove unnecessary code
