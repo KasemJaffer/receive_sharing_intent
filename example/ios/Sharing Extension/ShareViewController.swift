@@ -68,7 +68,6 @@ class ShareViewController: SLComposeServiceViewController {
                     let userDefaults = UserDefaults(suiteName: "group.\(this.hostAppBundleIdentifier)")
                     userDefaults?.set(this.sharedText, forKey: this.sharedKey)
                     userDefaults?.synchronize()
-                    this.extensionContext!.completeRequest(returningItems: [], completionHandler: nil)
                     this.redirectToHostApp(type: .text)
                 }
                 
@@ -90,7 +89,6 @@ class ShareViewController: SLComposeServiceViewController {
                     let userDefaults = UserDefaults(suiteName: "group.\(this.hostAppBundleIdentifier)")
                     userDefaults?.set(this.sharedText, forKey: this.sharedKey)
                     userDefaults?.synchronize()
-                    this.extensionContext!.completeRequest(returningItems: [], completionHandler: nil)
                     this.redirectToHostApp(type: .text)
                 }
                 
@@ -106,14 +104,11 @@ class ShareViewController: SLComposeServiceViewController {
             if error == nil, let url = data as? URL, let this = self {
                 
                 // Always copy
-                var fileExtension = url.lastPathComponent.components(separatedBy: ".")[safe: 1]
-                if fileExtension == nil {
-                    fileExtension = "png"
-                }
+                let fileExtension = this.getExtension(from: url, type: .image)
                 let newName = UUID().uuidString
                 let newPath = FileManager.default
                     .containerURL(forSecurityApplicationGroupIdentifier: "group.\(this.hostAppBundleIdentifier)")!
-                    .appendingPathComponent("\(newName).\(fileExtension!)")
+                    .appendingPathComponent("\(newName).\(fileExtension)")
                 let copied = this.copyFile(at: url, to: newPath)
                 if(copied) {
                     this.sharedMedia.append(SharedMediaFile(path: newPath.absoluteString, thumbnail: nil, duration: nil, type: .image))
@@ -124,21 +119,11 @@ class ShareViewController: SLComposeServiceViewController {
                     let userDefaults = UserDefaults(suiteName: "group.\(this.hostAppBundleIdentifier)")
                     userDefaults?.set(this.toData(data: this.sharedMedia), forKey: this.sharedKey)
                     userDefaults?.synchronize()
-                    this.extensionContext!.completeRequest(returningItems: [], completionHandler: nil)
                     this.redirectToHostApp(type: .media)
                 }
                 
             } else {
-                print("GETTING ERROR")
-                let alert = UIAlertController(title: "Error", message: "Error loading image", preferredStyle: .alert)
-                
-                let action = UIAlertAction(title: "Error", style: .cancel) { _ in
-                    self?.dismiss(animated: true, completion: nil)
-                }
-                
-                alert.addAction(action)
-                self?.present(alert, animated: true, completion: nil)
-                self?.extensionContext!.completeRequest(returningItems: [], completionHandler: nil)
+                 self?.dismissWithError()
             }
         }
     }
@@ -149,14 +134,11 @@ class ShareViewController: SLComposeServiceViewController {
             if error == nil, let url = data as? URL, let this = self {
                 
                 // Always copy
-                var fileExtension = url.lastPathComponent.components(separatedBy: ".")[safe: 1]
-                if fileExtension == nil {
-                    fileExtension = "mp4"
-                }
+                let fileExtension = this.getExtension(from: url, type: .video)
                 let newName = UUID().uuidString
                 let newPath = FileManager.default
                     .containerURL(forSecurityApplicationGroupIdentifier: "group.\(this.hostAppBundleIdentifier)")!
-                    .appendingPathComponent("\(newName).\(fileExtension!)")
+                    .appendingPathComponent("\(newName).\(fileExtension)")
                 let copied = this.copyFile(at: url, to: newPath)
                 if(copied) {
                     guard let sharedFile = this.getSharedMediaFile(forVideo: newPath) else {
@@ -170,28 +152,18 @@ class ShareViewController: SLComposeServiceViewController {
                     let userDefaults = UserDefaults(suiteName: "group.\(this.hostAppBundleIdentifier)")
                     userDefaults?.set(this.toData(data: this.sharedMedia), forKey: this.sharedKey)
                     userDefaults?.synchronize()
-                    this.extensionContext!.completeRequest(returningItems: [], completionHandler: nil)
                     this.redirectToHostApp(type: .media)
                 }
                 
             } else {
-                print("GETTING ERROR")
-                let alert = UIAlertController(title: "Error", message: "Error loading image", preferredStyle: .alert)
-                
-                let action = UIAlertAction(title: "Error", style: .cancel) { _ in
-                    self?.dismiss(animated: true, completion: nil)
-                }
-                
-                alert.addAction(action)
-                self?.present(alert, animated: true, completion: nil)
-                self?.extensionContext!.completeRequest(returningItems: [], completionHandler: nil)
+                 self?.dismissWithError()
             }
         }
     }
     
-    private func dismissWithError(){
+    private func dismissWithError() {
         print("GETTING ERROR")
-        let alert = UIAlertController(title: "Error", message: "Error loading image", preferredStyle: .alert)
+        let alert = UIAlertController(title: "Error", message: "Error loading data", preferredStyle: .alert)
         
         let action = UIAlertAction(title: "Error", style: .cancel) { _ in
             self.dismiss(animated: true, completion: nil)
@@ -213,11 +185,30 @@ class ShareViewController: SLComposeServiceViewController {
             }
             responder = responder!.next
         }
+        extensionContext!.completeRequest(returningItems: [], completionHandler: nil)
     }
     
     enum RedirectType {
         case media
         case text
+    }
+    
+    func getExtension(from url: URL, type: SharedMediaType) -> String {
+        let parts = url.lastPathComponent.components(separatedBy: ".")
+        var ex: String? = nil
+        if (parts.count > 1) {
+            ex = parts.last
+        }
+        
+        if (ex == nil) {
+            switch type {
+            case .image:
+                ex = "PNG"
+            case .video:
+                ex = "MP4"
+            }
+        }
+        return ex ?? "Unknown"
     }
     
     func copyFile(at srcURL: URL, to dstURL: URL) -> Bool {
@@ -246,10 +237,10 @@ class ShareViewController: SLComposeServiceViewController {
         let assetImgGenerate = AVAssetImageGenerator(asset: asset)
         assetImgGenerate.appliesPreferredTrackTransform = true
         //        let scale = UIScreen.main.scale
-        //        assetImgGenerate.maximumSize =  CGSize(width: 79 * scale, height: 79 * scale)
+        assetImgGenerate.maximumSize =  CGSize(width: 360, height: 360)
         do {
-            let img = try assetImgGenerate.copyCGImage(at: CMTimeMakeWithSeconds(1.0, 600), actualTime: nil)
-            try UIImagePNGRepresentation(UIImage(cgImage: img))?.write(to: thumbnailPath)
+            let img = try assetImgGenerate.copyCGImage(at: CMTimeMakeWithSeconds(1.0, preferredTimescale: 600), actualTime: nil)
+            try UIImage(cgImage: img).pngData()?.write(to: thumbnailPath)
             saved = true
         } catch {
             saved = false
