@@ -127,7 +127,7 @@ class ReceiveSharingIntentPlugin: FlutterPlugin, MethodCallHandler, ActivityAwar
     companion object {
         @JvmStatic
         fun registerWith(registrar: Registrar) {
-            Log.d("flutter_share", "registerWith")
+//            Log.d("flutter_share", "registerWith")
             val instance = ReceiveSharingIntentPlugin()
             instance.applicationContext = registrar.context()
             instance.setupCallbackChannels(registrar.messenger())
