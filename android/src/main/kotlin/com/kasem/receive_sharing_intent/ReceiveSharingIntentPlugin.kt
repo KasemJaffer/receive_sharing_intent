@@ -28,10 +28,7 @@ private const val EVENTS_CHANNEL_MEDIA = "receive_sharing_intent/events-media"
 private const val EVENTS_CHANNEL_TEXT = "receive_sharing_intent/events-text"
 
 /** FlutterShareExtensionPlugin */
-class ReceiveSharingIntentPlugin: FlutterPlugin, MethodCallHandler, ActivityAware
-        , EventChannel.StreamHandler
-        , PluginRegistry.NewIntentListener
-{
+class ReceiveSharingIntentPlugin: FlutterPlugin, MethodCallHandler, ActivityAware, EventChannel.StreamHandler, PluginRegistry.NewIntentListener {
     private lateinit var mChannel : MethodChannel
     private lateinit var eChannelMedia : EventChannel
     private lateinit var eChannelText : EventChannel
@@ -41,10 +38,8 @@ class ReceiveSharingIntentPlugin: FlutterPlugin, MethodCallHandler, ActivityAwar
 
     private var initialMedia: JSONArray? = null
     private var latestMedia: JSONArray? = null
-
     private var initialText: String? = null
     private var latestText: String? = null
-
     private var eventSinkMedia: EventChannel.EventSink? = null
     private var eventSinkText: EventChannel.EventSink? = null
 
@@ -68,39 +63,33 @@ class ReceiveSharingIntentPlugin: FlutterPlugin, MethodCallHandler, ActivityAwar
     }
 
     override fun onAttachedToActivity(binding: ActivityPluginBinding) {
-        Log.d("flutter_share", "onAttachedToActivity")
-
         activity = binding.activity
         activityBinding = binding;
         activityBinding.addOnNewIntentListener(this)
+
+        // Handle launch-intent here if app was not running when the intent was shared to it
+        handleIntent(applicationContext, activityBinding.activity.intent, true)
+//        Log.d("flutter_share", "onAttachedToActivity | activityBinding.activity.intent: ${activityBinding.activity.intent}")
     }
 
     override fun onDetachedFromActivity() {
-        Log.d("flutter_share", "onDetachedFromActivity")
-
+//        Log.d("flutter_share", "onDetachedFromActivity")
         activityBinding.removeOnNewIntentListener(this)
     }
 
     override fun onDetachedFromActivityForConfigChanges() {
-        Log.d("flutter_share", "onDetachedFromActivityForConfigChanges")
-
+//        Log.d("flutter_share", "onDetachedFromActivityForConfigChanges")
         activityBinding.removeOnNewIntentListener(this)
     }
 
     override fun onReattachedToActivityForConfigChanges(binding: ActivityPluginBinding) {
-        Log.d("flutter_share", "onReattachedToActivityForConfigChanges")
-
+//        Log.d("flutter_share", "onReattachedToActivityForConfigChanges")
         activity = binding.activity
         activityBinding.addOnNewIntentListener(this)
     }
 
-//    init {
-//        handleIntent(applicationContext, activityBinding.activity.intent, true)
-//    }
-
     private fun setupCallbackChannels(messenger: BinaryMessenger) {
-        Log.d("flutter_share", "setupCallbackChannels")
-
+//        Log.d("flutter_share", "setupCallbackChannels")
         mChannel = MethodChannel(messenger, MESSAGES_CHANNEL)
         mChannel.setMethodCallHandler(this)
 
@@ -112,16 +101,16 @@ class ReceiveSharingIntentPlugin: FlutterPlugin, MethodCallHandler, ActivityAwar
     }
 
     private fun teardown() {
-        Log.d("flutter_share", "teardown")
+//        Log.d("flutter_share", "teardown")
         mChannel.setMethodCallHandler(null)
         eChannelMedia.setStreamHandler(null)
         eChannelText.setStreamHandler(null)
-//        activityBinding.removeOnNewIntentListener(this)
+        activityBinding.removeOnNewIntentListener(this)
     }
 
 
     override fun onAttachedToEngine(@NonNull flutterPluginBinding: FlutterPlugin.FlutterPluginBinding) {
-        Log.d("flutter_share", "onAttachedToEngine")
+//        Log.d("flutter_share", "onAttachedToEngine")
         applicationContext = flutterPluginBinding.applicationContext
         setupCallbackChannels(flutterPluginBinding.binaryMessenger)
     }
@@ -150,8 +139,7 @@ class ReceiveSharingIntentPlugin: FlutterPlugin, MethodCallHandler, ActivityAwar
     }
 
     override fun onMethodCall(@NonNull call: MethodCall, @NonNull result: Result) {
-        Log.d("flutter_share", "onMethodCall | call: $call")
-
+//        Log.d("flutter_share", "onMethodCall | call: $call")
         when (call.method) {
             "getInitialMedia" -> result.success(initialMedia?.toString())
             "getInitialText" -> result.success(initialText)
@@ -167,7 +155,7 @@ class ReceiveSharingIntentPlugin: FlutterPlugin, MethodCallHandler, ActivityAwar
     }
 
     private fun handleIntent(context: Context, intent: Intent, initial: Boolean) {
-        Log.d("flutter_share", "handleIntent")
+//        Log.d("flutter_share", "handleIntent")
         when {
             (intent.type?.startsWith("image") == true || intent.type?.startsWith("video") == true)
                     && (intent.action == Intent.ACTION_SEND
@@ -195,8 +183,7 @@ class ReceiveSharingIntentPlugin: FlutterPlugin, MethodCallHandler, ActivityAwar
     }
 
     private fun getMediaUris(context: Context, intent: Intent?): JSONArray? {
-        Log.d("flutter_share", "getMediaUris")
-
+//        Log.d("flutter_share", "getMediaUris")
         if (intent == null) return null
 
         return when (intent.action) {
@@ -236,16 +223,14 @@ class ReceiveSharingIntentPlugin: FlutterPlugin, MethodCallHandler, ActivityAwar
     }
 
     private fun getMediaType(path: String?): Int {
-        Log.d("flutter_share", "getMediaType")
-
+//        Log.d("flutter_share", "getMediaType")
         val mimeType = URLConnection.guessContentTypeFromName(path)
         val isImage = mimeType?.startsWith("image") == true
         return if (isImage) 0 else 1
     }
 
     private fun getThumbnail(context: Context, path: String, type: Int): String? {
-        Log.d("flutter_share", "getThumbnail")
-
+//        Log.d("flutter_share", "getThumbnail")
         if (type != 1) return null // get video thumbnail only
 
         val videoFile = File(path)
@@ -260,8 +245,7 @@ class ReceiveSharingIntentPlugin: FlutterPlugin, MethodCallHandler, ActivityAwar
     }
 
     private fun getDuration(path: String, type: Int): Long? {
-        Log.d("flutter_share", "getDuration")
-
+//        Log.d("flutter_share", "getDuration")
         if (type != 1) return null // get duration for video only
         val retriever = MediaMetadataRetriever()
         retriever.setDataSource(path)
