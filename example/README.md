@@ -134,7 +134,7 @@ ios/Share Extension/info.plist
                 <true/>
                 <!--TODO: Add this tag, if you want to support sharing urls into your app-->
             	<key>NSExtensionActivationSupportsWebURLWithMaxCount</key>
-            	<string>1</string>
+            	<integer>1</integer>
             	<!--TODO: Add this flag, if you want to support sharing images into your app-->
                 <key>NSExtensionActivationSupportsImageWithMaxCount</key>
                 <integer>100</integer>
