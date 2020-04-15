@@ -240,7 +240,7 @@ class ShareViewController: SLComposeServiceViewController {
         assetImgGenerate.maximumSize =  CGSize(width: 360, height: 360)
         do {
             let img = try assetImgGenerate.copyCGImage(at: CMTimeMakeWithSeconds(1.0, preferredTimescale: 600), actualTime: nil)
-            try UIImagePNGRepresentation(UIImage(cgImage: img))?.write(to: thumbnailPath)
+            try UIImage(cgImage: img).pngData()?.write(to: thumbnailPath)
             saved = true
         } catch {
             saved = false
