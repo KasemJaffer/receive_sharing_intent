@@ -25,7 +25,7 @@
 			<string>Editor</string>
 			<key>CFBundleURLSchemes</key>
 			<array>
-				<string>SharePhotos</string>
+				<string>ShareMedia</string>
 			</array>
 		</dict>
 		<dict/>

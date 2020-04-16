@@ -3,7 +3,6 @@ import UIKit
 import Photos
 
 public class SwiftReceiveSharingIntentPlugin: NSObject, FlutterPlugin, FlutterStreamHandler {
-    
     static let kMessagesChannel = "receive_sharing_intent/messages";
     static let kEventsChannelMedia = "receive_sharing_intent/events-media";
     static let kEventsChannelLink = "receive_sharing_intent/events-text";
@@ -82,11 +81,10 @@ public class SwiftReceiveSharingIntentPlugin: NSObject, FlutterPlugin, FlutterSt
                 if let key = url.host?.components(separatedBy: "=").last,
                     let json = userDefaults?.object(forKey: key) as? Data {
                     let sharedArray = decode(data: json)
-                    let sharedMediaFiles: [SharedMediaFile] = sharedArray.compactMap{
+                    let sharedMediaFiles: [SharedMediaFile] = sharedArray.compactMap {
                         guard let path = getAbsolutePath(for: $0.path) else {
                             return nil
                         }
-                       
                         if ($0.type == .video && $0.thumbnail != nil) {
                             let thumbnail = getAbsolutePath(for: $0.thumbnail!)
                             return SharedMediaFile.init(path: path, thumbnail: thumbnail, duration: $0.duration, type: $0.type)
@@ -95,6 +93,22 @@ public class SwiftReceiveSharingIntentPlugin: NSObject, FlutterPlugin, FlutterSt
                         }
                         
                         return SharedMediaFile.init(path: path, thumbnail: nil, duration: $0.duration, type: $0.type)
+                    }
+                    latestMedia = sharedMediaFiles
+                    if(setInitialData) {
+                        initialMedia = latestMedia
+                    }
+                    eventSinkMedia?(toJson(data: latestMedia))
+                }
+            } else if url.fragment == "file" {
+                if let key = url.host?.components(separatedBy: "=").last,
+                    let json = userDefaults?.object(forKey: key) as? Data {
+                    let sharedArray = decode(data: json)
+                    let sharedMediaFiles: [SharedMediaFile] = sharedArray.compactMap{
+                        guard let path = getAbsolutePath(for: $0.path) else {
+                            return nil
+                        }
+                        return SharedMediaFile.init(path: $0.path, thumbnail: nil, duration: nil, type: $0.type)
                     }
                     latestMedia = sharedMediaFiles
                     if(setInitialData) {
@@ -120,7 +134,6 @@ public class SwiftReceiveSharingIntentPlugin: NSObject, FlutterPlugin, FlutterSt
             }
             return true
         }
-        
         latestMedia = nil
         latestText = nil
         return false
@@ -173,7 +186,6 @@ public class SwiftReceiveSharingIntentPlugin: NSObject, FlutterPlugin, FlutterSt
                semaphore.signal()
            }
            semaphore.wait()
-           
            return (url, orientation)
        }
     
@@ -209,5 +221,6 @@ public class SwiftReceiveSharingIntentPlugin: NSObject, FlutterPlugin, FlutterSt
     enum SharedMediaType: Int, Codable {
         case image
         case video
+        case file
     }
 }
