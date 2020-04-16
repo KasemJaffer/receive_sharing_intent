@@ -1,9 +1,19 @@
+//
+//  ShareViewController.swift
+//  Sharing Extension
+//
+//  Created by Kasem Mohamed on 2019-05-30.
+//  Modified by kr1tzy on 2020-04-16
+//  Copyright © 2019 The Chromium Authors. All rights reserved.
+//
+
 import UIKit
 import Social
 import MobileCoreServices
 import Photos
 
 class ShareViewController: SLComposeServiceViewController {
+    // TODO: IMPORTANT: This should be your host app bundle identifier
     let hostAppBundleIdentifier = "com.kasem.sharing"
     let sharedKey = "ShareKey"
     var sharedMedia: [SharedMediaFile] = []

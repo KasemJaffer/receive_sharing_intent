@@ -68,7 +68,7 @@ class ReceiveSharingIntent {
   static Stream<List<SharedMediaFile>> getMediaStream() {
     if (_streamMedia == null) {
       final stream =
-          _eChannelMedia.receiveBroadcastStream("media").cast<String>(); // TODO
+          _eChannelMedia.receiveBroadcastStream("media").cast<String>();
       _streamMedia = stream.transform<List<SharedMediaFile>>(
         new StreamTransformer<String, List<SharedMediaFile>>.fromHandlers(
           handleData: (String data, EventSink<List<SharedMediaFile>> sink) {
