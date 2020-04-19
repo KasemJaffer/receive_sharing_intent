@@ -105,7 +105,7 @@ class ReceiveSharingIntentPlugin(val registrar: Registrar) :
 
     private fun handleIntent(context: Context, intent: Intent, initial: Boolean) {
         when {
-            (intent.type?.startsWith("image") == true || intent.type?.startsWith("video") == true)
+            (intent.type?.startsWith("text") != true)
                     && (intent.action == Intent.ACTION_SEND
                     || intent.action == Intent.ACTION_SEND_MULTIPLE) -> { // Sharing images or videos
 
@@ -144,7 +144,7 @@ class ReceiveSharingIntentPlugin(val registrar: Registrar) :
                     JSONArray().put(
                             JSONObject()
                                     .put("path", path)
-                                    .put("type", type)
+                                    .put("type", type.ordinal)
                                     .put("thumbnail", thumbnail)
                                     .put("duration", duration)
                     )
@@ -159,7 +159,7 @@ class ReceiveSharingIntentPlugin(val registrar: Registrar) :
                     val duration = getDuration(path, type)
                     return@mapNotNull JSONObject()
                             .put("path", path)
-                            .put("type", type)
+                            .put("type", type.ordinal)
                             .put("thumbnail", thumbnail)
                             .put("duration", duration)
                 }?.toList()
@@ -169,14 +169,17 @@ class ReceiveSharingIntentPlugin(val registrar: Registrar) :
         }
     }
 
-    private fun getMediaType(path: String?): Int {
+    private fun getMediaType(path: String?): MediaType {
         val mimeType = URLConnection.guessContentTypeFromName(path)
-        val isImage = mimeType?.startsWith("image") == true
-        return if (isImage) 0 else 1
+        return when {
+            mimeType?.startsWith("image") == true -> MediaType.IMAGE
+            mimeType?.startsWith("video") == true -> MediaType.VIDEO
+            else -> MediaType.FILE
+        }
     }
 
-    private fun getThumbnail(context: Context, path: String, type: Int): String? {
-        if (type != 1) return null // get video thumbnail only
+    private fun getThumbnail(context: Context, path: String, type: MediaType): String? {
+        if (type != MediaType.VIDEO) return null // get video thumbnail only
 
         val videoFile = File(path)
         val targetFile = File(context.cacheDir, "${videoFile.name}.png")
@@ -189,12 +192,16 @@ class ReceiveSharingIntentPlugin(val registrar: Registrar) :
         return targetFile.path
     }
 
-    private fun getDuration(path: String, type: Int): Long? {
-        if (type != 1) return null // get duration for video only
+    private fun getDuration(path: String, type: MediaType): Long? {
+        if (type != MediaType.VIDEO) return null // get duration for video only
         val retriever = MediaMetadataRetriever()
         retriever.setDataSource(path)
         val duration = retriever.extractMetadata(MediaMetadataRetriever.METADATA_KEY_DURATION).toLongOrNull()
         retriever.release()
         return duration
+    }
+
+    enum class MediaType {
+        IMAGE, VIDEO, FILE;
     }
 }

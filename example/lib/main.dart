@@ -76,7 +76,11 @@ class _MyAppState extends State<MyApp> {
           child: Column(
             children: <Widget>[
               Text("Shared files:", style: textStyleBold),
-              Text(_sharedFiles?.map((f) => f.path)?.join(",") ?? ""),
+              Text(_sharedFiles
+                      ?.map((f) =>
+                          "{Path: ${f.path}, Type: ${f.type.toString().replaceFirst("SharedMediaType.", "")}\n")
+                      ?.join(",") ??
+                  ""),
               SizedBox(height: 100),
               Text("Shared urls/text:", style: textStyleBold),
               Text(_sharedText ?? "")

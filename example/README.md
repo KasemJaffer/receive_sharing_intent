@@ -71,6 +71,18 @@ android/app/src/main/manifest.xml
                 <category android:name="android.intent.category.DEFAULT" />
                 <data android:mimeType="video/*" />
             </intent-filter>
+
+            <!--TODO: Add this filter, if you want to support sharing any type of files-->
+            <intent-filter>
+                <action android:name="android.intent.action.SEND" />
+                <category android:name="android.intent.category.DEFAULT" />
+                <data android:mimeType="*/*" />
+            </intent-filter>
+            <intent-filter>
+                <action android:name="android.intent.action.SEND_MULTIPLE" />
+                <category android:name="android.intent.category.DEFAULT" />
+                <data android:mimeType="*/*" />
+            </intent-filter>
       </activity>
       
   </application>
@@ -134,7 +146,7 @@ ios/Share Extension/info.plist
                 <true/>
                 <!--TODO: Add this tag, if you want to support sharing urls into your app-->
             	<key>NSExtensionActivationSupportsWebURLWithMaxCount</key>
-            	<string>1</string>
+            	<integer>1</integer>
             	<!--TODO: Add this flag, if you want to support sharing images into your app-->
                 <key>NSExtensionActivationSupportsImageWithMaxCount</key>
                 <integer>100</integer>
