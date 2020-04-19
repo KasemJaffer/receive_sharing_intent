@@ -3,7 +3,6 @@
 //  Sharing Extension
 //
 //  Created by Kasem Mohamed on 2019-05-30.
-//  Modified by kr1tzy on 2020-04-16
 //  Copyright © 2019 The Chromium Authors. All rights reserved.
 //
 
@@ -32,7 +31,7 @@ class ShareViewController: SLComposeServiceViewController {
         // This is called after the user selects Post. Do the upload of contentText and/or NSExtensionContext attachments.
         if let content = extensionContext!.inputItems[0] as? NSExtensionItem {
             if let contents = content.attachments {
-                for (index, attachment) in (contents).enumerated() {
+                for (index, attachment) in (contents as! [NSItemProvider]).enumerated() {
                     if attachment.hasItemConformingToTypeIdentifier(imageContentType) {
                         handleImages(content: content, attachment: attachment, index: index)
                     } else if attachment.hasItemConformingToTypeIdentifier(textContentType) {
@@ -282,8 +281,8 @@ class ShareViewController: SLComposeServiceViewController {
         //        let scale = UIScreen.main.scale
         assetImgGenerate.maximumSize =  CGSize(width: 360, height: 360)
         do {
-            let img = try assetImgGenerate.copyCGImage(at: CMTimeMakeWithSeconds(600, preferredTimescale: Int32(1.0)), actualTime: nil)
-            try UIImage.pngData(UIImage(cgImage: img))()?.write(to: thumbnailPath)
+            let img = try assetImgGenerate.copyCGImage(at: CMTimeMakeWithSeconds(1.0, 600), actualTime: nil)
+            try UIImagePNGRepresentation(UIImage(cgImage: img))?.write(to: thumbnailPath)
             saved = true
         } catch {
             saved = false
