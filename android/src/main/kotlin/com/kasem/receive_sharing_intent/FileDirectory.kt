@@ -92,8 +92,13 @@ object FileDirectory {
 
         if (uri.authority != null) {
             val mimeType = context.contentResolver.getType(uri)
-            val isImage = mimeType?.startsWith("image") == true
-            val prefix = if (isImage) "IMG" else "VID"
+            val prefix = with(mimeType ?: "") {
+                when {
+                    startsWith("image") -> "IMG"
+                    startsWith("video") -> "VID"
+                    else -> "FILE"
+                }
+            }
             val type = MimeTypeMap.getSingleton().getExtensionFromMimeType(mimeType)
             val targetFile = File(context.cacheDir, "${prefix}_${Date().time}.$type")
             context.contentResolver.openInputStream(uri)?.use { input ->
