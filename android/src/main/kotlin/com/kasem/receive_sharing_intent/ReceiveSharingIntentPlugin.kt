@@ -121,12 +121,12 @@ class ReceiveSharingIntentPlugin(val registrar: Registrar) :
                 latestText = value
                 eventSinkText?.success(latestText)
             }
-            intent.action == Intent.ACTION_VIEW -> { // Opening URL
-                val value = intent.dataString
-                if (initial) initialText = value
-                latestText = value
-                eventSinkText?.success(latestText)
-            }
+            // intent.action == Intent.ACTION_VIEW -> { // Opening URL
+            //     val value = intent.dataString
+            //     if (initial) initialText = value
+            //     latestText = value
+            //     eventSinkText?.success(latestText)
+            // }
         }
     }
 
