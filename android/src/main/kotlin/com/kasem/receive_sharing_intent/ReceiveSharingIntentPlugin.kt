@@ -34,8 +34,12 @@ class ReceiveSharingIntentPlugin(val registrar: Registrar) :
     private var initialText: String? = null
     private var latestText: String? = null
 
+    private var initialLink: String? = null
+    private var latestLink: String? = null
+
     private var eventSinkMedia: EventChannel.EventSink? = null
     private var eventSinkText: EventChannel.EventSink? = null
+    private var eventSinkLink: EventChannel.EventSink? = null
 
     init {
         handleIntent(registrar.context(), registrar.activity().intent, true)
@@ -45,6 +49,7 @@ class ReceiveSharingIntentPlugin(val registrar: Registrar) :
         when (arguments) {
             "media" -> eventSinkMedia = events
             "text" -> eventSinkText = events
+            "link" -> eventSinkLink = events
         }
     }
 
@@ -52,6 +57,7 @@ class ReceiveSharingIntentPlugin(val registrar: Registrar) :
         when (arguments) {
             "media" -> eventSinkMedia = null
             "text" -> eventSinkText = null
+            "link" -> eventSinkLink = null
         }
     }
 
@@ -64,6 +70,7 @@ class ReceiveSharingIntentPlugin(val registrar: Registrar) :
         private val MESSAGES_CHANNEL = "receive_sharing_intent/messages"
         private val EVENTS_CHANNEL_MEDIA = "receive_sharing_intent/events-media"
         private val EVENTS_CHANNEL_TEXT = "receive_sharing_intent/events-text"
+        private val EVENTS_CHANNEL_LINK = "receive_sharing_intent/events-link"
 
         @JvmStatic
         fun registerWith(registrar: Registrar) {
@@ -83,6 +90,9 @@ class ReceiveSharingIntentPlugin(val registrar: Registrar) :
             val eChannelText = EventChannel(registrar.messenger(), EVENTS_CHANNEL_TEXT)
             eChannelText.setStreamHandler(instance)
 
+            val eChannelLink = EventChannel(registrar.messenger(), EVENTS_CHANNEL_LINK)
+            eChannelLink.setStreamHandler(instance)
+
             registrar.addNewIntentListener(instance)
         }
     }
@@ -92,11 +102,14 @@ class ReceiveSharingIntentPlugin(val registrar: Registrar) :
         when {
             call.method == "getInitialMedia" -> result.success(initialMedia?.toString())
             call.method == "getInitialText" -> result.success(initialText)
+            call.method == "getInitialLink" -> result.success(initialLink)
             call.method == "reset" -> {
                 initialMedia = null
                 latestMedia = null
                 initialText = null
                 latestText = null
+                initialLink = null
+                latestLink = null
                 result.success(null)
             }
             else -> result.notImplemented()
@@ -121,12 +134,12 @@ class ReceiveSharingIntentPlugin(val registrar: Registrar) :
                 latestText = value
                 eventSinkText?.success(latestText)
             }
-            // intent.action == Intent.ACTION_VIEW -> { // Opening URL
-            //     val value = intent.dataString
-            //     if (initial) initialText = value
-            //     latestText = value
-            //     eventSinkText?.success(latestText)
-            // }
+             intent.action == Intent.ACTION_VIEW -> { // Opening URL
+                 val value = intent.dataString
+                 if (initial) initialLink = value
+                 latestLink = value
+                 eventSinkLink?.success(latestLink)
+             }
         }
     }
 
