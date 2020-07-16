@@ -105,28 +105,39 @@ class ReceiveSharingIntentPlugin(val registrar: Registrar) :
 
     private fun handleIntent(context: Context, intent: Intent, initial: Boolean) {
         when {
-            (intent.type?.startsWith("text") != true)
-                    && (intent.action == Intent.ACTION_SEND
-                    || intent.action == Intent.ACTION_SEND_MULTIPLE) -> { // Sharing images or videos
+            //Media is sent
+            (intent.hasExtra(Intent.EXTRA_STREAM)) -> {
+                //val extras = intent.extras?.get(Intent.EXTRA_STREAM)
+                if (intent.action == Intent.ACTION_SEND || intent.action == Intent.ACTION_SEND_MULTIPLE) { // Sharing images or videos
 
-                val value = getMediaUris(context, intent)
-                if (initial) initialMedia = value
-                latestMedia = value
-                eventSinkMedia?.success(latestMedia?.toString())
+                    val value = getMediaUris(context, intent)
+                    if (initial) initialMedia = value
+                    latestMedia = value
+                    eventSinkMedia?.success(latestMedia?.toString())
+                }
+
             }
-            (intent.type == null || intent.type?.startsWith("text") == true)
-                    && intent.action == Intent.ACTION_SEND -> { // Sharing text
-                val value = intent.getStringExtra(Intent.EXTRA_TEXT)
-                if (initial) initialText = value
-                latestText = value
-                eventSinkText?.success(latestText)
+            //Text is sent
+            (intent.hasExtra(Intent.EXTRA_TEXT)) -> {
+
+                //Normal text shared
+                if (intent.type == null || intent.type?.startsWith("text") == true
+                        && intent.action == Intent.ACTION_SEND) { // Sharing text
+                    val value = intent.getStringExtra(Intent.EXTRA_TEXT)
+                    if (initial) initialText = value
+                    latestText = value
+                    eventSinkText?.success(latestText)
+                }
             }
+
             intent.action == Intent.ACTION_VIEW -> { // Opening URL
                 val value = intent.dataString
                 if (initial) initialText = value
                 latestText = value
                 eventSinkText?.success(latestText)
             }
+
+
         }
     }
 
