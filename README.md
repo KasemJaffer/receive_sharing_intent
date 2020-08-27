@@ -283,11 +283,10 @@ class ShareViewController: SLComposeServiceViewController {
             if error == nil, let url = data as? URL, let this = self {
 
                 // Always copy
-                let fileExtension = this.getExtension(from: url, type: .image)
-                let newName = UUID().uuidString
+                let fileName = this.getFileName(from: url, type: .image)
                 let newPath = FileManager.default
                     .containerURL(forSecurityApplicationGroupIdentifier: "group.\(this.hostAppBundleIdentifier)")!
-                    .appendingPathComponent("\(newName).\(fileExtension)")
+                    .appendingPathComponent(fileName)
                 let copied = this.copyFile(at: url, to: newPath)
                 if(copied) {
                     this.sharedMedia.append(SharedMediaFile(path: newPath.absoluteString, thumbnail: nil, duration: nil, type: .image))
@@ -313,11 +312,10 @@ class ShareViewController: SLComposeServiceViewController {
             if error == nil, let url = data as? URL, let this = self {
 
                 // Always copy
-                let fileExtension = this.getExtension(from: url, type: .video)
-                let newName = UUID().uuidString
+                let fileName = this.getFileName(from: url, type: .video)
                 let newPath = FileManager.default
                     .containerURL(forSecurityApplicationGroupIdentifier: "group.\(this.hostAppBundleIdentifier)")!
-                    .appendingPathComponent("\(newName).\(fileExtension)")
+                    .appendingPathComponent(fileName)
                 let copied = this.copyFile(at: url, to: newPath)
                 if(copied) {
                     guard let sharedFile = this.getSharedMediaFile(forVideo: newPath) else {
@@ -346,10 +344,10 @@ class ShareViewController: SLComposeServiceViewController {
             if error == nil, let url = data as? URL, let this = self {
 
                 // Always copy
-                let newName = this.getFileName(from :url)
+                let fileName = this.getFileName(from :url, type: .file)
                 let newPath = FileManager.default
                     .containerURL(forSecurityApplicationGroupIdentifier: "group.\(this.hostAppBundleIdentifier)")!
-                    .appendingPathComponent("\(newName)")
+                    .appendingPathComponent(fileName)
                 let copied = this.copyFile(at: url, to: newPath)
                 if (copied) {
                     this.sharedMedia.append(SharedMediaFile(path: newPath.absoluteString, thumbnail: nil, duration: nil, type: .file))
@@ -421,11 +419,11 @@ class ShareViewController: SLComposeServiceViewController {
         return ex ?? "Unknown"
     }
 
-    func getFileName(from url: URL) -> String {
+    func getFileName(from url: URL, type: SharedMediaType) -> String {
         var name = url.lastPathComponent
 
-        if (name == "") {
-            name = UUID().uuidString + "." + getExtension(from: url, type: .file)
+        if (name.isEmpty) {
+            name = UUID().uuidString + "." + getExtension(from: url, type: type)
         }
 
         return name
