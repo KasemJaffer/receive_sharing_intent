@@ -39,8 +39,6 @@ object FileDirectory {
                 if ("primary".equals(type, ignoreCase = true)) {
                     return Environment.getExternalStorageDirectory().toString() + "/" + split[1]
                 }
-
-                // TODO handle non-primary volumes
             } else if (isDownloadsDocument(uri)) {
                 val fileName = getFilePath(context, uri)
                 if (fileName != null) {
@@ -124,8 +122,6 @@ object FileDirectory {
                     val fileName = cursor.getString(columnIndex)
                     targetFile = File(context.cacheDir, fileName)
                 }
-            } catch (exception: Exception) {
-                Log.i("FileDirectory", "${exception}")
             } finally {
                 cursor?.close()
             }
@@ -190,9 +186,5 @@ object FileDirectory {
      */
     fun isMediaDocument(uri: Uri): Boolean {
         return "com.android.providers.media.documents" == uri.authority
-    }
-
-    fun isGoogleStorageDocument(uri: Uri): Boolean {
-        return "com.google.android.apps.docs.storage" == uri.authority
     }
 }
