@@ -8,14 +8,11 @@ import android.os.Build
 import android.os.Environment
 import android.provider.DocumentsContract
 import android.provider.MediaStore
+import android.util.Log
+import android.webkit.MimeTypeMap
 import java.io.File
 import java.io.FileOutputStream
 import java.util.*
-import android.webkit.MimeTypeMap
-import android.content.ContentResolver
-import android.media.ThumbnailUtils
-import android.util.Log
-
 
 object FileDirectory {
 
@@ -46,15 +43,20 @@ object FileDirectory {
 
                 // TODO handle non-primary volumes
             } else if (isDownloadsDocument(uri)) {
-                try {
-                    val id = DocumentsContract.getDocumentId(uri)
-                    val contentUri = ContentUris.withAppendedId(
-                            Uri.parse("content://downloads/public_downloads"), java.lang.Long.valueOf(id))
-
-                    return getDataColumn(context, contentUri, null, null)
-                } catch (exception: Exception) {
-                    return uri.path.substringAfter("raw:")
+                val fileName = getFilePath(context, uri)
+                if (fileName != null) {
+                    return Environment.getExternalStorageDirectory().toString() + "/Download/" + fileName
                 }
+
+                var id = DocumentsContract.getDocumentId(uri)
+                if (id.indexOf("raw:") != -1) {
+                    id = id.substringAfter("raw:")
+                    val file = File(id)
+                    if (file.exists()) return id
+                }
+
+                val contentUri = ContentUris.withAppendedId(Uri.parse("content://downloads/public_downloads"), java.lang.Long.valueOf(id))
+                return getDataColumn(context, contentUri, null, null)
             } else if (isMediaDocument(uri)) {
                 val docId = DocumentsContract.getDocumentId(uri)
                 val split = docId.split(":".toRegex()).dropLastWhile { it.isEmpty() }.toTypedArray()
@@ -81,6 +83,24 @@ object FileDirectory {
         return uri.path
     }
 
+    private fun getFilePath(context: Context, uri: Uri): String? {
+        var cursor: Cursor? = null
+        val projection = arrayOf(
+                MediaStore.MediaColumns.DISPLAY_NAME
+        )
+        try {
+            cursor = context.contentResolver.query(uri, projection, null, null,
+                    null)
+            if (cursor != null && cursor.moveToFirst()) {
+                val index = cursor.getColumnIndexOrThrow(MediaStore.MediaColumns.DISPLAY_NAME)
+                return cursor.getString(index)
+            }
+        } finally {
+            cursor?.close()
+        }
+        return null
+    }
+
     /**
      * Get the value of the data column for this Uri. This is useful for
      * MediaStore Uris, and other file-based ContentProviders.
@@ -99,14 +119,16 @@ object FileDirectory {
             val column = "_display_name"
             val projection = arrayOf(column)
             var targetFile: File? = null
+
             try {
                 cursor = context.contentResolver.query(uri, projection, selection, selectionArgs, null)
                 if (cursor != null && cursor.moveToFirst()) {
                     val columnIndex = cursor.getColumnIndexOrThrow(column)
                     val fileName = cursor.getString(columnIndex)
-                    Log.i("FileDirectory", "File name: $fileName")
                     targetFile = File(context.cacheDir, fileName)
                 }
+            } catch (exception: Exception) {
+                Log.i("FileDirectory", "${exception}")
             } finally {
                 cursor?.close()
             }
@@ -171,5 +193,9 @@ object FileDirectory {
      */
     fun isMediaDocument(uri: Uri): Boolean {
         return "com.android.providers.media.documents" == uri.authority
+    }
+
+    fun isGoogleStorageDocument(uri: Uri): Boolean {
+        return "com.google.android.apps.docs.storage" == uri.authority
     }
 }
