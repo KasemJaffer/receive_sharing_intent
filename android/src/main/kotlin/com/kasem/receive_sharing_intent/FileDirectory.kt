@@ -45,24 +45,22 @@ object FileDirectory {
 
                 // TODO handle non-primary volumes
             } else if (isDownloadsDocument(uri)) {
-                Log.i("FileDirectory", "Download document")
                 val fileName = getFilePath(context, uri)
                 if (fileName != null) {
-                    Log.i("FileDirectory", "Find file in 1 case")
+                    return "1"
                     return Environment.getExternalStorageDirectory().toString() + "/Download/" + fileName
                 }
 
                 var id = DocumentsContract.getDocumentId(uri)
-                Log.i("FileDirectory", "Compare in raw")
                 if (id.indexOf("raw:") != -1) {
-                    Log.i("FileDirectory", "Find file in 2 case")
                     id = id.substringAfter("raw:")
                     val file = File(id)
+                    return "2"
                     if (file.exists()) return id
                 }
 
-                Log.i("FileDirectory", "Compare in normal")
                 val contentUri = ContentUris.withAppendedId(Uri.parse("content://downloads/public_downloads"), java.lang.Long.valueOf(id))
+                return "3"
                 return getDataColumn(context, contentUri, null, null)
             } else if (isMediaDocument(uri)) {
                 val docId = DocumentsContract.getDocumentId(uri)
