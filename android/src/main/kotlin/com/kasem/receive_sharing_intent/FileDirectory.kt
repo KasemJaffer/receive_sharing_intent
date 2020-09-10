@@ -26,6 +26,7 @@ object FileDirectory {
      * @author paulburke
      */
     fun getAbsolutePath(context: Context, uri: Uri): String? {
+        Log.i("FileDirectory", "Comparing in uri")
 
         val isKitKat = Build.VERSION.SDK_INT >= Build.VERSION_CODES.KITKAT
 
@@ -33,6 +34,7 @@ object FileDirectory {
         if (isKitKat && DocumentsContract.isDocumentUri(context, uri)) {
             // ExternalStorageProvider
             if (isExternalStorageDocument(uri)) {
+                Log.i("FileDirectory", "Find as external storage docuument")
                 val docId = DocumentsContract.getDocumentId(uri)
                 val split = docId.split(":".toRegex()).dropLastWhile { it.isEmpty() }.toTypedArray()
                 val type = split[0]
@@ -78,13 +80,16 @@ object FileDirectory {
 
                 val selection = "_id=?"
                 val selectionArgs = arrayOf(split[1])
+                Log.i("FileDirectory", "Find as media")
                 return getDataColumn(context, contentUri, selection, selectionArgs)
             }// MediaProvider
             // DownloadsProvider
         } else if ("content".equals(uri.scheme, ignoreCase = true)) {
+            Log.i("FileDirectory", "Find as content")
             return getDataColumn(context, uri, null, null)
         }
 
+        Log.i("FileDirectory", "Not found")
         return uri.path
     }
 
