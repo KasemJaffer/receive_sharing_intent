@@ -26,15 +26,12 @@ object FileDirectory {
      * @author paulburke
      */
     fun getAbsolutePath(context: Context, uri: Uri): String? {
-        Log.i("FileDirectory", "Comparing in uri")
-
         val isKitKat = Build.VERSION.SDK_INT >= Build.VERSION_CODES.KITKAT
 
         // DocumentProvider
         if (isKitKat && DocumentsContract.isDocumentUri(context, uri)) {
             // ExternalStorageProvider
             if (isExternalStorageDocument(uri)) {
-                Log.i("FileDirectory", "Find as external storage docuument")
                 val docId = DocumentsContract.getDocumentId(uri)
                 val split = docId.split(":".toRegex()).dropLastWhile { it.isEmpty() }.toTypedArray()
                 val type = split[0]
@@ -54,12 +51,10 @@ object FileDirectory {
                 if (id.indexOf("raw:") != -1) {
                     id = id.substringAfter("raw:")
                     val file = File(id)
-                    return "2"
                     if (file.exists()) return id
                 }
 
                 val contentUri = ContentUris.withAppendedId(Uri.parse("content://downloads/public_downloads"), java.lang.Long.valueOf(id))
-                return "3"
                 return getDataColumn(context, contentUri, null, null)
             } else if (isMediaDocument(uri)) {
                 val docId = DocumentsContract.getDocumentId(uri)
@@ -77,16 +72,12 @@ object FileDirectory {
 
                 val selection = "_id=?"
                 val selectionArgs = arrayOf(split[1])
-                Log.i("FileDirectory", "Find as media")
                 return getDataColumn(context, contentUri, selection, selectionArgs)
             }// MediaProvider
             // DownloadsProvider
         } else if ("content".equals(uri.scheme, ignoreCase = true)) {
-            Log.i("FileDirectory", "Find as content")
             return getDataColumn(context, uri, null, null)
         }
-
-        Log.i("FileDirectory", "Not found")
         return uri.path
     }
 
