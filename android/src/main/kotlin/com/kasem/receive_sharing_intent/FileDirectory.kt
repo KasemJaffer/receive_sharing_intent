@@ -47,7 +47,7 @@ object FileDirectory {
             } else if (isDownloadsDocument(uri)) {
                 val fileName = getFilePath(context, uri)
                 if (fileName != null) {
-                    return "1"
+                    return fileName
                     return Environment.getExternalStorageDirectory().toString() + "/Download/" + fileName
                 }
 
@@ -97,8 +97,7 @@ object FileDirectory {
                 MediaStore.MediaColumns.DISPLAY_NAME
         )
         try {
-            cursor = context.contentResolver.query(uri, projection, null, null,
-                    null)
+            cursor = context.contentResolver.query(uri, projection, null, null, null)
             if (cursor != null && cursor.moveToFirst()) {
                 val index = cursor.getColumnIndexOrThrow(MediaStore.MediaColumns.DISPLAY_NAME)
                 return cursor.getString(index)
