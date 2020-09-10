@@ -47,7 +47,6 @@ object FileDirectory {
             } else if (isDownloadsDocument(uri)) {
                 val fileName = getFilePath(context, uri)
                 if (fileName != null) {
-                    return fileName
                     return Environment.getExternalStorageDirectory().toString() + "/Download/" + fileName
                 }
 
