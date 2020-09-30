@@ -94,6 +94,11 @@ android/app/src/main/manifest.xml
 
 If you want to launch it as a task independent of chrome, please add the following.
 
+AndroidManifest.xml
+```
+<activity android:launchMode="singleTask" ... >...</activity>
+```
+
 android/app/main/kotlin/.../MainActivity.kt
 ```
 import android.os.Bundle
