@@ -8,14 +8,11 @@ import android.os.Build
 import android.os.Environment
 import android.provider.DocumentsContract
 import android.provider.MediaStore
+import android.util.Log
+import android.webkit.MimeTypeMap
 import java.io.File
 import java.io.FileOutputStream
 import java.util.*
-import android.webkit.MimeTypeMap
-import android.content.ContentResolver
-import android.media.ThumbnailUtils
-import android.util.Log
-
 
 object FileDirectory {
 
@@ -29,6 +26,7 @@ object FileDirectory {
      * @author paulburke
      */
     fun getAbsolutePath(context: Context, uri: Uri): String? {
+        Log.i("FileDirectory", "Comparing in uri")
 
         val isKitKat = Build.VERSION.SDK_INT >= Build.VERSION_CODES.KITKAT
 
@@ -36,6 +34,7 @@ object FileDirectory {
         if (isKitKat && DocumentsContract.isDocumentUri(context, uri)) {
             // ExternalStorageProvider
             if (isExternalStorageDocument(uri)) {
+                Log.i("FileDirectory", "Find as external storage docuument")
                 val docId = DocumentsContract.getDocumentId(uri)
                 val split = docId.split(":".toRegex()).dropLastWhile { it.isEmpty() }.toTypedArray()
                 val type = split[0]
@@ -46,11 +45,22 @@ object FileDirectory {
 
                 // TODO handle non-primary volumes
             } else if (isDownloadsDocument(uri)) {
+                val fileName = getFilePath(context, uri)
+                if (fileName != null) {
+                    return "1"
+                    return Environment.getExternalStorageDirectory().toString() + "/Download/" + fileName
+                }
 
-                val id = DocumentsContract.getDocumentId(uri)
-                val contentUri = ContentUris.withAppendedId(
-                        Uri.parse("content://downloads/public_downloads"), java.lang.Long.valueOf(id))
+                var id = DocumentsContract.getDocumentId(uri)
+                if (id.indexOf("raw:") != -1) {
+                    id = id.substringAfter("raw:")
+                    val file = File(id)
+                    return "2"
+                    if (file.exists()) return id
+                }
 
+                val contentUri = ContentUris.withAppendedId(Uri.parse("content://downloads/public_downloads"), java.lang.Long.valueOf(id))
+                return "3"
                 return getDataColumn(context, contentUri, null, null)
             } else if (isMediaDocument(uri)) {
                 val docId = DocumentsContract.getDocumentId(uri)
@@ -68,14 +78,35 @@ object FileDirectory {
 
                 val selection = "_id=?"
                 val selectionArgs = arrayOf(split[1])
+                Log.i("FileDirectory", "Find as media")
                 return getDataColumn(context, contentUri, selection, selectionArgs)
             }// MediaProvider
             // DownloadsProvider
         } else if ("content".equals(uri.scheme, ignoreCase = true)) {
+            Log.i("FileDirectory", "Find as content")
             return getDataColumn(context, uri, null, null)
         }
 
+        Log.i("FileDirectory", "Not found")
         return uri.path
+    }
+
+    private fun getFilePath(context: Context, uri: Uri): String? {
+        var cursor: Cursor? = null
+        val projection = arrayOf(
+                MediaStore.MediaColumns.DISPLAY_NAME
+        )
+        try {
+            cursor = context.contentResolver.query(uri, projection, null, null,
+                    null)
+            if (cursor != null && cursor.moveToFirst()) {
+                val index = cursor.getColumnIndexOrThrow(MediaStore.MediaColumns.DISPLAY_NAME)
+                return cursor.getString(index)
+            }
+        } finally {
+            cursor?.close()
+        }
+        return null
     }
 
     /**
@@ -96,14 +127,16 @@ object FileDirectory {
             val column = "_display_name"
             val projection = arrayOf(column)
             var targetFile: File? = null
+
             try {
                 cursor = context.contentResolver.query(uri, projection, selection, selectionArgs, null)
                 if (cursor != null && cursor.moveToFirst()) {
                     val columnIndex = cursor.getColumnIndexOrThrow(column)
                     val fileName = cursor.getString(columnIndex)
-                    Log.i("FileDirectory", "File name: $fileName")
                     targetFile = File(context.cacheDir, fileName)
                 }
+            } catch (exception: Exception) {
+                Log.i("FileDirectory", "${exception}")
             } finally {
                 cursor?.close()
             }
@@ -168,5 +201,9 @@ object FileDirectory {
      */
     fun isMediaDocument(uri: Uri): Boolean {
         return "com.android.providers.media.documents" == uri.authority
+    }
+
+    fun isGoogleStorageDocument(uri: Uri): Boolean {
+        return "com.google.android.apps.docs.storage" == uri.authority
     }
 }
