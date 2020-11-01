@@ -1,0 +1,100 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<project version="4">
+  <component name="AutoImportSettings">
+    <option name="autoReloadType" value="NONE" />
+  </component>
+  <component name="ChangeListManager">
+    <list default="true" id="9a0b4624-fc53-4452-9e1a-3167eb4bfbc7" name="Default Changelist" comment="">
+      <change beforePath="$PROJECT_DIR$/android/build.gradle" beforeDir="false" afterPath="$PROJECT_DIR$/android/build.gradle" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/android/gradle.properties" beforeDir="false" afterPath="$PROJECT_DIR$/android/gradle.properties" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/android/gradle/wrapper/gradle-wrapper.properties" beforeDir="false" afterPath="$PROJECT_DIR$/android/gradle/wrapper/gradle-wrapper.properties" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/android/gradlew" beforeDir="false" afterPath="$PROJECT_DIR$/android/gradlew" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/android/src/main/kotlin/com/kasem/receive_sharing_intent/ReceiveSharingIntentPlugin.kt" beforeDir="false" afterPath="$PROJECT_DIR$/android/src/main/kotlin/com/kasem/receive_sharing_intent/ReceiveSharingIntentPlugin.kt" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/example/android/app/build.gradle" beforeDir="false" afterPath="$PROJECT_DIR$/example/android/app/build.gradle" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/example/android/app/src/main/AndroidManifest.xml" beforeDir="false" afterPath="$PROJECT_DIR$/example/android/app/src/main/AndroidManifest.xml" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/example/android/app/src/main/kotlin/com/kasem/receive_sharing_intent_example/MainActivity.kt" beforeDir="false" afterPath="$PROJECT_DIR$/example/android/app/src/main/kotlin/com/kasem/receive_sharing_intent_example/MainActivity.kt" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/example/android/build.gradle" beforeDir="false" afterPath="$PROJECT_DIR$/example/android/build.gradle" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/example/android/gradle.properties" beforeDir="false" afterPath="$PROJECT_DIR$/example/android/gradle.properties" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/example/android/gradle/wrapper/gradle-wrapper.properties" beforeDir="false" afterPath="$PROJECT_DIR$/example/android/gradle/wrapper/gradle-wrapper.properties" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/pubspec.lock" beforeDir="false" afterPath="$PROJECT_DIR$/pubspec.lock" afterDir="false" />
+    </list>
+    <option name="SHOW_DIALOG" value="false" />
+    <option name="HIGHLIGHT_CONFLICTS" value="true" />
+    <option name="HIGHLIGHT_NON_ACTIVE_CHANGELIST" value="false" />
+    <option name="LAST_RESOLUTION" value="IGNORE" />
+  </component>
+  <component name="Git.Settings">
+    <option name="RECENT_GIT_ROOT_PATH" value="$PROJECT_DIR$" />
+  </component>
+  <component name="ProjectId" id="1jR7yHLzktTM0sfHwADcyso6VVy" />
+  <component name="ProjectViewState">
+    <option name="hideEmptyMiddlePackages" value="true" />
+    <option name="showLibraryContents" value="true" />
+  </component>
+  <component name="PropertiesComponent">
+    <property name="RunOnceActivity.OpenProjectViewOnStart" value="true" />
+    <property name="RunOnceActivity.ShowReadmeOnStart" value="true" />
+    <property name="android.sdk.path" value="$USER_HOME$/Library/Android/sdk" />
+    <property name="dart.analysis.tool.window.visible" value="false" />
+    <property name="io.flutter.reload.alreadyRun" value="true" />
+    <property name="last_opened_file_path" value="$PROJECT_DIR$" />
+    <property name="settings.editor.selected.configurable" value="AndroidSdkUpdater" />
+    <property name="show.migrate.to.gradle.popup" value="false" />
+  </component>
+  <component name="RunManager">
+    <configuration name="main.dart" type="FlutterRunConfigurationType" factoryName="Flutter">
+      <option name="filePath" value="$PROJECT_DIR$/example/lib/main.dart" />
+      <method v="2" />
+    </configuration>
+  </component>
+  <component name="SvnConfiguration">
+    <configuration />
+  </component>
+  <component name="TaskManager">
+    <task active="true" id="Default" summary="Default task">
+      <changelist id="9a0b4624-fc53-4452-9e1a-3167eb4bfbc7" name="Default Changelist" comment="" />
+      <created>1603755303914</created>
+      <option name="number" value="Default" />
+      <option name="presentableId" value="Default" />
+      <updated>1603755303914</updated>
+    </task>
+    <servers />
+  </component>
+  <component name="UnknownFeatures">
+    <option featureType="com.intellij.fileTypeFactory" implementationName="*.md" />
+  </component>
+  <component name="WindowStateProjectService">
+    <state width="1098" height="256" key="GridCell.Tab.0.bottom" timestamp="1604253431640">
+      <screen x="0" y="23" width="1680" height="995" />
+    </state>
+    <state width="1098" height="256" key="GridCell.Tab.0.bottom/0.23.1680.995@0.23.1680.995" timestamp="1604253431640" />
+    <state width="1098" height="256" key="GridCell.Tab.0.center" timestamp="1604253431639">
+      <screen x="0" y="23" width="1680" height="995" />
+    </state>
+    <state width="1098" height="256" key="GridCell.Tab.0.center/0.23.1680.995@0.23.1680.995" timestamp="1604253431639" />
+    <state width="1098" height="256" key="GridCell.Tab.0.left" timestamp="1604253431639">
+      <screen x="0" y="23" width="1680" height="995" />
+    </state>
+    <state width="1098" height="256" key="GridCell.Tab.0.left/0.23.1680.995@0.23.1680.995" timestamp="1604253431639" />
+    <state width="1098" height="256" key="GridCell.Tab.0.right" timestamp="1604253431639">
+      <screen x="0" y="23" width="1680" height="995" />
+    </state>
+    <state width="1098" height="256" key="GridCell.Tab.0.right/0.23.1680.995@0.23.1680.995" timestamp="1604253431639" />
+    <state width="1098" height="256" key="GridCell.Tab.1.bottom" timestamp="1604253431640">
+      <screen x="0" y="23" width="1680" height="995" />
+    </state>
+    <state width="1098" height="256" key="GridCell.Tab.1.bottom/0.23.1680.995@0.23.1680.995" timestamp="1604253431640" />
+    <state width="1098" height="256" key="GridCell.Tab.1.center" timestamp="1604253431640">
+      <screen x="0" y="23" width="1680" height="995" />
+    </state>
+    <state width="1098" height="256" key="GridCell.Tab.1.center/0.23.1680.995@0.23.1680.995" timestamp="1604253431640" />
+    <state width="1098" height="256" key="GridCell.Tab.1.left" timestamp="1604253431640">
+      <screen x="0" y="23" width="1680" height="995" />
+    </state>
+    <state width="1098" height="256" key="GridCell.Tab.1.left/0.23.1680.995@0.23.1680.995" timestamp="1604253431640" />
+    <state width="1098" height="256" key="GridCell.Tab.1.right" timestamp="1604253431640">
+      <screen x="0" y="23" width="1680" height="995" />
+    </state>
+    <state width="1098" height="256" key="GridCell.Tab.1.right/0.23.1680.995@0.23.1680.995" timestamp="1604253431640" />
+  </component>
+</project>

@@ -9,7 +9,6 @@
          additional functionality it is fine to subclass or reimplement
          FlutterApplication and put your custom class here. -->
     <application
-        android:name="io.flutter.app.FlutterApplication"
         android:label="receive_sharing_intent_example"
         android:icon="@mipmap/ic_launcher">
         <activity
@@ -70,5 +69,9 @@
                 <data android:mimeType="video/*" />
             </intent-filter>
         </activity>
+
+        <meta-data
+            android:name="flutterEmbedding"
+            android:value="2" />
     </application>
 </manifest>
