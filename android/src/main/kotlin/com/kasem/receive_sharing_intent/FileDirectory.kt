@@ -40,18 +40,21 @@ object FileDirectory {
                 val split = docId.split(":".toRegex()).dropLastWhile { it.isEmpty() }.toTypedArray()
                 val type = split[0]
 
-                if ("primary".equals(type, ignoreCase = true)) {
-                    return Environment.getExternalStorageDirectory().toString() + "/" + split[1]
+                return if ("primary".equals(type, ignoreCase = true)) {
+                    Environment.getExternalStorageDirectory().toString() + "/" + split[1]
+                } else {
+                    getDataColumn(context, uri, null, null)
                 }
-
-                // TODO handle non-primary volumes
             } else if (isDownloadsDocument(uri)) {
+                return try {
+                    val id = DocumentsContract.getDocumentId(uri)
+                    val contentUri = ContentUris.withAppendedId(
+                            Uri.parse("content://downloads/public_downloads"), java.lang.Long.valueOf(id))
 
-                val id = DocumentsContract.getDocumentId(uri)
-                val contentUri = ContentUris.withAppendedId(
-                        Uri.parse("content://downloads/public_downloads"), java.lang.Long.valueOf(id))
-
-                return getDataColumn(context, contentUri, null, null)
+                    getDataColumn(context, contentUri, null, null)
+                } catch (exception: Exception) {
+                    getDataColumn(context, uri, null, null)
+                }
             } else if (isMediaDocument(uri)) {
                 val docId = DocumentsContract.getDocumentId(uri)
                 val split = docId.split(":".toRegex()).dropLastWhile { it.isEmpty() }.toTypedArray()
