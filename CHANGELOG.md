@@ -1,3 +1,8 @@
+## 1.4.2
+
+* Migrage to flutter android embedding v2
+* Fix crash while getting raw files path on Android
+
 ## 1.4.1
 
 * Preserve original file name
