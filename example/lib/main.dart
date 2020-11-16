@@ -38,22 +38,41 @@ class _MyAppState extends State<MyApp> {
       });
     });
 
-    // For sharing or opening urls/text coming from outside the app while the app is in the memory
+    // For sharing or opening text coming from outside the app while the app is in the memory
     _intentDataStreamSubscription =
         ReceiveSharingIntent.getTextStream().listen((String value) {
-      setState(() {
-        _sharedText = value;
-        print("Shared: $_sharedText");
-      });
-    }, onError: (err) {
-      print("getLinkStream error: $err");
-    });
+          setState(() {
+            _sharedText = value;
+            print("Shared text: $_sharedText");
+          });
+        }, onError: (err) {
+          print("getTextStream error: $err");
+        });
 
-    // For sharing or opening urls/text coming from outside the app while the app is closed
+    // For sharing or opening text coming from outside the app while the app is closed
     ReceiveSharingIntent.getInitialText().then((String value) {
       setState(() {
         _sharedText = value;
-        print("Shared: $_sharedText");
+        print("Shared text: $_sharedText");
+      });
+    });
+
+    // For sharing or opening urls coming from outside the app while the app is in the memory
+    _intentDataStreamSubscription =
+        ReceiveSharingIntent.getLinkStream().listen((String value) {
+          setState(() {
+            _sharedText = value;
+            print("Shared link: $_sharedText");
+          });
+        }, onError: (err) {
+          print("getLinkStream error: $err");
+        });
+
+    // For sharing or opening urls coming from outside the app while the app is closed
+    ReceiveSharingIntent.getInitialLink().then((String value) {
+      setState(() {
+        _sharedText = value;
+        print("Shared link: $_sharedText");
       });
     });
   }
@@ -77,9 +96,9 @@ class _MyAppState extends State<MyApp> {
             children: <Widget>[
               Text("Shared files:", style: textStyleBold),
               Text(_sharedFiles
-                      ?.map((f) =>
-                          "{Path: ${f.path}, Type: ${f.type.toString().replaceFirst("SharedMediaType.", "")}}\n")
-                      ?.join(",\n") ??
+                  ?.map((f) =>
+              "{Path: ${f.path}, Type: ${f.type.toString().replaceFirst("SharedMediaType.", "")}}\n")
+                  ?.join(",\n") ??
                   ""),
               SizedBox(height: 100),
               Text("Shared urls/text:", style: textStyleBold),
