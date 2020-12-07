@@ -1,3 +1,14 @@
+## 1.4.2
+
+* Migrage to flutter android embedding v2
+* Fix crash while getting raw files path on Android
+
+## 1.4.1
+
+* Preserve original file name
+
+Note. Updating your Sharing Extension Class is required (please check that in the example project)
+
 ## 1.4.0
 
 * Added support for sharing any type of file

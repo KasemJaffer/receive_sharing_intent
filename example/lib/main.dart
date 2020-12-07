@@ -78,8 +78,8 @@ class _MyAppState extends State<MyApp> {
               Text("Shared files:", style: textStyleBold),
               Text(_sharedFiles
                       ?.map((f) =>
-                          "{Path: ${f.path}, Type: ${f.type.toString().replaceFirst("SharedMediaType.", "")}\n")
-                      ?.join(",") ??
+                          "{Path: ${f.path}, Type: ${f.type.toString().replaceFirst("SharedMediaType.", "")}}\n")
+                      ?.join(",\n") ??
                   ""),
               SizedBox(height: 100),
               Text("Shared urls/text:", style: textStyleBold),
