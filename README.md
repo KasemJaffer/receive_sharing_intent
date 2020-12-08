@@ -305,18 +305,39 @@ class ShareViewController: SLComposeServiceViewController {
         }
     }
 
-    private func handleImages (content: NSExtensionItem, attachment: NSItemProvider, index: Int) {
+    private func handleImages(content: NSExtensionItem, attachment: NSItemProvider, index: Int) {
         attachment.loadItem(forTypeIdentifier: imageContentType, options: nil) { [weak self] data, error in
-
-            if error == nil, let url = data as? URL, let this = self {
-
+            
+            if error == nil, let this = self {
+                
                 // Always copy
-                let fileName = this.getFileName(from: url, type: .image)
+
+                let fileExtension: String = {
+                    if let url = data as? URL {
+                        return this.getExtension(from: url, type: .image)
+                    }
+                    if data is UIImage {
+                        return "png"
+                    }
+                    return ""
+                }()
+                
+                let newName = UUID().uuidString
                 let newPath = FileManager.default
                     .containerURL(forSecurityApplicationGroupIdentifier: "group.\(this.hostAppBundleIdentifier)")!
-                    .appendingPathComponent(fileName)
-                let copied = this.copyFile(at: url, to: newPath)
-                if(copied) {
+                    .appendingPathComponent("\(newName).\(fileExtension)")
+                
+                var copied = false
+                if let url = data as? URL {
+                    copied = this.copyFile(at: url, to: newPath)
+                }
+                if let image = data as? UIImage, let imageData = image.pngData() {
+                    do {
+                        try imageData.write(to: newPath)
+                        copied = true
+                    } catch {}
+                }
+                if copied {
                     this.sharedMedia.append(SharedMediaFile(path: newPath.absoluteString, thumbnail: nil, duration: nil, type: .image))
                 }
 
@@ -329,7 +350,7 @@ class ShareViewController: SLComposeServiceViewController {
                 }
 
             } else {
-                 self?.dismissWithError()
+                self?.dismissWithError()
             }
         }
     }
