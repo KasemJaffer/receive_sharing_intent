@@ -100,30 +100,53 @@ class ShareViewController: SLComposeServiceViewController {
     }
     
     private func handleImages (content: NSExtensionItem, attachment: NSItemProvider, index: Int) {
+        
+        func completed(copied: Bool, newPath: URL) {
+            if(copied) {
+                sharedMedia.append(SharedMediaFile(path: newPath.absoluteString, thumbnail: nil, duration: nil, type: .image))
+            }
+            
+            // If this is the last item, save imagesData in userDefaults and redirect to host app
+            if index == (content.attachments?.count)! - 1 {
+                let userDefaults = UserDefaults(suiteName: "group.\(hostAppBundleIdentifier)")
+                userDefaults?.set(toData(data: sharedMedia), forKey: sharedKey)
+                userDefaults?.synchronize()
+                redirectToHostApp(type: .media)
+            }
+        }
+        
         attachment.loadItem(forTypeIdentifier: imageContentType, options: nil) { [weak self] data, error in
             
-            if error == nil, let url = data as? URL, let this = self {
+            if error == nil, let this = self {
                 
-                // Always copy
-                let fileName = this.getFileName(from: url, type: .image)
-                let newPath = FileManager.default
+                let groupRootURL = FileManager.default
                     .containerURL(forSecurityApplicationGroupIdentifier: "group.\(this.hostAppBundleIdentifier)")!
-                    .appendingPathComponent(fileName)
-                let copied = this.copyFile(at: url, to: newPath)
-                if(copied) {
-                    this.sharedMedia.append(SharedMediaFile(path: newPath.absoluteString, thumbnail: nil, duration: nil, type: .image))
-                }
                 
-                // If this is the last item, save imagesData in userDefaults and redirect to host app
-                if index == (content.attachments?.count)! - 1 {
-                    let userDefaults = UserDefaults(suiteName: "group.\(this.hostAppBundleIdentifier)")
-                    userDefaults?.set(this.toData(data: this.sharedMedia), forKey: this.sharedKey)
-                    userDefaults?.synchronize()
-                    this.redirectToHostApp(type: .media)
+                if let url = data as? URL {
+                    // Always copy
+                    let fileName = this.getFileName(from: url, type: .image)
+                    let newPath = groupRootURL.appendingPathComponent(fileName)
+                    let copied = this.copyFile(at: url, to: newPath)
+                    completed(copied: copied, newPath: newPath)
+                } else if let image = data as? UIImage,
+                          let jpegData = UIImageJPEGRepresentation(image, 1.0) {
+                    
+                    let fileName = "\(Int64(Date().timeIntervalSince1970)).jpg"
+                    let newPath = groupRootURL.appendingPathComponent(fileName)
+                    
+                    var copied = false
+                    do {
+                        try jpegData.write(to: newPath)
+                        copied = true
+                    } catch {
+                        
+                    }
+                    completed(copied: copied, newPath: newPath)
+                } else {
+                    self?.dismissWithError()
                 }
-                
             } else {
-                 self?.dismissWithError()
+                self?.dismissWithError()
             }
         }
     }
@@ -155,16 +178,16 @@ class ShareViewController: SLComposeServiceViewController {
                 }
                 
             } else {
-                 self?.dismissWithError()
+                self?.dismissWithError()
             }
         }
     }
     
     private func handleFiles (content: NSExtensionItem, attachment: NSItemProvider, index: Int) {
         attachment.loadItem(forTypeIdentifier: fileURLType, options: nil) { [weak self] data, error in
-
+            
             if error == nil, let url = data as? URL, let this = self {
-
+                
                 // Always copy
                 let fileName = this.getFileName(from :url, type: .file)
                 let newPath = FileManager.default
@@ -174,14 +197,14 @@ class ShareViewController: SLComposeServiceViewController {
                 if (copied) {
                     this.sharedMedia.append(SharedMediaFile(path: newPath.absoluteString, thumbnail: nil, duration: nil, type: .file))
                 }
-
+                
                 if index == (content.attachments?.count)! - 1 {
                     let userDefaults = UserDefaults(suiteName: "group.\(this.hostAppBundleIdentifier)")
                     userDefaults?.set(this.toData(data: this.sharedMedia), forKey: this.sharedKey)
                     userDefaults?.synchronize()
                     this.redirectToHostApp(type: .file)
                 }
-
+                
             } else {
                 self?.dismissWithError()
             }
@@ -191,7 +214,7 @@ class ShareViewController: SLComposeServiceViewController {
     private func dismissWithError() {
         print("[ERROR] Error loading data!")
         let alert = UIAlertController(title: "Error", message: "Error loading data", preferredStyle: .alert)
-
+        
         let action = UIAlertAction(title: "Error", style: .cancel) { _ in
             self.dismiss(animated: true, completion: nil)
         }
@@ -230,12 +253,12 @@ class ShareViewController: SLComposeServiceViewController {
         
         if (ex == nil) {
             switch type {
-                case .image:
-                    ex = "PNG"
-                case .video:
-                    ex = "MP4"
-                case .file:
-                    ex = "TXT"
+            case .image:
+                ex = "PNG"
+            case .video:
+                ex = "MP4"
+            case .file:
+                ex = "TXT"
             }
         }
         return ex ?? "Unknown"
@@ -311,7 +334,7 @@ class ShareViewController: SLComposeServiceViewController {
             self.duration = duration
             self.type = type
         }
-
+        
         // Debug method to print out SharedMediaFile details in the console
         func toString() {
             print("[SharedMediaFile] \n\tpath: \(self.path)\n\tthumbnail: \(self.thumbnail)\n\tduration: \(self.duration)\n\ttype: \(self.type)")
