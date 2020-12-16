@@ -27,6 +27,7 @@ import java.net.URLConnection
 private const val MESSAGES_CHANNEL = "receive_sharing_intent/messages"
 private const val EVENTS_CHANNEL_MEDIA = "receive_sharing_intent/events-media"
 private const val EVENTS_CHANNEL_TEXT = "receive_sharing_intent/events-text"
+private const val EVENTS_CHANNEL_LINK = "receive_sharing_intent/events-link"
 
 class ReceiveSharingIntentPlugin : FlutterPlugin, ActivityAware, MethodCallHandler,
         EventChannel.StreamHandler, NewIntentListener {
@@ -37,8 +38,12 @@ class ReceiveSharingIntentPlugin : FlutterPlugin, ActivityAware, MethodCallHandl
     private var initialText: String? = null
     private var latestText: String? = null
 
+    private var initialLink: String? = null
+    private var latestLink: String? = null
+
     private var eventSinkMedia: EventChannel.EventSink? = null
     private var eventSinkText: EventChannel.EventSink? = null
+    private var eventSinkLink: EventChannel.EventSink? = null
 
     private var binding: ActivityPluginBinding? = null
     private lateinit var applicationContext: Context
@@ -52,6 +57,9 @@ class ReceiveSharingIntentPlugin : FlutterPlugin, ActivityAware, MethodCallHandl
 
         val eChannelText = EventChannel(binaryMessenger, EVENTS_CHANNEL_TEXT)
         eChannelText.setStreamHandler(this)
+
+        val eChannelLink = EventChannel(binaryMessenger, EVENTS_CHANNEL_LINK)
+        eChannelLink.setStreamHandler(this)
     }
 
     override fun onAttachedToEngine(binding: FlutterPlugin.FlutterPluginBinding) {
@@ -66,6 +74,7 @@ class ReceiveSharingIntentPlugin : FlutterPlugin, ActivityAware, MethodCallHandl
         when (arguments) {
             "media" -> eventSinkMedia = events
             "text" -> eventSinkText = events
+            "link" -> eventSinkLink = events
         }
     }
 
@@ -73,6 +82,7 @@ class ReceiveSharingIntentPlugin : FlutterPlugin, ActivityAware, MethodCallHandl
         when (arguments) {
             "media" -> eventSinkMedia = null
             "text" -> eventSinkText = null
+            "link" -> eventSinkLink = null
         }
     }
 
@@ -94,16 +104,18 @@ class ReceiveSharingIntentPlugin : FlutterPlugin, ActivityAware, MethodCallHandl
         }
     }
 
-
     override fun onMethodCall(call: MethodCall, result: Result) {
         when (call.method) {
             "getInitialMedia" -> result.success(initialMedia?.toString())
             "getInitialText" -> result.success(initialText)
+            "getInitialLink" -> result.success(initialLink)
             "reset" -> {
                 initialMedia = null
                 latestMedia = null
                 initialText = null
                 latestText = null
+                initialLink = null
+                latestLink = null
                 result.success(null)
             }
             else -> result.notImplemented()
@@ -130,9 +142,9 @@ class ReceiveSharingIntentPlugin : FlutterPlugin, ActivityAware, MethodCallHandl
             }
             intent.action == Intent.ACTION_VIEW -> { // Opening URL
                 val value = intent.dataString
-                if (initial) initialText = value
-                latestText = value
-                eventSinkText?.success(latestText)
+                if (initial) initialLink = value
+                latestLink = value
+                eventSinkLink?.success(latestLink)
             }
         }
     }

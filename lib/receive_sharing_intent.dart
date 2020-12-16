@@ -5,13 +5,16 @@ import 'package:flutter/services.dart';
 
 class ReceiveSharingIntent {
   static const MethodChannel _mChannel =
-      const MethodChannel('receive_sharing_intent/messages');
+  const MethodChannel('receive_sharing_intent/messages');
   static const EventChannel _eChannelMedia =
-      const EventChannel("receive_sharing_intent/events-media");
+  const EventChannel("receive_sharing_intent/events-media");
+  static const EventChannel _eChannelText =
+  const EventChannel("receive_sharing_intent/events-text");
   static const EventChannel _eChannelLink =
-      const EventChannel("receive_sharing_intent/events-text");
+  const EventChannel("receive_sharing_intent/events-link");
 
   static Stream<List<SharedMediaFile>> _streamMedia;
+  static Stream<String> _streamText;
   static Stream<String> _streamLink;
 
   /// Returns a [Future], which completes to one of the following:
@@ -32,10 +35,18 @@ class ReceiveSharingIntent {
 
   /// Returns a [Future], which completes to one of the following:
   ///
-  ///   * the initially stored link (possibly null), on successful invocation;
+  ///   * the initially stored text (possibly null), on successful invocation;
   ///   * a [PlatformException], if the invocation failed in the platform plugin.
   static Future<String> getInitialText() async {
     return await _mChannel.invokeMethod('getInitialText');
+  }
+
+  /// Returns a [Future], which completes to one of the following:
+  ///
+  ///   * the initially stored link (possibly null), on successful invocation;
+  ///   * a [PlatformException], if the invocation failed in the platform plugin.
+  static Future<String> getInitialLink() async {
+    return await _mChannel.invokeMethod('getInitialLink');
   }
 
   /// A convenience method that returns the initially stored link
@@ -43,8 +54,8 @@ class ReceiveSharingIntent {
   ///
   /// If the link is not valid as a URI or URI reference,
   /// a [FormatException] is thrown.
-  static Future<Uri> getInitialTextAsUri() async {
-    final String data = await getInitialText();
+  static Future<Uri> getInitialLinkAsUri() async {
+    final String data = await getInitialLink();
     if (data == null) return null;
     return Uri.parse(data);
   }
@@ -68,7 +79,7 @@ class ReceiveSharingIntent {
   static Stream<List<SharedMediaFile>> getMediaStream() {
     if (_streamMedia == null) {
       final stream =
-          _eChannelMedia.receiveBroadcastStream("media").cast<String>();
+      _eChannelMedia.receiveBroadcastStream("media").cast<String>();
       _streamMedia = stream.transform<List<SharedMediaFile>>(
         new StreamTransformer<String, List<SharedMediaFile>>.fromHandlers(
           handleData: (String data, EventSink<List<SharedMediaFile>> sink) {
@@ -88,6 +99,29 @@ class ReceiveSharingIntent {
     return _streamMedia;
   }
 
+  /// Sets up a broadcast stream for receiving incoming text change events.
+  ///
+  /// Returns a broadcast [Stream] which emits events to listeners as follows:
+  ///
+  ///   * a decoded data ([String]) event (possibly null) for each successful
+  ///   event received from the platform plugin;
+  ///   * an error event containing a [PlatformException] for each error event
+  ///   received from the platform plugin.
+  ///
+  /// Errors occurring during stream activation or deactivation are reported
+  /// through the `FlutterError` facility. Stream activation happens only when
+  /// stream listener count changes from 0 to 1. Stream deactivation happens
+  /// only when stream listener count changes from 1 to 0.
+  ///
+  /// If the app was started by a text intent or user activity the stream will
+  /// not emit that initial one - query either the `getInitialText` instead.
+  static Stream<String> getTextStream() {
+    if (_streamText == null) {
+      _streamText = _eChannelText.receiveBroadcastStream("text").cast<String>();
+    }
+    return _streamText;
+  }
+
   /// Sets up a broadcast stream for receiving incoming link change events.
   ///
   /// Returns a broadcast [Stream] which emits events to listeners as follows:
@@ -103,10 +137,10 @@ class ReceiveSharingIntent {
   /// only when stream listener count changes from 1 to 0.
   ///
   /// If the app was started by a link intent or user activity the stream will
-  /// not emit that initial one - query either the `getInitialText` instead.
-  static Stream<String> getTextStream() {
+  /// not emit that initial one - query either the `getInitialLink` instead.
+  static Stream<String> getLinkStream() {
     if (_streamLink == null) {
-      _streamLink = _eChannelLink.receiveBroadcastStream("text").cast<String>();
+      _streamLink = _eChannelLink.receiveBroadcastStream("link").cast<String>();
     }
     return _streamLink;
   }
@@ -116,12 +150,12 @@ class ReceiveSharingIntent {
   /// If the value is not valid as a URI or URI reference,
   /// a [FormatException] is thrown.
   ///
-  /// Refer to `getTextStream` about error/exception details.
+  /// Refer to `getLinkStream` about error/exception details.
   ///
   /// If the app was started by a share intent or user activity the stream will
-  /// not emit that initial uri - query either the `getInitialTextAsUri` instead.
-  static Stream<Uri> getTextStreamAsUri() {
-    return getTextStream().transform<Uri>(
+  /// not emit that initial uri - query either the `getInitialLinkAsUri` instead.
+  static Stream<Uri> getLinkStreamAsUri() {
+    return getLinkStream().transform<Uri>(
       new StreamTransformer<String, Uri>.fromHandlers(
         handleData: (String data, EventSink<Uri> sink) {
           if (data == null) {
