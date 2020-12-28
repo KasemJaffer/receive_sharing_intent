@@ -7,6 +7,8 @@ public class SwiftReceiveSharingIntentPlugin: NSObject, FlutterPlugin, FlutterSt
     static let kEventsChannelMedia = "receive_sharing_intent/events-media";
     static let kEventsChannelLink = "receive_sharing_intent/events-text";
     
+    private var customLinkPrefix = "ShareMedia";
+    
     private var initialMedia: [SharedMediaFile]? = nil
     private var latestMedia: [SharedMediaFile]? = nil
     
@@ -49,28 +51,67 @@ public class SwiftReceiveSharingIntentPlugin: NSObject, FlutterPlugin, FlutterSt
             result(FlutterMethodNotImplemented);
         }
     }
-    
-    public func application(_ application: UIApplication, didFinishLaunchingWithOptions launchOptions: [AnyHashable : Any] = [:]) -> Bool {
-        if let url = launchOptions[UIApplication.LaunchOptionsKey.url] as? URL {
-            return handleUrl(url: url, setInitialData: true)
-        } else if let activityDictionary = launchOptions[UIApplication.LaunchOptionsKey.userActivityDictionary] as? [AnyHashable: Any] { //Universal link
-            for key in activityDictionary.keys {
-                if let userActivity = activityDictionary[key] as? NSUserActivity {
-                    if let url = userActivity.webpageURL {
-                        return handleUrl(url: url, setInitialData: true)
-                    }
-                }
-            }
+
+    public func hasMatchingPrefix(url: URL?) -> Bool {
+        if let url = url {
+            return url.absoluteString.hasPrefix(self.customLinkPrefix)
         }
         return false
     }
     
-    public func application(_ application: UIApplication, open url: URL, options: [UIApplication.OpenURLOptionsKey : Any] = [:]) -> Bool {
-        return handleUrl(url: url, setInitialData: false)
+    // This is the function called on app startup with a shared link if the app had been closed already.
+    // It is called as the launch process is finishing and the app is almost ready to run.
+    // If the URL includes the module's ShareMedia prefix, then we process the URL and return true if we know how to handle that kind of URL or false if the app is not able to.
+    // If the URL does not include the module's prefix, we must return true since while our module cannot handle the link, other modules might be and returning false can prevent
+    // them from getting the chance to.
+    // Reference: https://developer.apple.com/documentation/uikit/uiapplicationdelegate/1622921-application
+    public func application(_ application: UIApplication, didFinishLaunchingWithOptions launchOptions: [AnyHashable : Any] = [:]) -> Bool {
+        if let url = launchOptions[UIApplication.LaunchOptionsKey.url] as? URL {
+            if (hasMatchingPrefix(url: url)) {
+                return handleUrl(url: url, setInitialData: true)
+            }
+            return true
+        } else if let activityDictionary = launchOptions[UIApplication.LaunchOptionsKey.userActivityDictionary] as? [AnyHashable: Any] {
+            // Handle multiple URLs shared in
+            for key in activityDictionary.keys {
+                if let userActivity = activityDictionary[key] as? NSUserActivity {
+                    if let url = userActivity.webpageURL {
+                        if (hasMatchingPrefix(url: url)) {
+                            return handleUrl(url: url, setInitialData: true)
+                        }
+                        return true
+                    }
+                }
+            }
+        }
+        return true
     }
     
+    // This is the function called on resuming the app from a shared link.
+    // It handles requests to open a resource by a specified URL. Returning true means that it was handled successfully, false means the attempt to open the resource failed.
+    // If the URL includes the module's ShareMedia prefix, then we process the URL and return true if we know how to handle that kind of URL or false if we are not able to.
+    // If the URL does not include the module's prefix, then we return true.
+    // Reference: https://developer.apple.com/documentation/uikit/uiapplicationdelegate/1623112-application
+    public func application(_ application: UIApplication, open url: URL, options: [UIApplication.OpenURLOptionsKey : Any] = [:]) -> Bool {
+        if (hasMatchingPrefix(url: url)) {
+            return handleUrl(url: url, setInitialData: false)
+        }
+        return true
+    }
+    
+    // This function is called by other modules like Firebase DeepLinks.
+    // It tells the delegate that data for continuing an activity is available. Returning true means that our module handled the activity and that others do not have to. Returning false tells
+    // iOS that our app did not handle the activity.
+    // If the URL includes the module's ShareMedia prefix, then we process the URL and return true if we know how to handle that kind of URL or false if we are not able to.
+    // If the URL does not include the module's prefix, then we must return false to indicate that this module did not handle the prefix and that other modules should try to.
+    // Reference: https://developer.apple.com/documentation/uikit/uiapplicationdelegate/1623072-application
     public func application(_ application: UIApplication, continue userActivity: NSUserActivity, restorationHandler: @escaping ([Any]) -> Void) -> Bool {
-        return handleUrl(url: userActivity.webpageURL, setInitialData: true)
+        if let url = userActivity.webpageURL {
+            if (hasMatchingPrefix(url: url)) {
+                return handleUrl(url: url, setInitialData: true)
+            }
+        }
+        return false
     }
     
     private func handleUrl(url: URL?, setInitialData: Bool) -> Bool {
