@@ -7,7 +7,7 @@ public class SwiftReceiveSharingIntentPlugin: NSObject, FlutterPlugin, FlutterSt
     static let kEventsChannelMedia = "receive_sharing_intent/events-media";
     static let kEventsChannelLink = "receive_sharing_intent/events-text";
     
-    private var customLinkPrefix = "ShareMedia";
+    private var customSchemePrefix = "ShareMedia";
     
     private var initialMedia: [SharedMediaFile]? = nil
     private var latestMedia: [SharedMediaFile]? = nil
@@ -52,9 +52,9 @@ public class SwiftReceiveSharingIntentPlugin: NSObject, FlutterPlugin, FlutterSt
         }
     }
 
-    public func hasMatchingPrefix(url: URL?) -> Bool {
+    public func hasMatchingSchemePrefix(url: URL?) -> Bool {
         if let url = url {
-            return url.absoluteString.hasPrefix(self.customLinkPrefix)
+            return url.absoluteString.hasPrefix(self.customSchemePrefix)
         }
         return false
     }
@@ -67,7 +67,7 @@ public class SwiftReceiveSharingIntentPlugin: NSObject, FlutterPlugin, FlutterSt
     // Reference: https://developer.apple.com/documentation/uikit/uiapplicationdelegate/1622921-application
     public func application(_ application: UIApplication, didFinishLaunchingWithOptions launchOptions: [AnyHashable : Any] = [:]) -> Bool {
         if let url = launchOptions[UIApplication.LaunchOptionsKey.url] as? URL {
-            if (hasMatchingPrefix(url: url)) {
+            if (hasMatchingSchemePrefix(url: url)) {
                 return handleUrl(url: url, setInitialData: true)
             }
             return true
@@ -76,7 +76,7 @@ public class SwiftReceiveSharingIntentPlugin: NSObject, FlutterPlugin, FlutterSt
             for key in activityDictionary.keys {
                 if let userActivity = activityDictionary[key] as? NSUserActivity {
                     if let url = userActivity.webpageURL {
-                        if (hasMatchingPrefix(url: url)) {
+                        if (hasMatchingSchemePrefix(url: url)) {
                             return handleUrl(url: url, setInitialData: true)
                         }
                         return true
@@ -93,7 +93,7 @@ public class SwiftReceiveSharingIntentPlugin: NSObject, FlutterPlugin, FlutterSt
     // If the URL does not include the module's prefix, then we return true.
     // Reference: https://developer.apple.com/documentation/uikit/uiapplicationdelegate/1623112-application
     public func application(_ application: UIApplication, open url: URL, options: [UIApplication.OpenURLOptionsKey : Any] = [:]) -> Bool {
-        if (hasMatchingPrefix(url: url)) {
+        if (hasMatchingSchemePrefix(url: url)) {
             return handleUrl(url: url, setInitialData: false)
         }
         return true
@@ -107,7 +107,7 @@ public class SwiftReceiveSharingIntentPlugin: NSObject, FlutterPlugin, FlutterSt
     // Reference: https://developer.apple.com/documentation/uikit/uiapplicationdelegate/1623072-application
     public func application(_ application: UIApplication, continue userActivity: NSUserActivity, restorationHandler: @escaping ([Any]) -> Void) -> Bool {
         if let url = userActivity.webpageURL {
-            if (hasMatchingPrefix(url: url)) {
+            if (hasMatchingSchemePrefix(url: url)) {
                 return handleUrl(url: url, setInitialData: true)
             }
         }
