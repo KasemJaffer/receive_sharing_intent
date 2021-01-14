@@ -111,8 +111,11 @@ class ReceiveSharingIntentPlugin : FlutterPlugin, ActivityAware, MethodCallHandl
     }
 
     private fun handleIntent(intent: Intent, initial: Boolean) {
+        val hasText = intent.getStringExtra(Intent.EXTRA_TEXT)
+        val isText = (intent.type == null || intent.type?.startsWith("text") == true)
+                        && intent.action == Intent.ACTION_SEND
         when {
-            (intent.type?.startsWith("text") != true)
+            (hasText == null || !isText)
                     && (intent.action == Intent.ACTION_SEND
                     || intent.action == Intent.ACTION_SEND_MULTIPLE) -> { // Sharing images or videos
 
@@ -121,8 +124,7 @@ class ReceiveSharingIntentPlugin : FlutterPlugin, ActivityAware, MethodCallHandl
                 latestMedia = value
                 eventSinkMedia?.success(latestMedia?.toString())
             }
-            (intent.type == null || intent.type?.startsWith("text") == true)
-                    && intent.action == Intent.ACTION_SEND -> { // Sharing text
+            isText -> { // Sharing text
                 val value = intent.getStringExtra(Intent.EXTRA_TEXT)
                 if (initial) initialText = value
                 latestText = value
