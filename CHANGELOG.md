@@ -1,3 +1,7 @@
+## 1.4.3
+
+* Fix suppressed link propagation to other modules on iOS
+
 ## 1.4.2
 
 * Migrage to flutter android embedding v2
