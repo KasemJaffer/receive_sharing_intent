@@ -70,7 +70,7 @@ public class SwiftReceiveSharingIntentPlugin: NSObject, FlutterPlugin, FlutterSt
             if (hasMatchingSchemePrefix(url: url)) {
                 return handleUrl(url: url, setInitialData: true)
             }
-            return true
+            return super.application(application, didFinishLaunchingWithOptions: launchOptions);
         } else if let activityDictionary = launchOptions[UIApplication.LaunchOptionsKey.userActivityDictionary] as? [AnyHashable: Any] {
             // Handle multiple URLs shared in
             for key in activityDictionary.keys {
@@ -79,12 +79,12 @@ public class SwiftReceiveSharingIntentPlugin: NSObject, FlutterPlugin, FlutterSt
                         if (hasMatchingSchemePrefix(url: url)) {
                             return handleUrl(url: url, setInitialData: true)
                         }
-                        return true
+                        return super.application(application, didFinishLaunchingWithOptions: launchOptions);
                     }
                 }
             }
         }
-        return true
+        return super.application(application, didFinishLaunchingWithOptions: launchOptions);
     }
     
     // This is the function called on resuming the app from a shared link.
@@ -96,7 +96,7 @@ public class SwiftReceiveSharingIntentPlugin: NSObject, FlutterPlugin, FlutterSt
         if (hasMatchingSchemePrefix(url: url)) {
             return handleUrl(url: url, setInitialData: false)
         }
-        return true
+        return super.application(application, open: url, options: options);
     }
     
     // This function is called by other modules like Firebase DeepLinks.
@@ -111,7 +111,7 @@ public class SwiftReceiveSharingIntentPlugin: NSObject, FlutterPlugin, FlutterSt
                 return handleUrl(url: url, setInitialData: true)
             }
         }
-        return false
+        return super.application(app, continue: userActivity, restorationHandler: restorationHandler);
     }
     
     private func handleUrl(url: URL?, setInitialData: Bool) -> Bool {
