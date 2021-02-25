@@ -149,7 +149,8 @@ public class SwiftReceiveSharingIntentPlugin: NSObject, FlutterPlugin, FlutterSt
                         guard let path = getAbsolutePath(for: $0.path) else {
                             return nil
                         }
-                        return SharedMediaFile.init(path: $0.path, thumbnail: nil, duration: nil, type: $0.type)
+                        let pathWithoutPrefix = String($0.path.dropFirst(7))//knock 'file://' off here...
+                        return SharedMediaFile.init(path: pathWithoutPrefix, thumbnail: nil, duration: nil, type: $0.type)
                     }
                     latestMedia = sharedMediaFiles
                     if(setInitialData) {
