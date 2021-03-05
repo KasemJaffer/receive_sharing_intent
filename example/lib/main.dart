@@ -11,9 +11,9 @@ class MyApp extends StatefulWidget {
 }
 
 class _MyAppState extends State<MyApp> {
-  StreamSubscription _intentDataStreamSubscription;
-  List<SharedMediaFile> _sharedFiles;
-  String _sharedText;
+  late StreamSubscription _intentDataStreamSubscription;
+  List<SharedMediaFile>? _sharedFiles;
+  String? _sharedText;
 
   @override
   void initState() {
@@ -24,7 +24,7 @@ class _MyAppState extends State<MyApp> {
         .listen((List<SharedMediaFile> value) {
       setState(() {
         _sharedFiles = value;
-        print("Shared:" + (_sharedFiles?.map((f) => f.path)?.join(",") ?? ""));
+        print("Shared:" + (_sharedFiles?.map((f) => f.path).join(",") ?? ""));
       });
     }, onError: (err) {
       print("getIntentDataStream error: $err");
@@ -34,23 +34,23 @@ class _MyAppState extends State<MyApp> {
     ReceiveSharingIntent.getInitialMedia().then((List<SharedMediaFile> value) {
       setState(() {
         _sharedFiles = value;
-        print("Shared:" + (_sharedFiles?.map((f) => f.path)?.join(",") ?? ""));
+        print("Shared:" + (_sharedFiles?.map((f) => f.path).join(",") ?? ""));
       });
     });
 
     // For sharing or opening urls/text coming from outside the app while the app is in the memory
     _intentDataStreamSubscription =
         ReceiveSharingIntent.getTextStream().listen((String value) {
-      setState(() {
-        _sharedText = value;
-        print("Shared: $_sharedText");
-      });
-    }, onError: (err) {
-      print("getLinkStream error: $err");
-    });
+          setState(() {
+            _sharedText = value;
+            print("Shared: $_sharedText");
+          });
+        }, onError: (err) {
+          print("getLinkStream error: $err");
+        });
 
     // For sharing or opening urls/text coming from outside the app while the app is closed
-    ReceiveSharingIntent.getInitialText().then((String value) {
+    ReceiveSharingIntent.getInitialText().then((String? value) {
       setState(() {
         _sharedText = value;
         print("Shared: $_sharedText");
@@ -77,9 +77,9 @@ class _MyAppState extends State<MyApp> {
             children: <Widget>[
               Text("Shared files:", style: textStyleBold),
               Text(_sharedFiles
-                      ?.map((f) =>
-                          "{Path: ${f.path}, Type: ${f.type.toString().replaceFirst("SharedMediaType.", "")}}\n")
-                      ?.join(",\n") ??
+                  ?.map((f) =>
+              "{Path: ${f.path}, Type: ${f.type.toString().replaceFirst("SharedMediaType.", "")}}\n")
+                  .join(",\n") ??
                   ""),
               SizedBox(height: 100),
               Text("Shared urls/text:", style: textStyleBold),
