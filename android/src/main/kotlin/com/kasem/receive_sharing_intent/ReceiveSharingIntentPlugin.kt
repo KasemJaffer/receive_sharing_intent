@@ -7,29 +7,26 @@ import android.media.MediaMetadataRetriever
 import android.media.ThumbnailUtils
 import android.net.Uri
 import android.provider.MediaStore
-import io.flutter.embedding.engine.plugins.FlutterPlugin
-import io.flutter.embedding.engine.plugins.activity.ActivityAware
-import io.flutter.embedding.engine.plugins.activity.ActivityPluginBinding
-import io.flutter.plugin.common.BinaryMessenger
 import io.flutter.plugin.common.EventChannel
 import io.flutter.plugin.common.MethodCall
 import io.flutter.plugin.common.MethodChannel
 import io.flutter.plugin.common.MethodChannel.MethodCallHandler
 import io.flutter.plugin.common.MethodChannel.Result
+import io.flutter.plugin.common.PluginRegistry
 import io.flutter.plugin.common.PluginRegistry.Registrar
-import io.flutter.plugin.common.PluginRegistry.NewIntentListener
 import org.json.JSONArray
 import org.json.JSONObject
 import java.io.File
 import java.io.FileOutputStream
 import java.net.URLConnection
+import android.os.Build
+import android.util.Log
 
-private const val MESSAGES_CHANNEL = "receive_sharing_intent/messages"
-private const val EVENTS_CHANNEL_MEDIA = "receive_sharing_intent/events-media"
-private const val EVENTS_CHANNEL_TEXT = "receive_sharing_intent/events-text"
 
-class ReceiveSharingIntentPlugin : FlutterPlugin, ActivityAware, MethodCallHandler,
-        EventChannel.StreamHandler, NewIntentListener {
+class ReceiveSharingIntentPlugin(val registrar: Registrar) :
+        MethodCallHandler,
+        EventChannel.StreamHandler,
+        PluginRegistry.NewIntentListener {
 
     private var initialMedia: JSONArray? = null
     private var latestMedia: JSONArray? = null
@@ -40,26 +37,8 @@ class ReceiveSharingIntentPlugin : FlutterPlugin, ActivityAware, MethodCallHandl
     private var eventSinkMedia: EventChannel.EventSink? = null
     private var eventSinkText: EventChannel.EventSink? = null
 
-    private var binding: ActivityPluginBinding? = null
-    private lateinit var applicationContext: Context
-
-    private fun setupCallbackChannels(binaryMessenger: BinaryMessenger) {
-        val mChannel = MethodChannel(binaryMessenger, MESSAGES_CHANNEL)
-        mChannel.setMethodCallHandler(this)
-
-        val eChannelMedia = EventChannel(binaryMessenger, EVENTS_CHANNEL_MEDIA)
-        eChannelMedia.setStreamHandler(this)
-
-        val eChannelText = EventChannel(binaryMessenger, EVENTS_CHANNEL_TEXT)
-        eChannelText.setStreamHandler(this)
-    }
-
-    override fun onAttachedToEngine(binding: FlutterPlugin.FlutterPluginBinding) {
-        applicationContext = binding.applicationContext
-        setupCallbackChannels(binding.binaryMessenger)
-    }
-
-    override fun onDetachedFromEngine(binding: FlutterPlugin.FlutterPluginBinding) {
+    init {
+        handleIntent(registrar.context(), registrar.activity().intent, true)
     }
 
     override fun onListen(arguments: Any?, events: EventChannel.EventSink) {
@@ -76,30 +55,44 @@ class ReceiveSharingIntentPlugin : FlutterPlugin, ActivityAware, MethodCallHandl
         }
     }
 
-    // This static function is optional and equivalent to onAttachedToEngine. It supports the old
-    // pre-Flutter-1.12 Android projects. You are encouraged to continue supporting
-    // plugin registration via this function while apps migrate to use the new Android APIs
-    // post-flutter-1.12 via https://flutter.dev/go/android-project-migration.
-    //
-    // It is encouraged to share logic between onAttachedToEngine and registerWith to keep
-    // them functionally equivalent. Only one of onAttachedToEngine or registerWith will be called
-    // depending on the user's project. onAttachedToEngine or registerWith must both be defined
-    // in the same class.
+    override fun onNewIntent(intent: Intent): Boolean {
+        handleIntent(registrar.context(), intent, false)
+        return false
+    }
+
     companion object {
+        private val MESSAGES_CHANNEL = "receive_sharing_intent/messages"
+        private val EVENTS_CHANNEL_MEDIA = "receive_sharing_intent/events-media"
+        private val EVENTS_CHANNEL_TEXT = "receive_sharing_intent/events-text"
+
         @JvmStatic
         fun registerWith(registrar: Registrar) {
-            val instance = ReceiveSharingIntentPlugin()
-            instance.applicationContext = registrar.context()
-            instance.setupCallbackChannels(registrar.messenger())
+            // Detect if we've been launched in background
+            if (registrar.activity() == null) {
+                return
+            }
+
+            val instance = ReceiveSharingIntentPlugin(registrar)
+
+            val mChannel = MethodChannel(registrar.messenger(), MESSAGES_CHANNEL)
+            mChannel.setMethodCallHandler(instance)
+
+            val eChannelMedia = EventChannel(registrar.messenger(), EVENTS_CHANNEL_MEDIA)
+            eChannelMedia.setStreamHandler(instance)
+
+            val eChannelText = EventChannel(registrar.messenger(), EVENTS_CHANNEL_TEXT)
+            eChannelText.setStreamHandler(instance)
+
+            registrar.addNewIntentListener(instance)
         }
     }
 
 
     override fun onMethodCall(call: MethodCall, result: Result) {
-        when (call.method) {
-            "getInitialMedia" -> result.success(initialMedia?.toString())
-            "getInitialText" -> result.success(initialText)
-            "reset" -> {
+        when {
+            call.method == "getInitialMedia" -> result.success(initialMedia?.toString())
+            call.method == "getInitialText" -> result.success(initialText)
+            call.method == "reset" -> {
                 initialMedia = null
                 latestMedia = null
                 initialText = null
@@ -110,13 +103,13 @@ class ReceiveSharingIntentPlugin : FlutterPlugin, ActivityAware, MethodCallHandl
         }
     }
 
-    private fun handleIntent(intent: Intent, initial: Boolean) {
+    private fun handleIntent(context: Context, intent: Intent, initial: Boolean) {
         when {
             (intent.type?.startsWith("text") != true)
                     && (intent.action == Intent.ACTION_SEND
                     || intent.action == Intent.ACTION_SEND_MULTIPLE) -> { // Sharing images or videos
 
-                val value = getMediaUris(intent)
+                val value = getMediaUris(context, intent)
                 if (initial) initialMedia = value
                 latestMedia = value
                 eventSinkMedia?.success(latestMedia?.toString())
@@ -137,16 +130,16 @@ class ReceiveSharingIntentPlugin : FlutterPlugin, ActivityAware, MethodCallHandl
         }
     }
 
-    private fun getMediaUris(intent: Intent?): JSONArray? {
+    private fun getMediaUris(context: Context, intent: Intent?): JSONArray? {
         if (intent == null) return null
 
-        return when (intent.action) {
-            Intent.ACTION_SEND -> {
-                val uri = intent.getParcelableExtra<Uri>(Intent.EXTRA_STREAM)
-                val path = FileDirectory.getAbsolutePath(applicationContext, uri)
+        return when {
+            intent.action == Intent.ACTION_SEND -> {
+                val uri = intent.getParcelableExtra<Uri>(Intent.EXTRA_STREAM) ?: return  null
+                val path = FileDirectory.getAbsolutePath(context, uri)
                 if (path != null) {
                     val type = getMediaType(path)
-                    val thumbnail = getThumbnail(path, type)
+                    val thumbnail = getThumbnail(context, path, type)
                     val duration = getDuration(path, type)
                     JSONArray().put(
                             JSONObject()
@@ -157,13 +150,12 @@ class ReceiveSharingIntentPlugin : FlutterPlugin, ActivityAware, MethodCallHandl
                     )
                 } else null
             }
-            Intent.ACTION_SEND_MULTIPLE -> {
+            intent.action == Intent.ACTION_SEND_MULTIPLE -> {
                 val uris = intent.getParcelableArrayListExtra<Uri>(Intent.EXTRA_STREAM)
                 val value = uris?.mapNotNull { uri ->
-                    val path = FileDirectory.getAbsolutePath(applicationContext, uri)
-                            ?: return@mapNotNull null
+                    val path = FileDirectory.getAbsolutePath(context, uri) ?: return@mapNotNull null
                     val type = getMediaType(path)
-                    val thumbnail = getThumbnail(path, type)
+                    val thumbnail = getThumbnail(context, path, type)
                     val duration = getDuration(path, type)
                     return@mapNotNull JSONObject()
                             .put("path", path)
@@ -186,11 +178,11 @@ class ReceiveSharingIntentPlugin : FlutterPlugin, ActivityAware, MethodCallHandl
         }
     }
 
-    private fun getThumbnail(path: String, type: MediaType): String? {
+    private fun getThumbnail(context: Context, path: String, type: MediaType): String? {
         if (type != MediaType.VIDEO) return null // get video thumbnail only
 
         val videoFile = File(path)
-        val targetFile = File(applicationContext.cacheDir, "${videoFile.name}.png")
+        val targetFile = File(context.cacheDir, "${videoFile.name}.png")
         val bitmap = ThumbnailUtils.createVideoThumbnail(path, MediaStore.Video.Thumbnails.MINI_KIND)
                 ?: return null
         FileOutputStream(targetFile).use { out ->
@@ -200,40 +192,16 @@ class ReceiveSharingIntentPlugin : FlutterPlugin, ActivityAware, MethodCallHandl
         return targetFile.path
     }
 
-    private fun getDuration(path: String, type: MediaType): Long? {
+    private fun getDuration(path: String?, type: MediaType?): Long? {
         if (type != MediaType.VIDEO) return null // get duration for video only
         val retriever = MediaMetadataRetriever()
         retriever.setDataSource(path)
-        val duration = retriever.extractMetadata(MediaMetadataRetriever.METADATA_KEY_DURATION).toLongOrNull()
+        val duration = retriever?.extractMetadata(MediaMetadataRetriever.METADATA_KEY_DURATION)?.toLongOrNull()
         retriever.release()
         return duration
     }
 
     enum class MediaType {
         IMAGE, VIDEO, FILE;
-    }
-
-    override fun onAttachedToActivity(binding: ActivityPluginBinding) {
-        this.binding = binding
-        binding.addOnNewIntentListener(this)
-        handleIntent(binding.activity.intent, true)
-    }
-
-    override fun onDetachedFromActivityForConfigChanges() {
-        binding?.removeOnNewIntentListener(this)
-    }
-
-    override fun onReattachedToActivityForConfigChanges(binding: ActivityPluginBinding) {
-        this.binding = binding
-        binding.addOnNewIntentListener(this)
-    }
-
-    override fun onDetachedFromActivity() {
-        binding?.removeOnNewIntentListener(this)
-    }
-
-    override fun onNewIntent(intent: Intent): Boolean {
-        handleIntent(intent, false)
-        return false
     }
 }
