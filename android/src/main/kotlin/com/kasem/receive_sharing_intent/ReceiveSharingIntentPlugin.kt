@@ -113,8 +113,7 @@ class ReceiveSharingIntentPlugin : FlutterPlugin, ActivityAware, MethodCallHandl
     private fun handleIntent(intent: Intent, initial: Boolean) {
         when {
             (intent.type?.startsWith("text") != true)
-                    && (intent.action == Intent.ACTION_VIEW
-                    || intent.action == Intent.ACTION_SEND
+                    && (intent.action == Intent.ACTION_SEND
                     || intent.action == Intent.ACTION_SEND_MULTIPLE) -> { // Sharing images or videos
 
                 val value = getMediaUris(intent)
@@ -138,32 +137,25 @@ class ReceiveSharingIntentPlugin : FlutterPlugin, ActivityAware, MethodCallHandl
         }
     }
 
-    private fun getMediaFromUri(uri: Uri): JSONArray? {
-        val path = FileDirectory.getAbsolutePath(applicationContext, uri)
-
-        return if (path != null) {
-            val type = getMediaType(path)
-            val thumbnail = getThumbnail(path, type)
-            val duration = getDuration(path, type)
-            JSONArray().put(
-                    JSONObject()
-                            .put("path", path)
-                            .put("type", type.ordinal)
-                            .put("thumbnail", thumbnail)
-                            .put("duration", duration)
-            )
-        } else null
-    }
-
     private fun getMediaUris(intent: Intent?): JSONArray? {
         if (intent == null) return null
 
         return when (intent.action) {
-            Intent.ACTION_VIEW -> {
-                return getMediaFromUri(intent.getData())
-            }
             Intent.ACTION_SEND -> {
-                return getMediaFromUri(intent.getParcelableExtra<Uri>(Intent.EXTRA_STREAM))
+                val uri = intent.getParcelableExtra<Uri>(Intent.EXTRA_STREAM)
+                val path = FileDirectory.getAbsolutePath(applicationContext, uri!!)
+                if (path != null) {
+                    val type = getMediaType(path)
+                    val thumbnail = getThumbnail(path, type)
+                    val duration = getDuration(path, type)
+                    JSONArray().put(
+                            JSONObject()
+                                    .put("path", path)
+                                    .put("type", type.ordinal)
+                                    .put("thumbnail", thumbnail)
+                                    .put("duration", duration)
+                    )
+                } else null
             }
             Intent.ACTION_SEND_MULTIPLE -> {
                 val uris = intent.getParcelableArrayListExtra<Uri>(Intent.EXTRA_STREAM)
@@ -212,7 +204,7 @@ class ReceiveSharingIntentPlugin : FlutterPlugin, ActivityAware, MethodCallHandl
         if (type != MediaType.VIDEO) return null // get duration for video only
         val retriever = MediaMetadataRetriever()
         retriever.setDataSource(path)
-        val duration = retriever.extractMetadata(MediaMetadataRetriever.METADATA_KEY_DURATION).toLongOrNull()
+        val duration = retriever.extractMetadata(MediaMetadataRetriever.METADATA_KEY_DURATION)!!.toLongOrNull()
         retriever.release()
         return duration
     }
