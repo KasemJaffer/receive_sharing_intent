@@ -13,7 +13,7 @@ import Photos
 
 class ShareViewController: SLComposeServiceViewController {
     // TODO: IMPORTANT: This should be your host app bundle identifier
-    let hostAppBundleIdentifier = "com.kasem.sharing"
+    let hostAppBundleIdentifier = "com.odamsoft.sharing"
     let sharedKey = "ShareKey"
     var sharedMedia: [SharedMediaFile] = []
     var sharedText: [String] = []
@@ -117,7 +117,7 @@ class ShareViewController: SLComposeServiceViewController {
                     .appendingPathComponent(fileName)
                 let copied = this.copyFile(at: url, to: newPath)
                 if(copied) {
-                    this.sharedMedia.append(SharedMediaFile(path: newPath.absoluteString, thumbnail: nil, duration: nil, type: .image))
+                    this.sharedMedia.append(SharedMediaFile(path: newPath.absoluteString, thumbnail: nil, duration: nil, type: .image, isViewAction: false))
                 }
                 
                 // If this is the last item, save imagesData in userDefaults and redirect to host app
@@ -178,7 +178,7 @@ class ShareViewController: SLComposeServiceViewController {
                     .appendingPathComponent(fileName)
                 let copied = this.copyFile(at: url, to: newPath)
                 if (copied) {
-                    this.sharedMedia.append(SharedMediaFile(path: newPath.absoluteString, thumbnail: nil, duration: nil, type: .file))
+                    this.sharedMedia.append(SharedMediaFile(path: newPath.absoluteString, thumbnail: nil, duration: nil, type: .file, isViewAction: false))
                 }
 
                 if index == (content.attachments?.count)! - 1 {
@@ -276,7 +276,7 @@ class ShareViewController: SLComposeServiceViewController {
         let thumbnailPath = getThumbnailPath(for: forVideo)
         
         if FileManager.default.fileExists(atPath: thumbnailPath.path) {
-            return SharedMediaFile(path: forVideo.absoluteString, thumbnail: thumbnailPath.absoluteString, duration: duration, type: .video)
+            return SharedMediaFile(path: forVideo.absoluteString, thumbnail: thumbnailPath.absoluteString, duration: duration, type: .video, isViewAction: false)
         }
         
         var saved = false
@@ -292,7 +292,7 @@ class ShareViewController: SLComposeServiceViewController {
             saved = false
         }
         
-        return saved ? SharedMediaFile(path: forVideo.absoluteString, thumbnail: thumbnailPath.absoluteString, duration: duration, type: .video) : nil
+        return saved ? SharedMediaFile(path: forVideo.absoluteString, thumbnail: thumbnailPath.absoluteString, duration: duration, type: .video, isViewAction: false) : nil
         
     }
     
@@ -309,13 +309,15 @@ class ShareViewController: SLComposeServiceViewController {
         var thumbnail: String?; // video thumbnail
         var duration: Double?; // video duration in milliseconds
         var type: SharedMediaType;
+        var isViewAction: Bool?
         
         
-        init(path: String, thumbnail: String?, duration: Double?, type: SharedMediaType) {
+        init(path: String, thumbnail: String?, duration: Double?, type: SharedMediaType, isViewAction: Bool?) {
             self.path = path
             self.thumbnail = thumbnail
             self.duration = duration
             self.type = type
+            self.isViewAction = isViewAction ?? false
         }
 
         // Debug method to print out SharedMediaFile details in the console

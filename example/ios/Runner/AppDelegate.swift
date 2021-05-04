@@ -18,7 +18,7 @@ import receive_sharing_intent
         if sharingIntent.hasMatchingSchemePrefix(url: url) {
             return sharingIntent.application(app, open: url, options: options)
         }
-        
+
         // For example
         // return MSALPublicClientApplication.handleMSALResponse(url, sourceApplication: options[.sourceApplication] as? String)
         return false

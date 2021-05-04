@@ -145,7 +145,7 @@ class SharedMediaFile {
   /// whether it's a view action
   final bool isViewAction;
 
-  SharedMediaFile(this.path, this.thumbnail, this.duration, this.type, this.isViewAction);
+  //SharedMediaFile(this.path, this.thumbnail, this.duration, this.type, this.isViewAction);
 
   SharedMediaFile.fromJson(Map<String, dynamic> json)
       : path = json['path'],
@@ -154,7 +154,7 @@ class SharedMediaFile {
         type = SharedMediaType.values[json['type']],
         isViewAction = json['isViewAction'];
 
-  String toString() => "Path: $path, type: $type, isViewACtion: $isViewAction";
+  String toString() => "Path: $path, type: $type, isViewAction: $isViewAction";
 }
 
 enum SharedMediaType { IMAGE, VIDEO, FILE }
