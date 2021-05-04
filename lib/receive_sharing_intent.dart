@@ -4,12 +4,9 @@ import 'dart:convert';
 import 'package:flutter/services.dart';
 
 class ReceiveSharingIntent {
-  static const MethodChannel _mChannel =
-  const MethodChannel('receive_sharing_intent/messages');
-  static const EventChannel _eChannelMedia =
-  const EventChannel("receive_sharing_intent/events-media");
-  static const EventChannel _eChannelLink =
-  const EventChannel("receive_sharing_intent/events-text");
+  static const MethodChannel _mChannel = const MethodChannel('receive_sharing_intent/messages');
+  static const EventChannel _eChannelMedia = const EventChannel("receive_sharing_intent/events-media");
+  static const EventChannel _eChannelLink = const EventChannel("receive_sharing_intent/events-text");
 
   static Stream<List<SharedMediaFile>>? _streamMedia;
   static Stream<String>? _streamLink;
@@ -25,9 +22,7 @@ class ReceiveSharingIntent {
     final json = await _mChannel.invokeMethod('getInitialMedia');
     if (json == null) return [];
     final encoded = jsonDecode(json);
-    return encoded
-        .map<SharedMediaFile>((file) => SharedMediaFile.fromJson(file))
-        .toList();
+    return encoded.map<SharedMediaFile>((file) => SharedMediaFile.fromJson(file)).toList();
   }
 
   /// Returns a [Future], which completes to one of the following:
@@ -67,8 +62,7 @@ class ReceiveSharingIntent {
   /// not emit that initial one - query either the `getInitialMedia` instead.
   static Stream<List<SharedMediaFile>> getMediaStream() {
     if (_streamMedia == null) {
-      final stream =
-      _eChannelMedia.receiveBroadcastStream("media").cast<String?>();
+      final stream = _eChannelMedia.receiveBroadcastStream("media").cast<String?>();
       _streamMedia = stream.transform<List<SharedMediaFile>>(
         new StreamTransformer<String?, List<SharedMediaFile>>.fromHandlers(
           handleData: (String? data, EventSink<List<SharedMediaFile>> sink) {
@@ -76,10 +70,7 @@ class ReceiveSharingIntent {
               sink.add([]);
             } else {
               final encoded = jsonDecode(data);
-              sink.add(encoded
-                  .map<SharedMediaFile>(
-                      (file) => SharedMediaFile.fromJson(file))
-                  .toList());
+              sink.add(encoded.map<SharedMediaFile>((file) => SharedMediaFile.fromJson(file)).toList());
             }
           },
         ),
@@ -151,13 +142,19 @@ class SharedMediaFile {
   /// Whether its a video or image or file
   final SharedMediaType type;
 
-  SharedMediaFile(this.path, this.thumbnail, this.duration, this.type);
+  /// whether it's a view action
+  final bool isViewAction;
+
+  SharedMediaFile(this.path, this.thumbnail, this.duration, this.type, this.isViewAction);
 
   SharedMediaFile.fromJson(Map<String, dynamic> json)
       : path = json['path'],
         thumbnail = json['thumbnail'],
         duration = json['duration'],
-        type = SharedMediaType.values[json['type']];
+        type = SharedMediaType.values[json['type']],
+        isViewAction = json['isViewAction'];
+
+  String toString() => "Path: $path, type: $type, isViewACtion: $isViewAction";
 }
 
 enum SharedMediaType { IMAGE, VIDEO, FILE }

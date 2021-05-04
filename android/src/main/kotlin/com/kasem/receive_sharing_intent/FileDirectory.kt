@@ -26,8 +26,7 @@ object FileDirectory {
      * @param uri The Uri to query.
      * @author paulburke
      */
-    fun getAbsolutePath(context: Context, uri: Uri): String? {
-
+    fun getAbsolutePath(context: Context, uri: Uri): String? { 
         // DocumentProvider
         if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.KITKAT && DocumentsContract.isDocumentUri(context, uri)) {
             // ExternalStorageProvider
@@ -71,6 +70,7 @@ object FileDirectory {
             }// MediaProvider
             // DownloadsProvider
         } else if ("content".equals(uri.scheme, ignoreCase = true)) {
+
             return getDataColumn(context, uri, null, null)
         }
 

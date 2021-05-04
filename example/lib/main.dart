@@ -53,7 +53,7 @@ class _MyAppState extends State<MyApp> {
     ReceiveSharingIntent.getInitialText().then((String? value) {
       setState(() {
         _sharedText = value;
-        print("Shared: $_sharedText");
+        print("Shared Init: $_sharedText");
       });
     });
   }
@@ -78,7 +78,7 @@ class _MyAppState extends State<MyApp> {
               Text("Shared files:", style: textStyleBold),
               Text(_sharedFiles
                   ?.map((f) =>
-              "{Path: ${f.path}, Type: ${f.type.toString().replaceFirst("SharedMediaType.", "")}}\n")
+              "{${f.toString()}}\n")
                   .join(",\n") ??
                   ""),
               SizedBox(height: 100),

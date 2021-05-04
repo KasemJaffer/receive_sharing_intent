@@ -7,6 +7,7 @@ import android.media.MediaMetadataRetriever
 import android.media.ThumbnailUtils
 import android.net.Uri
 import android.provider.MediaStore
+import io.flutter.Log
 import io.flutter.embedding.engine.plugins.FlutterPlugin
 import io.flutter.embedding.engine.plugins.activity.ActivityAware
 import io.flutter.embedding.engine.plugins.activity.ActivityPluginBinding
@@ -128,6 +129,12 @@ class ReceiveSharingIntentPlugin : FlutterPlugin, ActivityAware, MethodCallHandl
                 latestText = value
                 eventSinkText?.success(latestText)
             }
+            intent.type != null && intent.action == Intent.ACTION_VIEW -> {
+                val value = getMediaUris(intent)
+                if (initial) initialMedia = value
+                latestMedia = value
+                eventSinkMedia?.success(latestMedia?.toString())
+            }
             intent.action == Intent.ACTION_VIEW -> { // Opening URL
                 val value = intent.dataString
                 if (initial) initialText = value
@@ -154,6 +161,7 @@ class ReceiveSharingIntentPlugin : FlutterPlugin, ActivityAware, MethodCallHandl
                                     .put("type", type.ordinal)
                                     .put("thumbnail", thumbnail)
                                     .put("duration", duration)
+                                    .put("isViewAction", false)
                     )
                 } else null
             }
@@ -170,8 +178,27 @@ class ReceiveSharingIntentPlugin : FlutterPlugin, ActivityAware, MethodCallHandl
                             .put("type", type.ordinal)
                             .put("thumbnail", thumbnail)
                             .put("duration", duration)
+                            .put("isViewAction", false)
                 }?.toList()
                 if (value != null) JSONArray(value) else null
+            }
+            Intent.ACTION_VIEW -> {
+                val uri = intent.data
+                val path = uri?.let{ FileDirectory.getAbsolutePath(applicationContext, it) }
+                if (path != null) {
+                    val type = getMediaType(path)
+                    val thumbnail = getThumbnail(path, type)
+                    val duration = getDuration(path, type)
+                    val array = JSONArray().put(
+                            JSONObject()
+                                    .put("path", path)
+                                    .put("type", type.ordinal)
+                                    .put("thumbnail", thumbnail)
+                                    .put("duration", duration)
+                                    .put("isViewAction", true)
+                    )
+                    return array
+                } else null
             }
             else -> null
         }
