@@ -70,11 +70,16 @@ public class SwiftReceiveSharingIntentPlugin: NSObject, FlutterPlugin, FlutterSt
     // them from getting the chance to.
     // Reference: https://developer.apple.com/documentation/uikit/uiapplicationdelegate/1622921-application
     public func application(_ application: UIApplication, didFinishLaunchingWithOptions launchOptions: [AnyHashable : Any] = [:]) -> Bool {
+        
         if let url = launchOptions[UIApplication.LaunchOptionsKey.url] as? URL {
+            if( url.isFileURL) {
+                return handleUrl(url: url, setInitialData: true, openInPlace: true)
+            }
+            
             if (hasMatchingSchemePrefix(url: url)) {
                 return handleUrl(url: url, setInitialData: true)
             }
-            return true
+            //return true
         } else if let activityDictionary = launchOptions[UIApplication.LaunchOptionsKey.userActivityDictionary] as? [AnyHashable: Any] {
             // Handle multiple URLs shared in
             for key in activityDictionary.keys {
@@ -97,10 +102,17 @@ public class SwiftReceiveSharingIntentPlugin: NSObject, FlutterPlugin, FlutterSt
     // If the URL does not include the module's prefix, then we return false to indicate our module's attempt to open the resource failed and others should be allowed to.
     // Reference: https://developer.apple.com/documentation/uikit/uiapplicationdelegate/1623112-application
     public func application(_ application: UIApplication, open url: URL, options: [UIApplication.OpenURLOptionsKey : Any] = [:]) -> Bool {
+
+        // called for view actions
+        if( options[UIApplication.OpenURLOptionsKey.openInPlace] as! Bool && url.isFileURL) {
+            return handleUrl(url: url, setInitialData: true, openInPlace: true)
+        }
+
+        
         if (hasMatchingSchemePrefix(url: url)) {
             return handleUrl(url: url, setInitialData: false)
         }
-        return false
+        return true
     }
     
     // This function is called by other modules like Firebase DeepLinks.
@@ -118,7 +130,8 @@ public class SwiftReceiveSharingIntentPlugin: NSObject, FlutterPlugin, FlutterSt
         return false
     }
     
-    private func handleUrl(url: URL?, setInitialData: Bool) -> Bool {
+    private func handleUrl(url: URL?, setInitialData: Bool, openInPlace: Bool = false) -> Bool {
+        
         if let url = url {
             let appDomain = Bundle.main.bundleIdentifier!
             let userDefaults = UserDefaults(suiteName: "group.\(appDomain)")
@@ -170,6 +183,17 @@ public class SwiftReceiveSharingIntentPlugin: NSObject, FlutterPlugin, FlutterSt
                     }
                     eventSinkText?(latestText)
                 }
+            } else if openInPlace {
+                guard let path = getAbsolutePath(for: url.path) else {
+                   return false
+                }
+                let sharedMediaFile = SharedMediaFile.init(path: path, thumbnail: nil, duration: nil, type: .file, isViewAction: true)
+                let sharedMediaFiles: [SharedMediaFile] = [sharedMediaFile]
+                latestMedia = sharedMediaFiles
+                if(setInitialData) {
+                    initialMedia = latestMedia
+                }
+                eventSinkMedia?(toJson(data: latestMedia))
             } else {
                 latestText = url.absoluteString
                 if(setInitialData) {

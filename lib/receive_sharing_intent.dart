@@ -131,6 +131,7 @@ class ReceiveSharingIntent {
 class SharedMediaFile {
   /// Image or Video path.
   /// NOTE. for iOS only the file is always copied
+  /// if [isViewAction] is true, the file is not copied [no need to copy it either]
   final String path;
 
   /// Video thumbnail
