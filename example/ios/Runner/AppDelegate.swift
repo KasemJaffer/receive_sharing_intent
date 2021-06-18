@@ -19,8 +19,13 @@ import receive_sharing_intent
             return sharingIntent.application(app, open: url, options: options)
         }
         
-        // For example
-        // return MSALPublicClientApplication.handleMSALResponse(url, sourceApplication: options[.sourceApplication] as? String)
-        return false
+         // For example load MSALPublicClientApplication
+         // return MSALPublicClientApplication.handleMSALResponse(url, sourceApplication: options[.sourceApplication] as? String)
+
+         // Cancel url handling
+         // return false
+
+         // Proceed url handling for other Flutter libraries like uni_links
+         return super.application(app, open: url, options:options)
     }
 }
