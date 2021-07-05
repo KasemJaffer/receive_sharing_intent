@@ -1,3 +1,17 @@
+## 1.4.5
+
+* Update android to use compileSdkVersion 30
+
+## 1.4.4
+
+* Enabled null safety
+* Fix frozen app after sharing. Fix requires you to update your Sharing Extension Class (Check example project)
+* Fix regression regarding link propagation
+
+## 1.4.3
+
+* Fix suppressed link propagation to other modules on iOS
+
 ## 1.4.2
 
 * Migrage to flutter android embedding v2
