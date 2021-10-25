@@ -119,7 +119,7 @@ class ReceiveSharingIntent {
     if (_streamText == null) {
       _streamText = _eChannelText.receiveBroadcastStream("text").cast<String>();
     }
-    return _streamText;
+    return _streamText!;
   }
 
   /// Sets up a broadcast stream for receiving incoming link change events.
