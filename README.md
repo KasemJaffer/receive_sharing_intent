@@ -136,7 +136,6 @@ ios/Runner/info.plist
 				<string>ShareMedia</string>
 			</array>
 		</dict>
-		<dict/>
 	</array>
 
   <key>NSPhotoLibraryUsageDescription</key>
