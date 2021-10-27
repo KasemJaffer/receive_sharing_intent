@@ -2,7 +2,7 @@
 
 A flutter plugin that enables flutter apps to receive sharing photos, videos, text, urls or any other file types from another app.
 
-Also, supports iOS Share extension and launching the host app automatically. 
+Also, supports iOS Share extension and launching the host app automatically.
 Check the provided example for more info.
 
 ![Alt Text](./example/demo.gif)
@@ -92,32 +92,11 @@ android/app/src/main/manifest.xml
 ....
 ```
 
-If you want to launch it as a task independent of chrome, please add the following.
+Add the following, if you want to prevent creating new activity instance everytime there is a new intent.
 
 AndroidManifest.xml
 ```
 <activity android:launchMode="singleTask" ... >...</activity>
-```
-
-android/app/main/kotlin/.../MainActivity.kt
-```
-import android.os.Bundle
-import io.flutter.embedding.android.FlutterActivity
-import android.content.Intent.FLAG_ACTIVITY_NEW_TASK
-
-class MainActivity: FlutterActivity() {
-    override fun onCreate(savedInstanceState: Bundle?) {
-
-       ・・・
-
-        if (intent.getIntExtra("org.chromium.chrome.extra.TASK_ID", -1) == this.taskId) {
-            this.finish()
-            intent.addFlags(FLAG_ACTIVITY_NEW_TASK);
-            startActivity(intent);
-        }
-        super.onCreate(savedInstanceState)
-    }
-}
 ```
 
 ### iOS
@@ -126,6 +105,8 @@ class MainActivity: FlutterActivity() {
 ios/Runner/info.plist
 ```xml
 ...
+<key>AppGroupId</key>
+<string>$(CUSTOM_GROUP_ID)</string>
 <key>CFBundleURLTypes</key>
 	<array>
 		<dict>
@@ -133,13 +114,13 @@ ios/Runner/info.plist
 			<string>Editor</string>
 			<key>CFBundleURLSchemes</key>
 			<array>
-				<string>ShareMedia</string>
+				<string>ShareMedia-$(PRODUCT_BUNDLE_IDENTIFIER)</string>
 			</array>
 		</dict>
 	</array>
 
-  <key>NSPhotoLibraryUsageDescription</key>
-	<string>To upload photos, please allow permission to access your photo library.</string>
+<key>NSPhotoLibraryUsageDescription</key>
+<string>To upload photos, please allow permission to access your photo library.</string>
 ...
 ```
 

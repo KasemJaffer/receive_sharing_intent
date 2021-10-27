@@ -2,7 +2,7 @@
 
 A flutter plugin that enables flutter apps to receive sharing photos, videos, text, urls or any other file types from another app.
 
-Also, supports iOS Share extension and launching the host app automatically. 
+Also, supports iOS Share extension and launching the host app automatically.
 
 ![Alt Text](./demo.gif)
 
@@ -28,7 +28,7 @@ android/app/src/main/manifest.xml
             android:configChanges="orientation|keyboardHidden|keyboard|screenSize|locale|layoutDirection|fontScale|screenLayout|density|uiMode"
             android:hardwareAccelerated="true"
             android:windowSoftInputMode="adjustResize">
-            
+
             <intent-filter>
                <action android:name="android.intent.action.VIEW" />
                <category android:name="android.intent.category.DEFAULT" />
@@ -39,7 +39,7 @@ android/app/src/main/manifest.xml
                    android:host="example.com"
                    android:pathPrefix="/invite"/>
             </intent-filter>
-            
+
              <!--TODO: Add this filter, if you want to support sharing text into your app-->
             <intent-filter>
                <action android:name="android.intent.action.SEND" />
@@ -59,7 +59,7 @@ android/app/src/main/manifest.xml
                 <category android:name="android.intent.category.DEFAULT" />
                 <data android:mimeType="image/*" />
             </intent-filter>
-            
+
              <!--TODO: Add this filter, if you want to support sharing videos into your app-->
             <intent-filter>
                 <action android:name="android.intent.action.SEND" />
@@ -84,10 +84,17 @@ android/app/src/main/manifest.xml
                 <data android:mimeType="*/*" />
             </intent-filter>
       </activity>
-      
+
   </application>
 </manifest>
 ....
+```
+
+Add the following, if you want to prevent creating new activity instance everytime there is a new intent.
+
+AndroidManifest.xml
+```
+<activity android:launchMode="singleTask" ... >...</activity>
 ```
 
 ### iOS
@@ -108,11 +115,10 @@ ios/Runner/info.plist
 				<string>ShareMedia-$(PRODUCT_BUNDLE_IDENTIFIER)</string>
 			</array>
 		</dict>
-		<dict/>
 	</array>
 
-  <key>NSPhotoLibraryUsageDescription</key>
-	<string>To upload photos, please allow permission to access your photo library.</string>
+<key>NSPhotoLibraryUsageDescription</key>
+<string>To upload photos, please allow permission to access your photo library.</string>
 ...
 ```
 
