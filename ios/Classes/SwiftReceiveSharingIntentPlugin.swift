@@ -172,11 +172,30 @@ public class SwiftReceiveSharingIntentPlugin: NSObject, FlutterPlugin, FlutterSt
                     eventSinkText?(latestText)
                 }
             } else {
-                latestText = url.absoluteString
-                if(setInitialData) {
-                    initialText = latestText
+                do {
+                  if let key = url.host?.components(separatedBy: "=").last,
+                    let json = userDefaults?.object(forKey: key) as? Data {
+                    let sharedArray = decode(data: json)
+                    let sharedMediaFiles: [SharedMediaFile] = sharedArray.compactMap{
+                        guard let path = getAbsolutePath(for: $0.path) else {
+                            return nil
+                        }
+                        return SharedMediaFile.init(path: path, thumbnail: nil, duration: nil, type: $0.type)
+                    }
+                    latestMedia = sharedMediaFiles
+                    if(setInitialData) {
+                        initialMedia = latestMedia
+                    }
+                    eventSinkMedia?(toJson(data: latestMedia))
+                    
+                  }
+                } catch {
+                    latestText = url.absoluteString
+                    if(setInitialData) {
+                        initialText = latestText
+                    }
+                    eventSinkText?(latestText)
                 }
-                eventSinkText?(latestText)
             }
             return true
         }
