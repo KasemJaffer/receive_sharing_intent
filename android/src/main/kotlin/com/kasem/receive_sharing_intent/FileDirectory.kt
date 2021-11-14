@@ -12,8 +12,7 @@ import java.io.File
 import java.io.FileOutputStream
 import java.util.*
 import android.webkit.MimeTypeMap
-import android.content.ContentResolver
-import android.media.ThumbnailUtils
+import android.util.Log
 
 
 object FileDirectory {
@@ -29,21 +28,19 @@ object FileDirectory {
      */
     fun getAbsolutePath(context: Context, uri: Uri): String? {
 
-        val isKitKat = Build.VERSION.SDK_INT >= Build.VERSION_CODES.KITKAT
-
         // DocumentProvider
-        if (isKitKat && DocumentsContract.isDocumentUri(context, uri)) {
+        if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.KITKAT && DocumentsContract.isDocumentUri(context, uri)) {
             // ExternalStorageProvider
             if (isExternalStorageDocument(uri)) {
                 val docId = DocumentsContract.getDocumentId(uri)
                 val split = docId.split(":".toRegex()).dropLastWhile { it.isEmpty() }.toTypedArray()
                 val type = split[0]
 
-                if ("primary".equals(type, ignoreCase = true)) {
-                    return Environment.getExternalStorageDirectory().toString() + "/" + split[1]
+                return if ("primary".equals(type, ignoreCase = true)) {
+                    Environment.getExternalStorageDirectory().toString() + "/" + split[1]
+                } else {
+                    getDataColumn(context, uri, null, null)
                 }
-
-                // TODO handle non-primary volumes
             } else if (isDownloadsDocument(uri)) {
 
                 // val id = DocumentsContract.getDocumentId(uri)
@@ -51,16 +48,15 @@ object FileDirectory {
                 //         Uri.parse("content://downloads/public_downloads"), java.lang.Long.valueOf(id))
 
                 // return getDataColumn(context, contentUri, null, null)
-                try {
+                return try {
                     val id = DocumentsContract.getDocumentId(uri)
                     val contentUri = ContentUris.withAppendedId(
                             Uri.parse("content://downloads/public_downloads"), java.lang.Long.valueOf(id))
 
-                    return getDataColumn(context, contentUri, null, null)
+                    getDataColumn(context, contentUri, null, null)
                 } catch (exception: Exception) {
-                    return uri.path.substringAfter("raw:")
+                    getDataColumn(context, uri, null, null)
                 }
-
             } else if (isMediaDocument(uri)) {
                 val docId = DocumentsContract.getDocumentId(uri)
                 val split = docId.split(":".toRegex()).dropLastWhile { it.isEmpty() }.toTypedArray()
@@ -101,16 +97,35 @@ object FileDirectory {
                               selectionArgs: Array<String>?): String? {
 
         if (uri.authority != null) {
-            val mimeType = context.contentResolver.getType(uri)
-            val prefix = with(mimeType ?: "") {
-                when {
-                    startsWith("image") -> "IMG"
-                    startsWith("video") -> "VID"
-                    else -> "FILE"
+            var cursor: Cursor? = null
+            val column = "_display_name"
+            val projection = arrayOf(column)
+            var targetFile: File? = null
+            try {
+                cursor = context.contentResolver.query(uri, projection, selection, selectionArgs, null)
+                if (cursor != null && cursor.moveToFirst()) {
+                    val columnIndex = cursor.getColumnIndexOrThrow(column)
+                    val fileName = cursor.getString(columnIndex)
+                    Log.i("FileDirectory", "File name: $fileName")
+                    targetFile = File(context.cacheDir, fileName)
                 }
+            } finally {
+                cursor?.close()
             }
-            val type = MimeTypeMap.getSingleton().getExtensionFromMimeType(mimeType)
-            val targetFile = File(context.cacheDir, "${prefix}_${Date().time}.$type")
+
+            if (targetFile == null) {
+                val mimeType = context.contentResolver.getType(uri)
+                val prefix = with(mimeType ?: "") {
+                    when {
+                        startsWith("image") -> "IMG"
+                        startsWith("video") -> "VID"
+                        else -> "FILE"
+                    }
+                }
+                val type = MimeTypeMap.getSingleton().getExtensionFromMimeType(mimeType)
+                targetFile = File(context.cacheDir, "${prefix}_${Date().time}.$type")
+            }
+
             context.contentResolver.openInputStream(uri)?.use { input ->
                 FileOutputStream(targetFile).use { fileOut ->
                     input.copyTo(fileOut)
@@ -126,8 +141,8 @@ object FileDirectory {
         try {
             cursor = context.contentResolver.query(uri, projection, selection, selectionArgs, null)
             if (cursor != null && cursor.moveToFirst()) {
-                val column_index = cursor.getColumnIndexOrThrow(column)
-                return cursor.getString(column_index)
+                val columnIndex = cursor.getColumnIndexOrThrow(column)
+                return cursor.getString(columnIndex)
             }
         } finally {
             cursor?.close()
