@@ -146,7 +146,7 @@ class ReceiveSharingIntentPlugin(val registrar: Registrar) :
 
         return when {
             intent.action == Intent.ACTION_SEND -> {
-                val uri = intent.getParcelableExtra<Uri>(Intent.EXTRA_STREAM)
+                Uri uri = intent.getParcelableExtra<Uri>(Intent.EXTRA_STREAM)
                 val path = FileDirectory.getAbsolutePath(context, uri)
                 if (path != null) {
                     val type = getMediaType(path)
@@ -207,7 +207,7 @@ class ReceiveSharingIntentPlugin(val registrar: Registrar) :
         if (type != MediaType.VIDEO) return null // get duration for video only
         val retriever = MediaMetadataRetriever()
         retriever.setDataSource(path)
-        val duration = retriever.extractMetadata(MediaMetadataRetriever.METADATA_KEY_DURATION).toLongOrNull()
+        val duration = retriever.extractMetadata(MediaMetadataRetriever.METADATA_KEY_DURATION)?.toLongOrNull()
         retriever.release()
         return duration
     }
