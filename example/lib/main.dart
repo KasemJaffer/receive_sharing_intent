@@ -11,80 +11,101 @@ class MyApp extends StatefulWidget {
 }
 
 class _MyAppState extends State<MyApp> {
-  late StreamSubscription _intentDataStreamSubscription;
-  List<SharedMediaFile>? _sharedFiles;
-  String? _sharedText;
+  final List<StreamSubscription> streamSubscriptions = [];
+
+  final List<SharedMediaFile> sharedFiles = [];
+
+  SharedTextInfo? sharedText;
 
   @override
   void initState() {
     super.initState();
 
     // For sharing images coming from outside the app while the app is in the memory
-    _intentDataStreamSubscription = ReceiveSharingIntent.getMediaStream()
-        .listen((List<SharedMediaFile> value) {
+    final sub1 = ReceiveSharingIntent.getMediaStream().listen((final List<SharedMediaFile> value) {
+      print("Shared Media Stream: ${value.map((e) => e.toString()).join("\n\n")}");
+
       setState(() {
-        _sharedFiles = value;
-        print("Shared:" + (_sharedFiles?.map((f) => f.path).join(",") ?? ""));
+        sharedFiles
+          ..clear()
+          ..addAll(value);
       });
     }, onError: (err) {
       print("getIntentDataStream error: $err");
     });
+    streamSubscriptions.add(sub1);
 
     // For sharing images coming from outside the app while the app is closed
     ReceiveSharingIntent.getInitialMedia().then((List<SharedMediaFile> value) {
+      print("Shared Media Init: ${value.map((e) => e.toString()).join("\n\n")}");
+
       setState(() {
-        _sharedFiles = value;
-        print("Shared:" + (_sharedFiles?.map((f) => f.path).join(",") ?? ""));
+        sharedFiles
+          ..clear()
+          ..addAll(value);
       });
     });
 
     // For sharing or opening urls/text coming from outside the app while the app is in the memory
-    _intentDataStreamSubscription =
-        ReceiveSharingIntent.getTextStream().listen((String value) {
-          setState(() {
-            _sharedText = value;
-            print("Shared: $_sharedText");
-          });
-        }, onError: (err) {
-          print("getLinkStream error: $err");
-        });
+    final sub2 = ReceiveSharingIntent.getTextStream().listen((value) {
+      print("Shared Text Stream: $value");
+
+      setState(() {
+        sharedText = value;
+      });
+    }, onError: (err) {
+      print("getLinkStream error: $err");
+    });
+    streamSubscriptions.add(sub2);
 
     // For sharing or opening urls/text coming from outside the app while the app is closed
-    ReceiveSharingIntent.getInitialText().then((String? value) {
+    ReceiveSharingIntent.getInitialText().then((  value) {
+      print("Shared Text Stream: $value");
+      if (value == null) {
+        return;
+      }
+
       setState(() {
-        _sharedText = value;
-        print("Shared Init: $_sharedText");
+        sharedText = value;
       });
     });
   }
 
   @override
+  void setState(fn) {
+    if (!mounted) return;
+    super.setState(fn);
+  }
+
+  @override
   void dispose() {
-    _intentDataStreamSubscription.cancel();
+    streamSubscriptions.forEach((element) {
+      element.cancel();
+    });
+
     super.dispose();
   }
 
   @override
   Widget build(BuildContext context) {
     const textStyleBold = const TextStyle(fontWeight: FontWeight.bold);
+
     return MaterialApp(
       home: Scaffold(
         appBar: AppBar(
           title: const Text('Plugin example app'),
         ),
-        body: Center(
-          child: Column(
-            children: <Widget>[
-              Text("Shared files:", style: textStyleBold),
-              Text(_sharedFiles
-                  ?.map((f) =>
-              "{${f.toString()}}\n")
-                  .join(",\n") ??
-                  ""),
-              SizedBox(height: 100),
-              Text("Shared urls/text:", style: textStyleBold),
-              Text(_sharedText ?? "")
-            ],
+        body: SingleChildScrollView(
+          child: Center(
+            child: Column(
+              children: <Widget>[
+                Text("Shared files:", style: textStyleBold),
+                Text("${sharedFiles.map((e) => e.toString()).join("\n    -------------------    \n")}"),
+                SizedBox(height: 100),
+                Text("Shared urls/text:", style: textStyleBold),
+                Text(sharedText?.toString() ?? ""),
+              ],
+            ),
           ),
         ),
       ),

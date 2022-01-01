@@ -1,4 +1,5 @@
 <manifest xmlns:android="http://schemas.android.com/apk/res/android"
+    xmlns:tools="http://schemas.android.com/tools"
     package="com.kasem.receive_sharing_intent_example">
 
     <uses-permission android:name="android.permission.READ_EXTERNAL_STORAGE" />
@@ -61,27 +62,53 @@
                             <data android:mimeType="image/*" />
                         </intent-filter>
              -->
+        </activity>
 
+        <activity-alias
+            android:name="ReceiveSingle"
+            android:targetActivity=".MainActivity"
+            android:label="Single Receive"
+            android:icon="@mipmap/ic_launcher"
+            >
 
             <intent-filter>
                 <action android:name="android.intent.action.SEND" />
                 <category android:name="android.intent.category.DEFAULT" />
                 <data android:mimeType="*/*" />
             </intent-filter>
+
+        </activity-alias>
+
+        <activity-alias
+            android:name="ReceiveMultiple"
+            android:targetActivity=".MainActivity"
+            android:label="Multiple Receive"
+            android:icon="@mipmap/ic_launcher"
+            >
+
             <intent-filter>
                 <action android:name="android.intent.action.SEND_MULTIPLE" />
                 <category android:name="android.intent.category.DEFAULT" />
                 <data android:mimeType="*/*" />
             </intent-filter>
-            
+
+        </activity-alias>
+
+        <activity-alias
+            android:name="ReceiveView"
+            android:targetActivity=".MainActivity"
+            android:label="View Receive"
+            android:icon="@mipmap/ic_launcher"
+            >
+
             <!--Filter to open files view intent-->
-            <intent-filter>
+            <intent-filter tools:ignore="AppLinkUrlError">
                 <action android:name="android.intent.action.VIEW" />
                 <category android:name="android.intent.category.DEFAULT" />
                 <data android:mimeType="*/*" />
             </intent-filter>
 
-        </activity>
+        </activity-alias>
 
         <meta-data
             android:name="flutterEmbedding"

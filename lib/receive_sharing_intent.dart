@@ -9,7 +9,7 @@ class ReceiveSharingIntent {
   static const EventChannel _eChannelLink = const EventChannel("receive_sharing_intent/events-text");
 
   static Stream<List<SharedMediaFile>>? _streamMedia;
-  static Stream<String>? _streamLink;
+  static Stream<SharedTextInfo>? _streamLink;
 
   /// Returns a [Future], which completes to one of the following:
   ///
@@ -21,6 +21,7 @@ class ReceiveSharingIntent {
   static Future<List<SharedMediaFile>> getInitialMedia() async {
     final json = await _mChannel.invokeMethod('getInitialMedia');
     if (json == null) return [];
+
     final encoded = jsonDecode(json);
     return encoded.map<SharedMediaFile>((file) => SharedMediaFile.fromJson(file)).toList();
   }
@@ -29,8 +30,14 @@ class ReceiveSharingIntent {
   ///
   ///   * the initially stored link (possibly null), on successful invocation;
   ///   * a [PlatformException], if the invocation failed in the platform plugin.
-  static Future<String?> getInitialText() async {
-    return await _mChannel.invokeMethod('getInitialText');
+  static Future<SharedTextInfo?> getInitialText() async {
+    final json = await _mChannel.invokeMethod('getInitialText');
+    if (json == null) {
+      return null;
+    }
+
+    final encoded = jsonDecode(json);
+    return SharedTextInfo.fromJson(encoded);
   }
 
   /// A convenience method that returns the initially stored link
@@ -41,7 +48,8 @@ class ReceiveSharingIntent {
   static Future<Uri?> getInitialTextAsUri() async {
     final data = await getInitialText();
     if (data == null) return null;
-    return Uri.parse(data);
+
+    return Uri.parse(data.text);
   }
 
   /// Sets up a broadcast stream for receiving incoming media share change events.
@@ -63,6 +71,7 @@ class ReceiveSharingIntent {
   static Stream<List<SharedMediaFile>> getMediaStream() {
     if (_streamMedia == null) {
       final stream = _eChannelMedia.receiveBroadcastStream("media").cast<String?>();
+
       _streamMedia = stream.transform<List<SharedMediaFile>>(
         new StreamTransformer<String?, List<SharedMediaFile>>.fromHandlers(
           handleData: (String? data, EventSink<List<SharedMediaFile>> sink) {
@@ -95,9 +104,20 @@ class ReceiveSharingIntent {
   ///
   /// If the app was started by a link intent or user activity the stream will
   /// not emit that initial one - query either the `getInitialText` instead.
-  static Stream<String> getTextStream() {
+  static Stream<SharedTextInfo> getTextStream() {
     if (_streamLink == null) {
-      _streamLink = _eChannelLink.receiveBroadcastStream("text").cast<String>();
+      final stream = _eChannelLink.receiveBroadcastStream("text").cast<String?>();
+
+      _streamLink = stream.transform<SharedTextInfo>(
+        StreamTransformer<String?, SharedTextInfo>.fromHandlers(
+          handleData: (data, sink) {
+            if (data != null) {
+              final encoded = jsonDecode(data);
+              sink.add(SharedTextInfo.fromJson(encoded));
+            }
+          },
+        ),
+      );
     }
     return _streamLink!;
   }
@@ -113,9 +133,9 @@ class ReceiveSharingIntent {
   /// not emit that initial uri - query either the `getInitialTextAsUri` instead.
   static Stream<Uri> getTextStreamAsUri() {
     return getTextStream().transform<Uri>(
-      new StreamTransformer<String, Uri>.fromHandlers(
-        handleData: (String data, EventSink<Uri> sink) {
-          sink.add(Uri.parse(data));
+      new StreamTransformer<SharedTextInfo, Uri>.fromHandlers(
+        handleData: (data, sink) {
+          sink.add(Uri.parse(data.text));
         },
       ),
     );
@@ -133,6 +153,10 @@ class SharedMediaFile {
   /// NOTE. for iOS only the file is always copied
   /// if [isViewAction] is true, the file is not copied [no need to copy it either]
   final String path;
+
+  /// activity / activity-alias name
+  /// empty for iOS
+  final String label;
 
   /// Video thumbnail
   final String? thumbnail;
@@ -154,12 +178,33 @@ class SharedMediaFile {
 
   SharedMediaFile.fromJson(Map<String, dynamic> json)
       : path = json['path'],
+        label = json['label'] ?? '',
         thumbnail = json['thumbnail'],
         duration = json['duration'],
         type = SharedMediaType.values[json['type']],
-        isViewAction = json['isViewAction'];
+        isViewAction = json['isViewAction'] ?? false;
 
-  String toString() => "Path: $path, type: $type, isViewAction: $isViewAction";
+  String toString() => "Label: $label, type: $type, isViewAction: $isViewAction, \nPath: $path";
 }
 
 enum SharedMediaType { IMAGE, VIDEO, FILE }
+
+///
+class SharedTextInfo {
+  /// text data
+  final String text;
+
+  /// activity / activity-alias name
+  /// empty for iOS
+  final String label;
+
+  /// whether it's a view action
+  final bool isViewAction;
+
+  SharedTextInfo.fromJson(Map<String, dynamic> json)
+      : text = json['text'] ?? '',
+        label = json['label'] ?? '',
+        isViewAction = json['isViewAction'] ?? false;
+
+  String toString() => "Label: $label, isViewAction: $isViewAction, \nText: $text";
+}

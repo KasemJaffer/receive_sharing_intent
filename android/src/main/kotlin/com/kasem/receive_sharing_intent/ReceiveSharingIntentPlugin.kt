@@ -35,8 +35,8 @@ class ReceiveSharingIntentPlugin : FlutterPlugin, ActivityAware, MethodCallHandl
     private var initialMedia: JSONArray? = null
     private var latestMedia: JSONArray? = null
 
-    private var initialText: String? = null
-    private var latestText: String? = null
+    private var initialText: JSONObject? = null
+    private var latestText: JSONObject? = null
 
     private var eventSinkMedia: EventChannel.EventSink? = null
     private var eventSinkText: EventChannel.EventSink? = null
@@ -99,7 +99,7 @@ class ReceiveSharingIntentPlugin : FlutterPlugin, ActivityAware, MethodCallHandl
     override fun onMethodCall(call: MethodCall, result: Result) {
         when (call.method) {
             "getInitialMedia" -> result.success(initialMedia?.toString())
-            "getInitialText" -> result.success(initialText)
+            "getInitialText" -> result.success(initialText?.toString())
             "reset" -> {
                 initialMedia = null
                 latestMedia = null
@@ -125,9 +125,14 @@ class ReceiveSharingIntentPlugin : FlutterPlugin, ActivityAware, MethodCallHandl
             (intent.type == null || intent.type?.startsWith("text") == true)
                     && intent.action == Intent.ACTION_SEND -> { // Sharing text
                 val value = intent.getStringExtra(Intent.EXTRA_TEXT)
-                if (initial) initialText = value
-                latestText = value
-                eventSinkText?.success(latestText)
+
+                val jsonObject = JSONObject()
+                    .put("text", value)
+                    .put("isViewAction", false)
+                    .put("label", intent.component?.className)
+                if (initial) initialText = jsonObject
+                latestText = jsonObject
+                eventSinkText?.success(latestText?.toString())
             }
             intent.type != null && intent.action == Intent.ACTION_VIEW -> {
                 val value = getMediaUris(intent)
@@ -137,9 +142,14 @@ class ReceiveSharingIntentPlugin : FlutterPlugin, ActivityAware, MethodCallHandl
             }
             intent.action == Intent.ACTION_VIEW -> { // Opening URL
                 val value = intent.dataString
-                if (initial) initialText = value
-                latestText = value
-                eventSinkText?.success(latestText)
+
+                val jsonObject = JSONObject()
+                    .put("text", value)
+                    .put("isViewAction", true)
+                    .put("label", intent.component?.className)
+                if (initial) initialText = jsonObject
+                latestText = jsonObject
+                eventSinkText?.success(latestText?.toString())
             }
         }
     }
@@ -162,6 +172,7 @@ class ReceiveSharingIntentPlugin : FlutterPlugin, ActivityAware, MethodCallHandl
                                     .put("thumbnail", thumbnail)
                                     .put("duration", duration)
                                     .put("isViewAction", false)
+                                .put("label", intent.component?.className)
                     )
                 } else null
             }
@@ -179,6 +190,7 @@ class ReceiveSharingIntentPlugin : FlutterPlugin, ActivityAware, MethodCallHandl
                             .put("thumbnail", thumbnail)
                             .put("duration", duration)
                             .put("isViewAction", false)
+                        .put("label", intent.component?.className)
                 }?.toList()
                 if (value != null) JSONArray(value) else null
             }
@@ -196,6 +208,7 @@ class ReceiveSharingIntentPlugin : FlutterPlugin, ActivityAware, MethodCallHandl
                                     .put("thumbnail", thumbnail)
                                     .put("duration", duration)
                                     .put("isViewAction", true)
+                                .put("label", intent.component?.className)
                     )
                     return array
                 } else null
