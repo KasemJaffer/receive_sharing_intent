@@ -146,6 +146,10 @@ class SharedMediaFile {
   /// whether it's a view action
   final bool isViewAction;
 
+  bool get isImage => type == SharedMediaType.IMAGE;
+  bool get isVideo => type == SharedMediaType.VIDEO;
+  bool get isFile => type == SharedMediaType.FILE;
+
   //SharedMediaFile(this.path, this.thumbnail, this.duration, this.type, this.isViewAction);
 
   SharedMediaFile.fromJson(Map<String, dynamic> json)
