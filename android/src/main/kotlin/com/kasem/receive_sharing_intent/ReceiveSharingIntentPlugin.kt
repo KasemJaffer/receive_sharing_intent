@@ -143,7 +143,7 @@ class ReceiveSharingIntentPlugin : FlutterPlugin, ActivityAware, MethodCallHandl
         return when (intent.action) {
             Intent.ACTION_SEND -> {
                 val uri = intent.getParcelableExtra<Uri>(Intent.EXTRA_STREAM)
-                val path = uri?.let{ FileDirectory.getAbsolutePath(applicationContext, it) }
+                val path = FileDirectory.getAbsolutePath(applicationContext, uri!!)
                 if (path != null) {
                     val type = getMediaType(path)
                     val thumbnail = getThumbnail(path, type)
