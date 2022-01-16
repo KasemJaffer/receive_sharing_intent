@@ -4,6 +4,8 @@ import 'dart:convert';
 import 'package:flutter/services.dart';
 
 class ReceiveSharingIntent {
+  ReceiveSharingIntent._();
+
   static const MethodChannel _mChannel = const MethodChannel('receive_sharing_intent/messages');
   static const EventChannel _eChannelMedia = const EventChannel("receive_sharing_intent/events-media");
   static const EventChannel _eChannelLink = const EventChannel("receive_sharing_intent/events-text");
@@ -149,14 +151,15 @@ class ReceiveSharingIntent {
 }
 
 class SharedMediaFile {
-  /// Image or Video path.
-  /// NOTE. for iOS only the file is always copied
-  /// if [isViewAction] is true, the file is not copied [no need to copy it either]
+  /// Image or Video or File path.
   final String path;
 
   /// activity / activity-alias name
   /// empty for iOS
   final String label;
+
+  /// whether the file was copied or not
+  final bool isCopied;
 
   /// Video thumbnail
   final String? thumbnail;
@@ -174,17 +177,16 @@ class SharedMediaFile {
   bool get isVideo => type == SharedMediaType.VIDEO;
   bool get isFile => type == SharedMediaType.FILE;
 
-  //SharedMediaFile(this.path, this.thumbnail, this.duration, this.type, this.isViewAction);
-
   SharedMediaFile.fromJson(Map<String, dynamic> json)
       : path = json['path'],
         label = json['label'] ?? '',
+        isCopied = json['isCopied'] ?? true,
         thumbnail = json['thumbnail'],
         duration = json['duration'],
         type = SharedMediaType.values[json['type']],
         isViewAction = json['isViewAction'] ?? false;
 
-  String toString() => "Label: $label, type: $type, isViewAction: $isViewAction, \nPath: $path";
+  String toString() => "Label: $label, type: $type, isViewAction: $isViewAction, isCopied: $isCopied, \nPath: $path";
 }
 
 enum SharedMediaType { IMAGE, VIDEO, FILE }

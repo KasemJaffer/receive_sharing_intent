@@ -24,9 +24,10 @@ object FileDirectory {
      *
      * @param context The context.
      * @param uri The Uri to query.
+     * @param copyFile Whether to copy file or not
      * @author paulburke
      */
-    fun getAbsolutePath(context: Context, uri: Uri): String? { 
+    fun getAbsolutePath(context: Context, uri: Uri, copyFile: Boolean): String? {
         // DocumentProvider
         if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.KITKAT && DocumentsContract.isDocumentUri(context, uri)) {
             // ExternalStorageProvider
@@ -38,7 +39,7 @@ object FileDirectory {
                 return if ("primary".equals(type, ignoreCase = true)) {
                     Environment.getExternalStorageDirectory().toString() + "/" + split[1]
                 } else {
-                    getDataColumn(context, uri, null, null)
+                    getDataColumn(context, uri, copyFile, null, null)
                 }
             } else if (isDownloadsDocument(uri)) {
                 return try {
@@ -46,9 +47,9 @@ object FileDirectory {
                     val contentUri = ContentUris.withAppendedId(
                             Uri.parse("content://downloads/public_downloads"), java.lang.Long.valueOf(id))
 
-                    getDataColumn(context, contentUri, null, null)
+                    getDataColumn(context, contentUri, copyFile, null, null)
                 } catch (exception: Exception) {
-                    getDataColumn(context, uri, null, null)
+                    getDataColumn(context, uri, copyFile, null, null)
                 }
             } else if (isMediaDocument(uri)) {
                 val docId = DocumentsContract.getDocumentId(uri)
@@ -66,12 +67,12 @@ object FileDirectory {
 
                 val selection = "_id=?"
                 val selectionArgs = arrayOf(split[1])
-                return getDataColumn(context, contentUri, selection, selectionArgs)
+                return getDataColumn(context, contentUri, copyFile, selection, selectionArgs)
             }// MediaProvider
             // DownloadsProvider
         } else if ("content".equals(uri.scheme, ignoreCase = true)) {
 
-            return getDataColumn(context, uri, null, null)
+            return getDataColumn(context, uri, copyFile, null, null)
         }
 
         return uri.path
@@ -83,25 +84,54 @@ object FileDirectory {
      *
      * @param context The context.
      * @param uri The Uri to query.
+     * @param copyFile Whether to copy file or not
      * @param selection (Optional) Filter used in the query.
      * @param selectionArgs (Optional) Selection arguments used in the query.
      * @return The value of the _data column, which is typically a file path.
      */
-    private fun getDataColumn(context: Context, uri: Uri, selection: String?,
+    private fun getDataColumn(context: Context, uri: Uri, copyFile: Boolean, selection: String?,
                               selectionArgs: Array<String>?): String? {
 
-        if (uri.authority != null) {
+
+        var filePath: String? = null
+
+        if(!copyFile) {
+            var cursor: Cursor? = null
+            val column = "_data"
+            val projection = arrayOf(column)
+
+            try {
+                cursor =
+                    context.contentResolver.query(uri, projection, selection, selectionArgs, null)
+                if (cursor != null && cursor.moveToFirst()) {
+                    val columnIndex = cursor.getColumnIndex(column)
+                    if(columnIndex != -1) {
+                        filePath = cursor.getString(columnIndex)
+                    }
+                }
+            } finally {
+                cursor?.close()
+            }
+        }
+
+        if (filePath == null && uri.authority != null) {
             var cursor: Cursor? = null
             val column = "_display_name"
             val projection = arrayOf(column)
             var targetFile: File? = null
             try {
+                Log.d("FileDirectory", "URI: $uri")
                 cursor = context.contentResolver.query(uri, projection, selection, selectionArgs, null)
                 if (cursor != null && cursor.moveToFirst()) {
-                    val columnIndex = cursor.getColumnIndexOrThrow(column)
-                    val fileName = cursor.getString(columnIndex)
+                    val columnIndex = cursor.getColumnIndex(column)
+                    val fileName = if(columnIndex != -1) {
+                        cursor.getString(columnIndex)
+                    }else {
+                        null
+                    }
+
                     Log.i("FileDirectory", "File name: $fileName")
-                    targetFile = File(context.cacheDir, fileName)
+                    targetFile = fileName?.let { File(context.cacheDir, it) }
                 }
             } finally {
                 cursor?.close()
@@ -125,23 +155,30 @@ object FileDirectory {
                     input.copyTo(fileOut)
                 }
             }
-            return targetFile.path
+            filePath = targetFile.path
         }
 
-        var cursor: Cursor? = null
-        val column = "_data"
-        val projection = arrayOf(column)
 
-        try {
-            cursor = context.contentResolver.query(uri, projection, selection, selectionArgs, null)
-            if (cursor != null && cursor.moveToFirst()) {
-                val columnIndex = cursor.getColumnIndexOrThrow(column)
-                return cursor.getString(columnIndex)
+        if(filePath == null) {
+            var cursor: Cursor? = null
+            val column = "_data"
+            val projection = arrayOf(column)
+
+            try {
+                cursor =
+                    context.contentResolver.query(uri, projection, selection, selectionArgs, null)
+                if (cursor != null && cursor.moveToFirst()) {
+                    val columnIndex = cursor.getColumnIndex(column)
+                    if(columnIndex != -1) {
+                        filePath = cursor.getString(columnIndex)
+                    }
+                }
+            } finally {
+                cursor?.close()
             }
-        } finally {
-            cursor?.close()
         }
-        return null
+
+        return filePath
     }
 
 
@@ -149,7 +186,7 @@ object FileDirectory {
      * @param uri The Uri to check.
      * @return Whether the Uri authority is ExternalStorageProvider.
      */
-    fun isExternalStorageDocument(uri: Uri): Boolean {
+    private fun isExternalStorageDocument(uri: Uri): Boolean {
         return "com.android.externalstorage.documents" == uri.authority
     }
 
@@ -157,7 +194,7 @@ object FileDirectory {
      * @param uri The Uri to check.
      * @return Whether the Uri authority is DownloadsProvider.
      */
-    fun isDownloadsDocument(uri: Uri): Boolean {
+    private fun isDownloadsDocument(uri: Uri): Boolean {
         return "com.android.providers.downloads.documents" == uri.authority
     }
 
@@ -165,7 +202,7 @@ object FileDirectory {
      * @param uri The Uri to check.
      * @return Whether the Uri authority is MediaProvider.
      */
-    fun isMediaDocument(uri: Uri): Boolean {
+    private fun isMediaDocument(uri: Uri): Boolean {
         return "com.android.providers.media.documents" == uri.authority
     }
 }
