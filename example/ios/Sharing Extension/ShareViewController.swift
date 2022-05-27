@@ -10,6 +10,7 @@ import UIKit
 import Social
 import MobileCoreServices
 import Photos
+import UniformTypeIdentifiers
 
 class ShareViewController: SLComposeServiceViewController {
     var hostAppBundleIdentifier = ""
@@ -17,11 +18,11 @@ class ShareViewController: SLComposeServiceViewController {
     let sharedKey = "ShareKey"
     var sharedMedia: [SharedMediaFile] = []
     var sharedText: [String] = []
-    let imageContentType = kUTTypeImage as String
-    let videoContentType = kUTTypeMovie as String
-    let textContentType = kUTTypeText as String
-    let urlContentType = kUTTypeURL as String
-    let fileURLType = kUTTypeFileURL as String;
+    let imageContentType = UTType.image.identifier as String
+    let videoContentType = UTType.movie.identifier as String
+    let textContentType = UTType.text.identifier as String
+    let urlContentType = UTType.url.identifier as String
+    let fileURLType = UTType.fileURL.identifier as String;
 
     override func isContentValid() -> Bool {
         return true
