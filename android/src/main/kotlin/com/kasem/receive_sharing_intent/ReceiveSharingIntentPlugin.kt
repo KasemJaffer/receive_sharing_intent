@@ -126,6 +126,16 @@ class ReceiveSharingIntentPlugin : FlutterPlugin, ActivityAware, MethodCallHandl
                 latestMedia = value
                 eventSinkMedia?.success(latestMedia?.toString())
             }
+            (intent.action == Intent.ACTION_SENDTO) -> {
+                val dataString = intent.dataString
+                if (dataString != null) {
+                    val value = dataString
+                    if (initial) initialText = value
+                    latestText = value
+                    eventSinkText?.success(latestText)
+                }
+
+            }
             (intent.type == null || intent.type?.startsWith("text") == true)
                     && intent.action == Intent.ACTION_SEND -> { // Sharing text
                 val value = intent.getStringExtra(Intent.EXTRA_TEXT)
