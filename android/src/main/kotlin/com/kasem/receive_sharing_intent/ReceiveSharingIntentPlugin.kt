@@ -112,13 +112,9 @@ class ReceiveSharingIntentPlugin : FlutterPlugin, ActivityAware, MethodCallHandl
     }
 
     private fun handleIntent(intent: Intent, initial: Boolean) {
-        println("=================handleIntent:")
-        println("=================startsWith: ${intent.type?.startsWith("text")}")
-        println("=================action: ${intent.action}")
-        println("=================type: ${intent.type}")
-        println("=================scheme: ${intent.scheme}")
         when {
             (intent.type?.startsWith("text") != true)
+                    || (intent.type?.startsWith("text/x-vcard") == true)
                     && (intent.action == Intent.ACTION_SEND
                     || intent.action == Intent.ACTION_SEND_MULTIPLE) -> { // Sharing images or videos
 
