@@ -116,6 +116,7 @@ class ReceiveSharingIntentPlugin : FlutterPlugin, ActivityAware, MethodCallHandl
         println("=================startsWith: ${intent.type?.startsWith("text")}")
         println("=================action: ${intent.action}")
         println("=================type: ${intent.type}")
+        println("=================scheme: ${intent.scheme}")
         when {
             (intent.type?.startsWith("text") != true)
                     && (intent.action == Intent.ACTION_SEND
@@ -126,10 +127,10 @@ class ReceiveSharingIntentPlugin : FlutterPlugin, ActivityAware, MethodCallHandl
                 latestMedia = value
                 eventSinkMedia?.success(latestMedia?.toString())
             }
-            (intent.action == Intent.ACTION_SENDTO) -> {
-                val dataString = intent.dataString
-                if (dataString != null) {
-                    val value = dataString
+            (intent.action == Intent.ACTION_SENDTO && "mailto" == intent.scheme) -> {
+                val email = intent.data?.schemeSpecificPart
+                if (email != null) {
+                    val value = email
                     if (initial) initialText = value
                     latestText = value
                     eventSinkText?.success(latestText)
