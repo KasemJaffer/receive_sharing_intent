@@ -6,4 +6,4 @@ pluginManagement {
   }
 }
 
-rootProject.name = 'receive_sharing_intent'
+rootProject.name = "receive_sharing_intent"
