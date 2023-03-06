@@ -113,6 +113,7 @@ class ReceiveSharingIntentPlugin : FlutterPlugin, ActivityAware, MethodCallHandl
     private fun handleIntent(intent: Intent, initial: Boolean) {
         when {
             (intent.type?.startsWith("text") != true)
+                    || (intent.type?.startsWith("text/x-vcard") == true)
                     && (intent.action == Intent.ACTION_SEND
                     || intent.action == Intent.ACTION_SEND_MULTIPLE) -> { // Sharing images or videos
 
@@ -127,6 +128,16 @@ class ReceiveSharingIntentPlugin : FlutterPlugin, ActivityAware, MethodCallHandl
                 if (initial) initialText = value
                 latestText = value
                 eventSinkText?.success(latestText)
+            }
+            (intent.action == Intent.ACTION_SENDTO && "mailto" == intent.scheme) -> { //Send Mailto
+                val emailAddres = intent.data?.schemeSpecificPart
+                if (emailAddres != null) {
+                    val value = emailAddres
+                    if (initial) initialText = value
+                    latestText = value
+                    eventSinkText?.success(latestText)
+                }
+
             }
             intent.action == Intent.ACTION_VIEW -> { // Opening URL
                 val value = intent.dataString
