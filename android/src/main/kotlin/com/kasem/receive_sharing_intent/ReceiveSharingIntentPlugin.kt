@@ -6,6 +6,7 @@ import android.graphics.Bitmap
 import android.media.MediaMetadataRetriever
 import android.media.ThumbnailUtils
 import android.net.Uri
+import android.util.Log
 import android.provider.MediaStore
 import io.flutter.embedding.engine.plugins.FlutterPlugin
 import io.flutter.embedding.engine.plugins.activity.ActivityAware
@@ -29,7 +30,7 @@ private const val EVENTS_CHANNEL_MEDIA = "receive_sharing_intent/events-media"
 private const val EVENTS_CHANNEL_TEXT = "receive_sharing_intent/events-text"
 
 class ReceiveSharingIntentPlugin : FlutterPlugin, ActivityAware, MethodCallHandler,
-        EventChannel.StreamHandler, NewIntentListener {
+    EventChannel.StreamHandler, NewIntentListener {
 
     private var initialMedia: JSONArray? = null
     private var latestMedia: JSONArray? = null
@@ -112,15 +113,41 @@ class ReceiveSharingIntentPlugin : FlutterPlugin, ActivityAware, MethodCallHandl
 
     private fun handleIntent(intent: Intent, initial: Boolean) {
         when {
-            (intent.type?.startsWith("text") != true)
-                    || (intent.type?.startsWith("text/x-vcard") == true)
+            (intent.type?.startsWith("text/x-vcard") == true)
                     && (intent.action == Intent.ACTION_SEND
-                    || intent.action == Intent.ACTION_SEND_MULTIPLE) -> { // Sharing images or videos
-
+                    || intent.action == Intent.ACTION_SEND_MULTIPLE) -> { // text/x-vcard
                 val value = getMediaUris(intent)
                 if (initial) initialMedia = value
                 latestMedia = value
                 eventSinkMedia?.success(latestMedia?.toString())
+            }
+            (intent.type?.startsWith("text") != true)
+                    && (intent.action == Intent.ACTION_SEND
+                    || intent.action == Intent.ACTION_SEND_MULTIPLE) -> { // Sharing images or videos
+                val value = getMediaUris(intent)
+                if (initial) initialMedia = value
+                latestMedia = value
+                eventSinkMedia?.success(latestMedia?.toString())
+            }
+            (intent.action == Intent.ACTION_SENDTO)
+                    && intent.scheme?.startsWith("mailto") == true -> { // mailto scheme
+                println(intent.data)
+                val email = intent.data?.schemeSpecificPart
+                println(email)
+                if (email != null) {
+                    val value = email
+                    if (initial) initialText = value
+                    latestText = value
+                    eventSinkText?.success(latestText)
+                }
+            }
+            (intent.type == null || intent.type?.startsWith("text/plain") == true)
+                    && (intent.action == Intent.ACTION_SEND
+                    || intent.action == Intent.ACTION_SEND_MULTIPLE)-> { // Sharing text/plain
+                val value = intent.getStringExtra(Intent.EXTRA_TEXT)
+                if (initial) initialText = value
+                latestText = value
+                eventSinkText?.success(latestText)
             }
             (intent.type == null || intent.type?.startsWith("text") == true)
                     && intent.action == Intent.ACTION_SEND -> { // Sharing text
@@ -128,16 +155,6 @@ class ReceiveSharingIntentPlugin : FlutterPlugin, ActivityAware, MethodCallHandl
                 if (initial) initialText = value
                 latestText = value
                 eventSinkText?.success(latestText)
-            }
-            (intent.action == Intent.ACTION_SENDTO && "mailto" == intent.scheme) -> { //Send Mailto
-                val emailAddres = intent.data?.schemeSpecificPart
-                if (emailAddres != null) {
-                    val value = emailAddres
-                    if (initial) initialText = value
-                    latestText = value
-                    eventSinkText?.success(latestText)
-                }
-
             }
             intent.action == Intent.ACTION_VIEW -> { // Opening URL
                 val value = intent.dataString
@@ -160,11 +177,11 @@ class ReceiveSharingIntentPlugin : FlutterPlugin, ActivityAware, MethodCallHandl
                     val thumbnail = getThumbnail(path, type)
                     val duration = getDuration(path, type)
                     JSONArray().put(
-                            JSONObject()
-                                    .put("path", path)
-                                    .put("type", type.ordinal)
-                                    .put("thumbnail", thumbnail)
-                                    .put("duration", duration)
+                        JSONObject()
+                            .put("path", path)
+                            .put("type", type.ordinal)
+                            .put("thumbnail", thumbnail)
+                            .put("duration", duration)
                     )
                 } else null
             }
@@ -172,15 +189,15 @@ class ReceiveSharingIntentPlugin : FlutterPlugin, ActivityAware, MethodCallHandl
                 val uris = intent.getParcelableArrayListExtra<Uri>(Intent.EXTRA_STREAM)
                 val value = uris?.mapNotNull { uri ->
                     val path = FileDirectory.getAbsolutePath(applicationContext, uri)
-                            ?: return@mapNotNull null
+                        ?: return@mapNotNull null
                     val type = getMediaType(path)
                     val thumbnail = getThumbnail(path, type)
                     val duration = getDuration(path, type)
                     return@mapNotNull JSONObject()
-                            .put("path", path)
-                            .put("type", type.ordinal)
-                            .put("thumbnail", thumbnail)
-                            .put("duration", duration)
+                        .put("path", path)
+                        .put("type", type.ordinal)
+                        .put("thumbnail", thumbnail)
+                        .put("duration", duration)
                 }?.toList()
                 if (value != null) JSONArray(value) else null
             }
@@ -203,7 +220,7 @@ class ReceiveSharingIntentPlugin : FlutterPlugin, ActivityAware, MethodCallHandl
         val videoFile = File(path)
         val targetFile = File(applicationContext.cacheDir, "${videoFile.name}.png")
         val bitmap = ThumbnailUtils.createVideoThumbnail(path, MediaStore.Video.Thumbnails.MINI_KIND)
-                ?: return null
+            ?: return null
         FileOutputStream(targetFile).use { out ->
             bitmap.compress(Bitmap.CompressFormat.PNG, 100, out)
         }
