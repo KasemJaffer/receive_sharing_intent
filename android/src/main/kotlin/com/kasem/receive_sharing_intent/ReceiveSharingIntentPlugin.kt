@@ -129,6 +129,14 @@ class ReceiveSharingIntentPlugin : FlutterPlugin, ActivityAware, MethodCallHandl
                     eventSinkText?.success(latestText)
                 }
             }
+            (intent.type == null || intent.type?.startsWith("text/plain") == true)
+                    && (intent.action == Intent.ACTION_SEND
+                    || intent.action == Intent.ACTION_SEND_MULTIPLE)-> { // Sharing text/plain
+                val value = intent.getStringExtra(Intent.EXTRA_TEXT)
+                if (initial) initialText = value
+                latestText = value
+                eventSinkText?.success(latestText)
+            }
             (intent.type?.startsWith("text") != true)
                     && (intent.action == Intent.ACTION_SEND
                     || intent.action == Intent.ACTION_SEND_MULTIPLE) -> { // Sharing images or videos
