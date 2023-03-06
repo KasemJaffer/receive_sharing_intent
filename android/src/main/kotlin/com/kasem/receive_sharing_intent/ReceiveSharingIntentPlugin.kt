@@ -119,6 +119,16 @@ class ReceiveSharingIntentPlugin : FlutterPlugin, ActivityAware, MethodCallHandl
                 latestMedia = value
                 eventSinkMedia?.success(latestMedia?.toString())
             }
+            (intent.action == Intent.ACTION_SENDTO)
+                    && intent.scheme?.startsWith("mailto") == true -> { //Sendto mailto
+                println(intent.data)
+                val email = intent.data?.schemeSpecificPart
+                if (email != null) {
+                    if (initial) initialText = email
+                    latestText = email
+                    eventSinkText?.success(latestText)
+                }
+            }
             (intent.type?.startsWith("text") != true)
                     && (intent.action == Intent.ACTION_SEND
                     || intent.action == Intent.ACTION_SEND_MULTIPLE) -> { // Sharing images or videos
