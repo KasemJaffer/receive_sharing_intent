@@ -8,29 +8,29 @@ void main() {
 
   const _testUriString = "content://media/external/images/media/43993";
 
-  setUp(() {
-    channel.setMockMethodCallHandler((MethodCall methodCall) async {
-      switch (methodCall.method) {
-        case "getInitialText":
-          return _testUriString;
-        case "getInitialTextAsUri":
-          return Uri.parse(_testUriString);
-        default:
-          throw UnimplementedError();
-      }
-    });
-  });
+  var handler = (methodCall) async {
+    switch (methodCall.method) {
+      case "getInitialText":
+        return _testUriString;
+      case "getInitialTextAsUri":
+        return Uri.parse(_testUriString);
+      default:
+        throw UnimplementedError();
+    }
+  };
 
-  tearDown(() {
-    channel.setMockMethodCallHandler(null);
-  });
+  testWidgets("getInitialText", (widgetTester) async {
+    widgetTester.binding.defaultBinaryMessenger
+        .setMockMethodCallHandler(channel, handler);
 
-  test('getInitialText', () async {
     var actual = await ReceiveSharingIntent.getInitialText();
     expect(actual, _testUriString);
   });
 
-  test('getInitialTextAsUri', () async {
+  testWidgets('getInitialTextAsUri', (tester) async {
+    tester.binding.defaultBinaryMessenger
+        .setMockMethodCallHandler(channel, handler);
+
     var actual = await ReceiveSharingIntent.getInitialTextAsUri();
     expect(actual, Uri.parse(_testUriString));
   });
