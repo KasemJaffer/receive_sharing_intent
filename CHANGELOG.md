@@ -1,3 +1,7 @@
+## 1.4.5
+
+* Update android to use compileSdkVersion 30
+
 ## 1.4.4
 
 * Enabled null safety
