@@ -1,3 +1,7 @@
+## 1.4.6
+
+* Update gradle version to 7.4.2
+
 ## 1.4.5
 
 * Update android to use compileSdkVersion 30
