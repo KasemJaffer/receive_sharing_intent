@@ -17,7 +17,9 @@
             android:hardwareAccelerated="true"
             android:launchMode="singleTask"
             android:theme="@style/LaunchTheme"
-            android:windowSoftInputMode="adjustResize">
+            android:windowSoftInputMode="adjustResize"
+            android:exported="true"
+        >
             <!-- This keeps the window background of the activity showing
                  until Flutter renders its first frame. It can be removed if
                  there is no splash screen (such as the default splash screen
@@ -30,7 +32,8 @@
                 <category android:name="android.intent.category.LAUNCHER" />
             </intent-filter>
 
-            <!--TODO: Change the url host name you want to support-->
+            <!--TODO:
+            Change the url host name you want to support-->
             <intent-filter>
                 <action android:name="android.intent.action.VIEW" />
 
