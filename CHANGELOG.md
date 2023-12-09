@@ -1,4 +1,8 @@
-## 1.4.5
+# 1.4.6
+
+* Update android to use  ext.kotlin_version = '1.9.0' & sdk: ">=2.12.0 <4.0.0"
+
+# 1.4.5
 
 * Update android to use compileSdkVersion 30
 
