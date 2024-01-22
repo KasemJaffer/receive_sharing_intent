@@ -1,4 +1,5 @@
 # receive_sharing_intent
+[![pub package](https://img.shields.io/pub/v/receive_sharing_intent.svg)](https://pub.dev/packages/receive_sharing_intent)
 
 A flutter plugin that enables flutter apps to receive sharing photos, videos, text, urls or any other file types from another app.
 
@@ -580,12 +581,12 @@ end
 #### 4. Compiling issues and their fixes
 
 * Error: App does not build after adding Share Extension?
-* Fix: Check Build Settings of your share extension and remove everything that tries to import Cocoapods from your main project. i.e. remove everything under `Linking/Other Linker Flags` 
+  * Fix: Check Build Settings of your share extension and remove everything that tries to import Cocoapods from your main project. i.e. remove everything under `Linking/Other Linker Flags` 
 
 * You might need to disable bitcode for the extension target
 
 * Error: Invalid Bundle. The bundle at 'Runner.app/Plugins/Sharing Extension.appex' contains disallowed file 'Frameworks'
-* Fix: https://stackoverflow.com/a/25789145/2061365
+    * Fix: https://stackoverflow.com/a/25789145/2061365
 
 
 

@@ -1,3 +1,10 @@
+## 1.5.0
+
+* Add support for custom group ID for iOS
+* Update android gradle build tools to 7.3.1
+* Replace deprecated jcenter with mavenCentral
+* Update android to use compileSdkVersion 34
+
 ## 1.4.5
 
 * Update android to use compileSdkVersion 30
