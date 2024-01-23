@@ -1,3 +1,7 @@
+## 1.5.1
+
+* Update plugin's iOS build version
+
 ## 1.5.0
 
 * Add support for custom group ID for iOS
