@@ -4,16 +4,25 @@
 A flutter plugin that enables flutter apps to receive sharing photos, videos, text, urls or any other file types from another app.
 
 Also, supports iOS Share extension and launching the host app automatically.
-Check the provided example for more info.
+Check the provided [example](./example/lib/main.dart) for more info.
 
 ![Alt Text](./example/demo.gif)
 
 
 # Usage
 
+To use this plugin, add `receive_sharing_intent` as a [dependency in your pubspec.yaml file](https://flutter.io/platform-plugins/). For example:
+
+```yaml
+dependencies:
+  receive_sharing_intent: ^latest
+```
+
 ## Android
 
-android/app/src/main/manifest.xml
+
+Add the following filters to your [android/app/src/main/AndroidManifest.xml](./example/android/app/src/main/AndroidManifest.xml):
+
 ```xml
 <manifest xmlns:android="http://schemas.android.com/apk/res/android"
 .....
@@ -23,10 +32,10 @@ android/app/src/main/manifest.xml
         android:name="io.flutter.app.FlutterApplication"
         ...
         >
-
+<!--Set activity launchMode to singleTask, if you want to prevent creating new activity instance everytime there is a new intent.-->
     <activity
             android:name=".MainActivity"
-            android:launchMode="singleTop"
+            android:launchMode="singleTask"
             android:theme="@style/LaunchTheme"
             android:configChanges="orientation|keyboardHidden|keyboard|screenSize|locale|layoutDirection|fontScale|screenLayout|density|uiMode"
             android:hardwareAccelerated="true"
@@ -93,17 +102,17 @@ android/app/src/main/manifest.xml
 ....
 ```
 
-Add the following, if you want to prevent creating new activity instance everytime there is a new intent.
+## iOS
 
-AndroidManifest.xml
-```
-<activity android:launchMode="singleTask" ... >...</activity>
-```
+#### 1. Create Share Extension
 
-### iOS
+- Using Xcode, go to File/New/Target and Choose "Share Extension".
+- Give it a name, i.e., "Share Extension".
 
-#### 1. Add the following
-ios/Runner/info.plist
+Make sure the deployment target for Runner.app and the share extension is the same.
+
+#### 2. Add the following to [ios/Runner/info.plist](./example/ios/Runner/info.plist):
+
 ```xml
 ...
 <key>AppGroupId</key>
@@ -125,15 +134,8 @@ ios/Runner/info.plist
 ...
 ```
 
-#### 2. Create Share Extension
+#### 3. Add the following to [ios/Share Extension/info.plist](./example/ios/Share%20Extension/info.plist):
 
-- Using xcode, go to File/New/Target and Choose "Share Extension"
-- Give it a name i.e. "Share Extension"
-
-##### Make sure the deployment target for Runner.app and the share extension is the same. 
-
-##### Add the following code:
-ios/Share Extension/info.plist
 ```xml
 ....
     <key>AppGroupId</key>
@@ -180,7 +182,9 @@ ios/Share Extension/info.plist
 ```
 
 
-ios/Runner/Runner.entitlements
+#### 4. Add the following to [ios/Runner/Runner.entitlements](./example/ios/Runner/Runner.entitlements):
+
+
 ```xml
 ....
     <!--TODO:  Add this tag, if you want support opening urls into your app-->
@@ -192,9 +196,10 @@ ios/Runner/Runner.entitlements
 ```
 
 
-ios/Share Extension/ShareViewController.swift
+#### 5. Add the following code to [ios/Share Extension/ShareViewController.swift](./example/ios/Share%20Extension/ShareViewController.swift):
 
-* Look at `loadIds()` for configure and details
+
+
 ```swift
 import UIKit
 import Social
@@ -212,7 +217,7 @@ class ShareViewController: SLComposeServiceViewController {
     let videoContentType = UTType.movie.identifier
     let textContentType = UTType.text.identifier
     let urlContentType = UTType.url.identifier
-    let fileURLType = UTType.fileURL.identifier;
+    let fileURLType = UTType.fileURL.identifier
 
     override func isContentValid() -> Bool {
         return true
@@ -220,24 +225,24 @@ class ShareViewController: SLComposeServiceViewController {
 
     private func loadIds() {
         // loading Share extension App Id
-        let shareExtensionAppBundleIdentifier = Bundle.main.bundleIdentifier!;
+        let shareExtensionAppBundleIdentifier = Bundle.main.bundleIdentifier!
 
 
         // extract host app bundle id from ShareExtension id
         // by default it's <hostAppBundleIdentifier>.<ShareExtension>
         // for example: com.test.ShareExtension -> com.test
-        let lastIndexOfPoint = shareExtensionAppBundleIdentifier.lastIndex(of: ".");
-        hostAppBundleIdentifier = String(shareExtensionAppBundleIdentifier[..<lastIndexOfPoint!]);
+        let lastIndexOfPoint = shareExtensionAppBundleIdentifier.lastIndex(of: ".")
+        hostAppBundleIdentifier = String(shareExtensionAppBundleIdentifier[..<lastIndexOfPoint!])
 
         // loading custom AppGroupId from Build Settings or use group.<hostAppBundleIdentifier>
-        appGroupId = (Bundle.main.object(forInfoDictionaryKey: "AppGroupId") as? String) ?? "group.\(hostAppBundleIdentifier)";
+        appGroupId = (Bundle.main.object(forInfoDictionaryKey: "AppGroupId") as? String) ?? "group.\(hostAppBundleIdentifier)"
     }
 
     override func viewDidLoad() {
-        super.viewDidLoad();
+        super.viewDidLoad()
 
         // load group and app id from build info
-        loadIds();
+        loadIds()
     }
 
     override func viewDidAppear(_ animated: Bool) {
@@ -264,7 +269,7 @@ class ShareViewController: SLComposeServiceViewController {
     }
 
     override func didSelectPost() {
-        print("didSelectPost");
+        print("didSelectPost")
     }
 
     override func configurationItems() -> [Any]! {
@@ -418,7 +423,7 @@ class ShareViewController: SLComposeServiceViewController {
 
     private func redirectToHostApp(type: RedirectType) {
         // ids may not loaded yet so we need loadIds here too
-        loadIds();
+        loadIds()
         let url = URL(string: "ShareMedia-\(hostAppBundleIdentifier)://dataUrl=\(sharedKey)#\(type)")
         var responder = self as UIResponder?
         let selectorOpenURL = sel_registerName("openURL:")
@@ -516,10 +521,10 @@ class ShareViewController: SLComposeServiceViewController {
     }
 
     class SharedMediaFile: Codable {
-        var path: String; // can be image, video or url path. It can also be text content
-        var thumbnail: String?; // video thumbnail
-        var duration: Double?; // video duration in milliseconds
-        var type: SharedMediaType;
+        var path: String // can be image, video or url path. It can also be text content
+        var thumbnail: String? // video thumbnail
+        var duration: Double? // video duration in milliseconds
+        var type: SharedMediaType
 
 
         init(path: String, thumbnail: String?, duration: Double?, type: SharedMediaType) {
@@ -554,9 +559,8 @@ extension Array {
 }
 ```
 
-ios/Podfile
-
-```
+#### 6. Add the following to [ios/Podfile](./example/ios/Podfile):
+```ruby
 ...
 target 'Runner' do
   use_frameworks!
@@ -572,13 +576,13 @@ end
 ...
 ```
 
-#### 3. Add Runner and Share Extension in the same group
+#### 7. Add Runner and Share Extension in the same group
 
 * Go to the Capabilities tab and switch on the App Groups switch for both targets. 
 * Add a new group and name it as you want. For example `group.YOUR_HOST_APP_BUNDLE_IDENTIFIER` in my case `group.com.kasem.sharing`
 * Add User-defined(`Build Settings -> +`) string `CUSTOM_GROUP_ID` in *BOTH* Targets: `Runner` and `Share Extension` and set value to group id created above. You can use different group ids depends on flavor schemes
 
-#### 4. Compiling issues and their fixes
+#### Compiling issues and their fixes
 
 * Error: App does not build after adding Share Extension?
   * Fix: Check Build Settings of your share extension and remove everything that tries to import Cocoapods from your main project. i.e. remove everything under `Linking/Other Linker Flags` 
@@ -591,6 +595,8 @@ end
 
 
 ## Full Example
+
+[main.dart](./example/lib/main.dart)
 
 ```dart
 import 'package:flutter/material.dart';
