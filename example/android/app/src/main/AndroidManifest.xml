@@ -11,7 +11,9 @@
     <application
         android:name="${applicationName}"
         android:icon="@mipmap/ic_launcher"
-        android:label="receive_sharing_intent_example">
+        android:label="RSI Example">
+
+        <!--Set activity launchMode to singleTask, if you want to prevent creating new activity instance everytime there is a new intent.-->
         <activity
             android:name=".MainActivity"
             android:configChanges="orientation|keyboardHidden|keyboard|screenSize|locale|layoutDirection|fontScale|screenLayout|density|uiMode"

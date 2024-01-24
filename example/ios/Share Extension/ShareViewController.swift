@@ -10,6 +10,7 @@ import UIKit
 import Social
 import MobileCoreServices
 import Photos
+import UniformTypeIdentifiers
 
 class ShareViewController: SLComposeServiceViewController {
     var hostAppBundleIdentifier = ""
@@ -17,11 +18,11 @@ class ShareViewController: SLComposeServiceViewController {
     let sharedKey = "ShareKey"
     var sharedMedia: [SharedMediaFile] = []
     var sharedText: [String] = []
-    let imageContentType = kUTTypeImage as String
-    let videoContentType = kUTTypeMovie as String
-    let textContentType = kUTTypeText as String
-    let urlContentType = kUTTypeURL as String
-    let fileURLType = kUTTypeFileURL as String;
+    let imageContentType = UTType.image.identifier
+    let videoContentType = UTType.movie.identifier
+    let textContentType = UTType.text.identifier
+    let urlContentType = UTType.url.identifier
+    let fileURLType = UTType.fileURL.identifier
 
     override func isContentValid() -> Bool {
         return true
@@ -29,24 +30,24 @@ class ShareViewController: SLComposeServiceViewController {
 
     private func loadIds() {
         // loading Share extension App Id
-        let shareExtensionAppBundleIdentifier = Bundle.main.bundleIdentifier!;
+        let shareExtensionAppBundleIdentifier = Bundle.main.bundleIdentifier!
 
 
         // extract host app bundle id from ShareExtension id
         // by default it's <hostAppBundleIdentifier>.<ShareExtension>
         // for example: com.test.ShareExtension -> com.test
-        let lastIndexOfPoint = shareExtensionAppBundleIdentifier.lastIndex(of: ".");
-        hostAppBundleIdentifier = String(shareExtensionAppBundleIdentifier[..<lastIndexOfPoint!]);
+        let lastIndexOfPoint = shareExtensionAppBundleIdentifier.lastIndex(of: ".")
+        hostAppBundleIdentifier = String(shareExtensionAppBundleIdentifier[..<lastIndexOfPoint!])
 
         // loading custom AppGroupId from Build Settings or use group.<hostAppBundleIdentifier>
-        appGroupId = (Bundle.main.object(forInfoDictionaryKey: "AppGroupId") as? String) ?? "group.\(hostAppBundleIdentifier)";
+        appGroupId = (Bundle.main.object(forInfoDictionaryKey: "AppGroupId") as? String) ?? "group.\(hostAppBundleIdentifier)"
     }
 
     override func viewDidLoad() {
-        super.viewDidLoad();
+        super.viewDidLoad()
 
         // load group and app id from build info
-        loadIds();
+        loadIds()
     }
 
     override func viewDidAppear(_ animated: Bool) {
@@ -73,7 +74,7 @@ class ShareViewController: SLComposeServiceViewController {
     }
 
     override func didSelectPost() {
-        print("didSelectPost");
+        print("didSelectPost")
     }
 
     override func configurationItems() -> [Any]! {
@@ -227,7 +228,7 @@ class ShareViewController: SLComposeServiceViewController {
 
     private func redirectToHostApp(type: RedirectType) {
         // ids may not loaded yet so we need loadIds here too
-        loadIds();
+        loadIds()
         let url = URL(string: "ShareMedia-\(hostAppBundleIdentifier)://dataUrl=\(sharedKey)#\(type)")
         var responder = self as UIResponder?
         let selectorOpenURL = sel_registerName("openURL:")
@@ -325,10 +326,10 @@ class ShareViewController: SLComposeServiceViewController {
     }
 
     class SharedMediaFile: Codable {
-        var path: String; // can be image, video or url path. It can also be text content
-        var thumbnail: String?; // video thumbnail
-        var duration: Double?; // video duration in milliseconds
-        var type: SharedMediaType;
+        var path: String // can be image, video or url path. It can also be text content
+        var thumbnail: String? // video thumbnail
+        var duration: Double? // video duration in milliseconds
+        var type: SharedMediaType
 
 
         init(path: String, thumbnail: String?, duration: Double?, type: SharedMediaType) {
