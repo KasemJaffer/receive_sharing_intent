@@ -1,3 +1,7 @@
+## 1.5.4
+
+* Fix broken links in readme
+
 ## 1.5.3
 
 * Update readme
