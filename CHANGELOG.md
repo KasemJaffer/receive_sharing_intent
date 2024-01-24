@@ -1,3 +1,8 @@
+## 1.5.3
+
+* Update readme
+* Code refactor, remove unnecessary semicolon and initialization of optional fields
+
 ## 1.5.2
 
 * Fix wrong file path on iOS
