@@ -8,11 +8,11 @@ class ReceiveSharingIntent {
       const MethodChannel('receive_sharing_intent/messages');
   static const EventChannel _eChannelMedia =
       const EventChannel("receive_sharing_intent/events-media");
-  static const EventChannel _eChannelLink =
+  static const EventChannel _eChannelText =
       const EventChannel("receive_sharing_intent/events-text");
 
   static Stream<List<SharedMediaFile>>? _streamMedia;
-  static Stream<String>? _streamLink;
+  static Stream<String>? _streamText;
 
   /// Returns a [Future], which completes to one of the following:
   ///
@@ -88,7 +88,7 @@ class ReceiveSharingIntent {
     return _streamMedia!;
   }
 
-  /// Sets up a broadcast stream for receiving incoming link change events.
+  /// Sets up a broadcast stream for receiving incoming text change events.
   ///
   /// Returns a broadcast [Stream] which emits events to listeners as follows:
   ///
@@ -102,13 +102,13 @@ class ReceiveSharingIntent {
   /// stream listener count changes from 0 to 1. Stream deactivation happens
   /// only when stream listener count changes from 1 to 0.
   ///
-  /// If the app was started by a link intent or user activity the stream will
+  /// If the app was started by a text intent or user activity the stream will
   /// not emit that initial one - query either the `getInitialText` instead.
   static Stream<String> getTextStream() {
-    if (_streamLink == null) {
-      _streamLink = _eChannelLink.receiveBroadcastStream("text").cast<String>();
+    if (_streamText == null) {
+      _streamText = _eChannelText.receiveBroadcastStream("text").cast<String>();
     }
-    return _streamLink!;
+    return _streamText!;
   }
 
   /// A convenience transformation of the stream to a `Stream<Uri>`.
