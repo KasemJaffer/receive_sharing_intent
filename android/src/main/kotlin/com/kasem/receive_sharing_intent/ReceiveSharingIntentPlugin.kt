@@ -29,7 +29,7 @@ private const val EVENTS_CHANNEL_MEDIA = "receive_sharing_intent/events-media"
 private const val EVENTS_CHANNEL_TEXT = "receive_sharing_intent/events-text"
 
 class ReceiveSharingIntentPlugin : FlutterPlugin, ActivityAware, MethodCallHandler,
-        EventChannel.StreamHandler, NewIntentListener {
+    EventChannel.StreamHandler, NewIntentListener {
 
     private var initialMedia: JSONArray? = null
     private var latestMedia: JSONArray? = null
@@ -42,6 +42,8 @@ class ReceiveSharingIntentPlugin : FlutterPlugin, ActivityAware, MethodCallHandl
 
     private var binding: ActivityPluginBinding? = null
     private lateinit var applicationContext: Context
+
+    private var initialOverride: Boolean = false
 
     private fun setupCallbackChannels(binaryMessenger: BinaryMessenger) {
         val mChannel = MethodChannel(binaryMessenger, MESSAGES_CHANNEL)
@@ -104,6 +106,7 @@ class ReceiveSharingIntentPlugin : FlutterPlugin, ActivityAware, MethodCallHandl
                 latestMedia = null
                 initialText = null
                 latestText = null
+                initialOverride = false
                 result.success(null)
             }
             else -> result.notImplemented()
@@ -149,11 +152,11 @@ class ReceiveSharingIntentPlugin : FlutterPlugin, ActivityAware, MethodCallHandl
                     val thumbnail = getThumbnail(path, type)
                     val duration = getDuration(path, type)
                     JSONArray().put(
-                            JSONObject()
-                                    .put("path", path)
-                                    .put("type", type.ordinal)
-                                    .put("thumbnail", thumbnail)
-                                    .put("duration", duration)
+                        JSONObject()
+                            .put("path", path)
+                            .put("type", type.ordinal)
+                            .put("thumbnail", thumbnail)
+                            .put("duration", duration)
                     )
                 } else null
             }
@@ -161,15 +164,15 @@ class ReceiveSharingIntentPlugin : FlutterPlugin, ActivityAware, MethodCallHandl
                 val uris = intent.getParcelableArrayListExtra<Uri>(Intent.EXTRA_STREAM)
                 val value = uris?.mapNotNull { uri ->
                     val path = FileDirectory.getAbsolutePath(applicationContext, uri)
-                            ?: return@mapNotNull null
+                        ?: return@mapNotNull null
                     val type = getMediaType(path)
                     val thumbnail = getThumbnail(path, type)
                     val duration = getDuration(path, type)
                     return@mapNotNull JSONObject()
-                            .put("path", path)
-                            .put("type", type.ordinal)
-                            .put("thumbnail", thumbnail)
-                            .put("duration", duration)
+                        .put("path", path)
+                        .put("type", type.ordinal)
+                        .put("thumbnail", thumbnail)
+                        .put("duration", duration)
                 }?.toList()
                 if (value != null) JSONArray(value) else null
             }
@@ -192,7 +195,7 @@ class ReceiveSharingIntentPlugin : FlutterPlugin, ActivityAware, MethodCallHandl
         val videoFile = File(path)
         val targetFile = File(applicationContext.cacheDir, "${videoFile.name}.png")
         val bitmap = ThumbnailUtils.createVideoThumbnail(path, MediaStore.Video.Thumbnails.MINI_KIND)
-                ?: return null
+            ?: return null
         FileOutputStream(targetFile).use { out ->
             bitmap.compress(Bitmap.CompressFormat.PNG, 100, out)
         }
@@ -214,6 +217,7 @@ class ReceiveSharingIntentPlugin : FlutterPlugin, ActivityAware, MethodCallHandl
     }
 
     override fun onAttachedToActivity(binding: ActivityPluginBinding) {
+        initialOverride = true
         this.binding = binding
         binding.addOnNewIntentListener(this)
         handleIntent(binding.activity.intent, true)
@@ -233,7 +237,8 @@ class ReceiveSharingIntentPlugin : FlutterPlugin, ActivityAware, MethodCallHandl
     }
 
     override fun onNewIntent(intent: Intent): Boolean {
-        handleIntent(intent, false)
+        handleIntent(intent, false || initialOverride)
+        initialOverride = false
         return false
     }
 }
