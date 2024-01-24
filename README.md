@@ -223,9 +223,9 @@ class ShareViewController: SLComposeServiceViewController {
         let shareExtensionAppBundleIdentifier = Bundle.main.bundleIdentifier!;
 
 
-        // convert ShareExtension id to host app id
-        // By default it is remove last part of id after last point
-        // For example: com.test.ShareExtension -> com.test
+        // extract host app bundle id from ShareExtension id
+        // by default it's <hostAppBundleIdentifier>.<ShareExtension>
+        // for example: com.test.ShareExtension -> com.test
         let lastIndexOfPoint = shareExtensionAppBundleIdentifier.lastIndex(of: ".");
         hostAppBundleIdentifier = String(shareExtensionAppBundleIdentifier[..<lastIndexOfPoint!]);
 

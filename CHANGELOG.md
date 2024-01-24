@@ -1,3 +1,7 @@
+## 1.5.2
+
+* Fix wrong file path on iOS
+
 ## 1.5.1
 
 * Update plugin's iOS build version
@@ -25,7 +29,7 @@
 
 ## 1.4.2
 
-* Migrage to flutter android embedding v2
+* Migrate to flutter android embedding v2
 * Fix crash while getting raw files path on Android
 
 ## 1.4.1
