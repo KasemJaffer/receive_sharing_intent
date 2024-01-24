@@ -111,7 +111,7 @@ Add the following filters to your [android/app/src/main/AndroidManifest.xml](./e
 
 Make sure the deployment target for Runner.app and the share extension is the same.
 
-#### 2. Add the following to [ios/Runner/info.plist](./example/ios/Runner/info.plist):
+#### 2. Add the following to [ios/Runner/Info.plist](./example/ios/Runner/Info.plist):
 
 ```xml
 ...
@@ -134,7 +134,7 @@ Make sure the deployment target for Runner.app and the share extension is the sa
 ...
 ```
 
-#### 3. Add the following to [ios/Share Extension/info.plist](./example/ios/Share%20Extension/info.plist):
+#### 3. Add the following to [ios/Share Extension/Info.plist](./example/ios/Share%20Extension/Info.plist):
 
 ```xml
 ....
