@@ -27,25 +27,6 @@ class ReceiveSharingIntent {
         .toList();
   }
 
-  /// Returns a [Future], which completes to one of the following:
-  ///
-  ///   * the initially stored link (possibly null), on successful invocation;
-  ///   * a [PlatformException], if the invocation failed in the platform plugin.
-  static Future<String?> getInitialText() async {
-    return await _mChannel.invokeMethod('getInitialText');
-  }
-
-  /// A convenience method that returns the initially stored link
-  /// as a new [Uri] object.
-  ///
-  /// If the link is not valid as a URI or URI reference,
-  /// a [FormatException] is thrown.
-  static Future<Uri?> getInitialTextAsUri() async {
-    final data = await getInitialText();
-    if (data == null) return null;
-    return Uri.parse(data);
-  }
-
   /// Sets up a broadcast stream for receiving incoming media share change events.
   ///
   /// Returns a broadcast [Stream] which emits events to listeners as follows:
@@ -85,13 +66,13 @@ class ReceiveSharingIntent {
 
   /// Call this method if you already consumed the callback
   /// and don't want the same callback again
-  static void reset() {
-    _mChannel.invokeMethod('reset').then((_) {});
+  static Future<dynamic> reset() {
+    return _mChannel.invokeMethod('reset');
   }
 }
 
 class SharedMediaFile {
-  /// File path, url or the text shared
+  /// Shared file path, url or the text
   /// NOTE. for iOS only, all files are copied to a temp folder
   final String path;
 
