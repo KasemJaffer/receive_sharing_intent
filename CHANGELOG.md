@@ -1,3 +1,13 @@
+## 1.6.0
+
+### Breaking changes
+
+* All files types now come through `getInitialMedia` and `getMediaStream`
+* Your `ShareViewController` class should now inherit from `RSIShareViewController`. Eliminating the
+  need to copy the whole class again. Please check the example project for more details.
+* Removed `getInitialText`, `getInitialTextAsUri`, `getTextStream` and `getTextStreamAsUri` methods.
+  Please use `getInitialMedia` and `getMediaStream` instead.
+
 ## 1.5.4
 
 * Fix broken links in readme
