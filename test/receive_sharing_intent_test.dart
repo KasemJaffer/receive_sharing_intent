@@ -1,37 +1,98 @@
 import 'package:flutter/services.dart';
 import 'package:flutter_test/flutter_test.dart';
 import 'package:receive_sharing_intent/receive_sharing_intent.dart';
+import 'dart:async';
+import 'dart:convert';
 
 void main() {
-  const MethodChannel channel =
-      const MethodChannel('receive_sharing_intent/messages');
+  TestWidgetsFlutterBinding.ensureInitialized();
 
-  const _testUriString = "content://media/external/images/media/43993";
-
-  setUp(() {
-    channel.setMockMethodCallHandler((MethodCall methodCall) async {
-      switch (methodCall.method) {
-        case "getInitialText":
-          return _testUriString;
-        case "getInitialTextAsUri":
-          return Uri.parse(_testUriString);
-        default:
-          throw UnimplementedError();
-      }
-    });
-  });
+  const methodChannel = MethodChannel('receive_sharing_intent/messages');
+  const eventChannel = EventChannel('receive_sharing_intent/events-media');
 
   tearDown(() {
-    channel.setMockMethodCallHandler(null);
+    TestDefaultBinaryMessengerBinding.instance.defaultBinaryMessenger
+        .setMockMethodCallHandler(methodChannel, null);
+
+    TestDefaultBinaryMessengerBinding.instance.defaultBinaryMessenger
+        .setMockStreamHandler(eventChannel, null);
   });
 
-  test('getInitialText', () async {
-    var actual = await ReceiveSharingIntent.getInitialText();
-    expect(actual, _testUriString);
+  test('getInitialMedia', () async {
+    final expectedMediaFiles = [
+      SharedMediaFile(path: 'path1', type: SharedMediaType.image),
+      SharedMediaFile(path: 'path2', type: SharedMediaType.video),
+    ];
+    final json =
+        jsonEncode(expectedMediaFiles.map((file) => file.toMap()).toList());
+
+    TestDefaultBinaryMessengerBinding.instance.defaultBinaryMessenger
+        .setMockMethodCallHandler(methodChannel, (methodCall) async {
+      if (methodCall.method == 'getInitialMedia') {
+        return json;
+      }
+      return null;
+    });
+
+    final mediaFiles = await ReceiveSharingIntent.getInitialMedia();
+    expect(mediaFiles.length, expectedMediaFiles.length);
+    for (int i = 0; i < mediaFiles.length; i++) {
+      expect(mediaFiles[i].path, expectedMediaFiles[i].path);
+      expect(mediaFiles[i].type, expectedMediaFiles[i].type);
+    }
   });
 
-  test('getInitialTextAsUri', () async {
-    var actual = await ReceiveSharingIntent.getInitialTextAsUri();
-    expect(actual, Uri.parse(_testUriString));
+  test('getMediaStream', () async {
+    final expectedMediaFiles = [
+      SharedMediaFile(path: 'path1', type: SharedMediaType.image),
+      SharedMediaFile(path: 'path2', type: SharedMediaType.video),
+    ];
+    final json =
+        jsonEncode(expectedMediaFiles.map((file) => file.toMap()).toList());
+
+    final streamController = StreamController<String?>.broadcast();
+    TestDefaultBinaryMessengerBinding.instance.defaultBinaryMessenger
+        .setMockStreamHandler(
+      eventChannel,
+      MockStreamHandler.inline(
+        onListen: (args, events) {
+          streamController.stream.listen(events.success);
+        },
+      ),
+    );
+
+    final emittedMediaFiles = <List<SharedMediaFile>>[];
+    final subscription = ReceiveSharingIntent.getMediaStream().listen((event) {
+      emittedMediaFiles.add(event);
+    });
+
+    streamController.add(json);
+
+    await Future.delayed(Duration.zero); // Allow stream to process
+
+    expect(emittedMediaFiles.length, 1);
+    expect(emittedMediaFiles[0].length, expectedMediaFiles.length);
+    for (int i = 0; i < emittedMediaFiles[0].length; i++) {
+      expect(emittedMediaFiles[0][i].path, expectedMediaFiles[i].path);
+      expect(emittedMediaFiles[0][i].type, expectedMediaFiles[i].type);
+    }
+
+    subscription.cancel();
+    streamController.close();
+  });
+
+  test('reset', () async {
+    TestDefaultBinaryMessengerBinding.instance.defaultBinaryMessenger
+        .setMockMethodCallHandler(methodChannel, (methodCall) async {
+      if (methodCall.method == 'reset') {
+        return null;
+      }
+      return null;
+    });
+
+    await ReceiveSharingIntent.reset();
+
+    // No exception means success
+    expect(true, true);
   });
 }
