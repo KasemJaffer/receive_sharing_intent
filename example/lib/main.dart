@@ -11,56 +11,41 @@ class MyApp extends StatefulWidget {
 }
 
 class _MyAppState extends State<MyApp> {
-  late StreamSubscription _intentDataStreamSubscription;
-  List<SharedMediaFile>? _sharedFiles;
-  String? _sharedText;
+  late StreamSubscription _intentSub;
+  final _sharedFiles = <SharedMediaFile>[];
 
   @override
   void initState() {
     super.initState();
 
-    // For sharing images coming from outside the app while the app is in the memory
-    _intentDataStreamSubscription = ReceiveSharingIntent.getMediaStream()
-        .listen((List<SharedMediaFile> value) {
+    // Listen to media sharing coming from outside the app while the app is in the memory.
+    _intentSub = ReceiveSharingIntent.getMediaStream().listen((value) {
       setState(() {
-        _sharedFiles = value;
-        print("Shared:" + (_sharedFiles?.map((f) => f.path).join(",") ?? ""));
+        _sharedFiles.clear();
+        _sharedFiles.addAll(value);
+
+        print(_sharedFiles.map((f) => f.toMap()));
       });
     }, onError: (err) {
       print("getIntentDataStream error: $err");
     });
 
-    // For sharing images coming from outside the app while the app is closed
-    ReceiveSharingIntent.getInitialMedia().then((List<SharedMediaFile> value) {
+    // Get the media sharing coming from outside the app while the app is closed.
+    ReceiveSharingIntent.getInitialMedia().then((value) {
       setState(() {
-        _sharedFiles = value;
-        print("Shared:" + (_sharedFiles?.map((f) => f.path).join(",") ?? ""));
-      });
-    });
+        _sharedFiles.clear();
+        _sharedFiles.addAll(value);
+        print(_sharedFiles.map((f) => f.toMap()));
 
-    // For sharing or opening urls/text coming from outside the app while the app is in the memory
-    _intentDataStreamSubscription =
-        ReceiveSharingIntent.getTextStream().listen((String value) {
-      setState(() {
-        _sharedText = value;
-        print("Shared: $_sharedText");
-      });
-    }, onError: (err) {
-      print("getLinkStream error: $err");
-    });
-
-    // For sharing or opening urls/text coming from outside the app while the app is closed
-    ReceiveSharingIntent.getInitialText().then((String? value) {
-      setState(() {
-        _sharedText = value;
-        print("Shared: $_sharedText");
+        // Tell the library that we are done processing the intent.
+        ReceiveSharingIntent.reset();
       });
     });
   }
 
   @override
   void dispose() {
-    _intentDataStreamSubscription.cancel();
+    _intentSub.cancel();
     super.dispose();
   }
 
@@ -77,13 +62,8 @@ class _MyAppState extends State<MyApp> {
             children: <Widget>[
               Text("Shared files:", style: textStyleBold),
               Text(_sharedFiles
-                      ?.map((f) =>
-                          "{Path: ${f.path}, Type: ${f.type.toString().replaceFirst("SharedMediaType.", "")}}\n")
-                      .join(",\n") ??
-                  ""),
-              SizedBox(height: 100),
-              Text("Shared urls/text:", style: textStyleBold),
-              Text(_sharedText ?? "")
+                  .map((f) => f.toMap())
+                  .join(",\n****************\n")),
             ],
           ),
         ),

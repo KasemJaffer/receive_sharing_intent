@@ -34,11 +34,7 @@ class ReceiveSharingIntentPlugin : FlutterPlugin, ActivityAware, MethodCallHandl
     private var initialMedia: JSONArray? = null
     private var latestMedia: JSONArray? = null
 
-    private var initialText: String? = null
-    private var latestText: String? = null
-
     private var eventSinkMedia: EventChannel.EventSink? = null
-    private var eventSinkText: EventChannel.EventSink? = null
 
     private var binding: ActivityPluginBinding? = null
     private lateinit var applicationContext: Context
@@ -63,17 +59,11 @@ class ReceiveSharingIntentPlugin : FlutterPlugin, ActivityAware, MethodCallHandl
     }
 
     override fun onListen(arguments: Any?, events: EventChannel.EventSink) {
-        when (arguments) {
-            "media" -> eventSinkMedia = events
-            "text" -> eventSinkText = events
-        }
+        eventSinkMedia = events
     }
 
     override fun onCancel(arguments: Any?) {
-        when (arguments) {
-            "media" -> eventSinkMedia = null
-            "text" -> eventSinkText = null
-        }
+        eventSinkMedia = null
     }
 
     // This static function is optional and equivalent to onAttachedToEngine. It supports the old
@@ -98,41 +88,40 @@ class ReceiveSharingIntentPlugin : FlutterPlugin, ActivityAware, MethodCallHandl
     override fun onMethodCall(call: MethodCall, result: Result) {
         when (call.method) {
             "getInitialMedia" -> result.success(initialMedia?.toString())
-            "getInitialText" -> result.success(initialText)
             "reset" -> {
                 initialMedia = null
                 latestMedia = null
-                initialText = null
-                latestText = null
                 result.success(null)
             }
+
             else -> result.notImplemented()
         }
     }
 
     private fun handleIntent(intent: Intent, initial: Boolean) {
         when {
-            (intent.type?.startsWith("text") != true)
-                    && (intent.action == Intent.ACTION_SEND
-                    || intent.action == Intent.ACTION_SEND_MULTIPLE) -> { // Sharing images or videos
+            // Sharing or opening media (image, video, text, file)
+            intent.type != null && (
+                    intent.action == Intent.ACTION_VIEW
+                            || intent.action == Intent.ACTION_SEND
+                            || intent.action == Intent.ACTION_SEND_MULTIPLE) -> {
 
                 val value = getMediaUris(intent)
                 if (initial) initialMedia = value
                 latestMedia = value
                 eventSinkMedia?.success(latestMedia?.toString())
             }
-            (intent.type == null || intent.type?.startsWith("text") == true)
-                    && intent.action == Intent.ACTION_SEND -> { // Sharing text
-                val value = intent.getStringExtra(Intent.EXTRA_TEXT)
-                if (initial) initialText = value
-                latestText = value
-                eventSinkText?.success(latestText)
-            }
-            intent.action == Intent.ACTION_VIEW -> { // Opening URL
-                val value = intent.dataString
-                if (initial) initialText = value
-                latestText = value
-                eventSinkText?.success(latestText)
+
+            // Opening URL
+            intent.action == Intent.ACTION_VIEW -> {
+                val value = JSONArray(
+                        listOf(JSONObject()
+                                .put("path", intent.dataString)
+                                .put("type", MediaType.URL.value))
+                )
+                if (initial) initialMedia = value
+                latestMedia = value
+                eventSinkMedia?.success(latestMedia?.toString())
             }
         }
     }
@@ -141,49 +130,41 @@ class ReceiveSharingIntentPlugin : FlutterPlugin, ActivityAware, MethodCallHandl
         if (intent == null) return null
 
         return when (intent.action) {
+            Intent.ACTION_VIEW -> {
+                val uri = intent.data
+                toJsonObject(uri, null, intent.type)?.let { JSONArray(listOf(it)) }
+            }
+
             Intent.ACTION_SEND -> {
                 val uri = intent.getParcelableExtra<Uri>(Intent.EXTRA_STREAM)
-                val path = uri?.let{ FileDirectory.getAbsolutePath(applicationContext, it) }
-                if (path != null) {
-                    val type = getMediaType(path)
-                    val thumbnail = getThumbnail(path, type)
-                    val duration = getDuration(path, type)
-                    JSONArray().put(
-                            JSONObject()
-                                    .put("path", path)
-                                    .put("type", type.ordinal)
-                                    .put("thumbnail", thumbnail)
-                                    .put("duration", duration)
-                    )
-                } else null
+                val text = intent.getStringExtra(Intent.EXTRA_TEXT)
+                toJsonObject(uri, text, intent.type)?.let { JSONArray(listOf(it)) }
             }
+
             Intent.ACTION_SEND_MULTIPLE -> {
                 val uris = intent.getParcelableArrayListExtra<Uri>(Intent.EXTRA_STREAM)
-                val value = uris?.mapNotNull { uri ->
-                    val path = FileDirectory.getAbsolutePath(applicationContext, uri)
-                            ?: return@mapNotNull null
-                    val type = getMediaType(path)
-                    val thumbnail = getThumbnail(path, type)
-                    val duration = getDuration(path, type)
-                    return@mapNotNull JSONObject()
-                            .put("path", path)
-                            .put("type", type.ordinal)
-                            .put("thumbnail", thumbnail)
-                            .put("duration", duration)
-                }?.toList()
-                if (value != null) JSONArray(value) else null
+                val mimeTypes = intent.getStringArrayExtra(Intent.EXTRA_MIME_TYPES)
+
+                uris?.mapIndexedNotNull { index, uri ->
+                    toJsonObject(uri, null, mimeTypes?.getOrNull(index))
+                }?.let { JSONArray(it) }
             }
+
             else -> null
         }
     }
 
-    private fun getMediaType(path: String?): MediaType {
-        val mimeType = URLConnection.guessContentTypeFromName(path)
-        return when {
-            mimeType?.startsWith("image") == true -> MediaType.IMAGE
-            mimeType?.startsWith("video") == true -> MediaType.VIDEO
-            else -> MediaType.FILE
-        }
+    // content can only be uri or string
+    private fun toJsonObject(uri: Uri?, text: String?, mimeType: String?): JSONObject? {
+        val path = uri?.let { FileDirectory.getAbsolutePath(applicationContext, it) }
+        val mType = mimeType ?: path?.let { URLConnection.guessContentTypeFromName(path) }
+        val type = MediaType.fromMimeType(mType)
+        return JSONObject()
+                .put("path", path ?: text)
+                .put("type", type.value)
+                .put("mimeType", mType)
+                .put("thumbnail", path?.let { getThumbnail(path, type) })
+                .put("duration", path?.let { getDuration(path, type) })
     }
 
     private fun getThumbnail(path: String, type: MediaType): String? {
@@ -209,8 +190,19 @@ class ReceiveSharingIntentPlugin : FlutterPlugin, ActivityAware, MethodCallHandl
         return duration
     }
 
-    enum class MediaType {
-        IMAGE, VIDEO, FILE;
+    enum class MediaType(val value: String) {
+        IMAGE("image"), VIDEO("video"), TEXT("text"), FILE("file"), URL("url");
+
+        companion object {
+            fun fromMimeType(mimeType: String?): MediaType {
+                return when {
+                    mimeType?.startsWith("image") == true -> IMAGE
+                    mimeType?.startsWith("video") == true -> VIDEO
+                    mimeType?.startsWith("text") == true -> TEXT
+                    else -> FILE
+                }
+            }
+        }
     }
 
     override fun onAttachedToActivity(binding: ActivityPluginBinding) {
