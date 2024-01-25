@@ -2,11 +2,13 @@ import Flutter
 import UIKit
 import Photos
 
+public let kSchemePrefix = "ShareMedia"
+public let kUserDefaultsKey = "ShareKey"
+public let kAppGroupIdKey = "AppGroupId"
+
 public class SwiftReceiveSharingIntentPlugin: NSObject, FlutterPlugin, FlutterStreamHandler {
     static let kMessagesChannel = "receive_sharing_intent/messages"
     static let kEventsChannelMedia = "receive_sharing_intent/events-media"
-    
-    private var customSchemePrefix = "ShareMedia"
     
     private var initialMedia: [SharedMediaFile]?
     private var latestMedia: [SharedMediaFile]?
@@ -46,7 +48,7 @@ public class SwiftReceiveSharingIntentPlugin: NSObject, FlutterPlugin, FlutterSt
     // - found the issue while developing multiple applications using this library, after "application(_:open:options:)" is called, the first app using this librabry (first app by bundle id alphabetically) is opened
     public func hasMatchingSchemePrefix(url: URL?) -> Bool {
         if let url = url, let appDomain = Bundle.main.bundleIdentifier {
-            return url.absoluteString.hasPrefix("\(self.customSchemePrefix)-\(appDomain)")
+            return url.absoluteString.hasPrefix("\(kSchemePrefix)-\(appDomain)")
         }
         return false
     }
@@ -107,63 +109,34 @@ public class SwiftReceiveSharingIntentPlugin: NSObject, FlutterPlugin, FlutterSt
     }
     
     private func handleUrl(url: URL?, setInitialData: Bool) -> Bool {
-        if let url = url {
-            let appDomain = Bundle.main.bundleIdentifier!
-            let appGroupId = (Bundle.main.object(forInfoDictionaryKey: "AppGroupId") as? String) ?? "group.\(Bundle.main.bundleIdentifier!)"
-            let userDefaults = UserDefaults(suiteName: appGroupId)
-            if let key = url.host?.components(separatedBy: "=").last,
-               let json = userDefaults?.object(forKey: key) as? Data {
-                let sharedArray = decode(data: json)
-                let sharedMediaFiles: [SharedMediaFile] = sharedArray.compactMap {
-                    if $0.type == .text || $0.type == .url {
-                        return SharedMediaFile(
-                            path: $0.path,
-                            mimeType: $0.mimeType,
-                            thumbnail: nil,
-                            duration: nil,
-                            type: $0.type
-                        )
-                    }
-                    guard let path = getAbsolutePath(for: $0.path) else {
-                        return nil
-                    }
-                    if ($0.type == .video && $0.thumbnail != nil) {
-                        let thumbnail = getAbsolutePath(for: $0.thumbnail!)
-                        return SharedMediaFile(
-                            path: path,
-                            mimeType: $0.mimeType,
-                            thumbnail: thumbnail,
-                            duration: $0.duration,
-                            type: $0.type
-                        )
-                    } else if ($0.type == .video && $0.thumbnail == nil) {
-                        return SharedMediaFile(
-                            path: path,
-                            mimeType: $0.mimeType,
-                            thumbnail: nil,
-                            duration: $0.duration,
-                            type: $0.type
-                        )
-                    }
-                    
-                    return SharedMediaFile(
-                        path: path,
-                        mimeType: $0.mimeType,
-                        thumbnail: nil,
-                        duration: $0.duration,
-                        type: $0.type
-                    )
+        let appGroupId = Bundle.main.object(forInfoDictionaryKey: kAppGroupIdKey) as? String
+        let defaultGroupId = "group.\(Bundle.main.bundleIdentifier!)"
+        let userDefaults = UserDefaults(suiteName: appGroupId ?? defaultGroupId)
+        
+        
+        if let json = userDefaults?.object(forKey: kUserDefaultsKey) as? Data {
+            let sharedArray = decode(data: json)
+            let sharedMediaFiles: [SharedMediaFile] = sharedArray.compactMap {
+                guard let path = $0.type == .text || $0.type == .url ? $0.path
+                        : getAbsolutePath(for: $0.path) else {
+                    return nil
                 }
-                latestMedia = sharedMediaFiles
-                if(setInitialData) {
-                    initialMedia = latestMedia
-                }
-                eventSinkMedia?(toJson(data: latestMedia))
+                
+                return SharedMediaFile(
+                    path: path,
+                    mimeType: $0.mimeType,
+                    thumbnail: getAbsolutePath(for: $0.thumbnail),
+                    duration: $0.duration,
+                    type: $0.type
+                )
             }
-            return true
+            latestMedia = sharedMediaFiles
+            if(setInitialData) {
+                initialMedia = latestMedia
+            }
+            eventSinkMedia?(toJson(data: latestMedia))
         }
-        latestMedia = nil
-        return false
+        return true
     }
     
     
@@ -177,16 +150,24 @@ public class SwiftReceiveSharingIntentPlugin: NSObject, FlutterPlugin, FlutterSt
         return nil
     }
     
-    private func getAbsolutePath(for identifier: String) -> String? {
+    private func getAbsolutePath(for identifier: String?) -> String? {
+        guard let identifier else {
+            return nil
+        }
+        
         if (identifier.starts(with: "file://") || identifier.starts(with: "/var/mobile/Media") || identifier.starts(with: "/private/var/mobile")) {
             return identifier.replacingOccurrences(of: "file://", with: "")
         }
-        let phAsset = PHAsset.fetchAssets(withLocalIdentifiers: [identifier], options: .none).firstObject
-        if(phAsset == nil) {
+        
+        guard let phAsset = PHAsset.fetchAssets(
+            withLocalIdentifiers: [identifier],
+            options: .none).firstObject else {
             return nil
         }
-        let (url, _) = getFullSizeImageURLAndOrientation(for: phAsset!)
+        
+        let (url, _) = getFullSizeImageURLAndOrientation(for: phAsset)
         return url
+        
     }
     
     private func getFullSizeImageURLAndOrientation(for asset: PHAsset)-> (String?, Int) {
