@@ -16,4 +16,9 @@ class ShareViewController: RSIShareViewController {
         return false
     }
     
+    // Use this to change label of Post button
+    override func presentationAnimationDidFinish() {
+        super.presentationAnimationDidFinish()
+        navigationController?.navigationBar.topItem?.rightBarButtonItem?.title = "Send"
+    }
 }
