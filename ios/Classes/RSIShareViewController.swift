@@ -78,7 +78,7 @@ open class RSIShareViewController: SLComposeServiceViewController {
         
         // extract host app bundle id from ShareExtension id
         // by default it's <hostAppBundleIdentifier>.<ShareExtension>
-        // for example: com.test.ShareExtension -> com.test
+        // for example: "com.kasem.sharing.Share-Extension" -> com.kasem.sharing
         let lastIndexOfPoint = shareExtensionAppBundleIdentifier.lastIndex(of: ".")
         hostAppBundleIdentifier = String(shareExtensionAppBundleIdentifier[..<lastIndexOfPoint!])
         let defaultAppGroupId = "group.\(hostAppBundleIdentifier)"

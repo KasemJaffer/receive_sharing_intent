@@ -1,3 +1,7 @@
+## 1.6.3
+
+* Updated readme iOS section, rearranged the steps to properly setup the plugin and added a new step #7
+
 ## 1.6.2
 
 * Requires Swift 5.0
