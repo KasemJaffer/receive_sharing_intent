@@ -1,3 +1,7 @@
+## 1.6.1
+
+* Stop UTType because it doesn't exist prior to iOS 14.0
+
 ## 1.6.0
 
 ### Breaking changes
