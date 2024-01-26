@@ -6,6 +6,10 @@ A flutter plugin that enables flutter apps to receive sharing photos, videos, te
 Also, supports iOS Share extension and launching the host app automatically.
 Check the provided [example](./example/lib/main.dart) for more info.
 
+|             | Android | iOS              |
+|-------------|---------|------------------|
+| **Support** | SDK 19+ | 8.0+ (Swift 5.0) |
+
 ![Alt Text](./example/demo.gif)
 
 

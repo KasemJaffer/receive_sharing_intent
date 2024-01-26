@@ -1,6 +1,12 @@
+## 1.6.2
+
+* Requires Swift 5.0
+* Fix backward compatibility down to iOS 8.0
+* Use UTType for iOS 14.0 and above
+
 ## 1.6.1
 
-* Stop UTType because it doesn't exist prior to iOS 14.0
+* Stop using UTType because it doesn't exist prior to iOS 14.0
 
 ## 1.6.0
 
