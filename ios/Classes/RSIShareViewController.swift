@@ -9,19 +9,11 @@ import UIKit
 import Social
 import MobileCoreServices
 import Photos
-import UniformTypeIdentifiers
 
 open class RSIShareViewController: SLComposeServiceViewController {
     var hostAppBundleIdentifier = ""
     var appGroupId = ""
     var sharedMedia: [SharedMediaFile] = []
-    private let supportedContentTypes: [UTType] = [
-        .image,
-        .movie,
-        .text,
-        .url,
-        .fileURL
-    ]
     
     open override func isContentValid() -> Bool {
         return true
@@ -41,27 +33,27 @@ open class RSIShareViewController: SLComposeServiceViewController {
         if let content = extensionContext!.inputItems[0] as? NSExtensionItem {
             if let contents = content.attachments as? [NSItemProvider] {
                 for (index, attachment) in (contents).enumerated() {
-                    for contentType in supportedContentTypes {
-                        if attachment.hasItemConformingToTypeIdentifier(contentType.identifier) {
-                            attachment.loadItem(forTypeIdentifier: contentType.identifier) { [weak self] data, error in
+                    for type in SharedMediaType.allCases {
+                        if attachment.hasItemConformingToTypeIdentifier(type.toUTTypeIdentifier) {
+                            attachment.loadItem(forTypeIdentifier: type.toUTTypeIdentifier) { [weak self] data, error in
                                 guard let this = self, error == nil else {
                                     self?.dismissWithError()
                                     return
                                 }
-                                switch contentType {
+                                switch type {
                                 case .text, .url:
                                     if let text = data as? String {
                                         this.handleMedia(forLiteral: text,
-                                            contentType: contentType,
-                                            index: index,
-                                            content: content)
+                                                         type: type,
+                                                         index: index,
+                                                         content: content)
                                     }
                                 default:
                                     if let url = data as? URL {
                                         this.handleMedia(forFile: url,
-                                            contentType: contentType,
-                                            index: index,
-                                            content: content)
+                                                         type: type,
+                                                         index: index,
+                                                         content: content)
                                     }
                                 }
                             }
@@ -98,23 +90,23 @@ open class RSIShareViewController: SLComposeServiceViewController {
     }
     
     
-    private func handleMedia(forLiteral item: String, contentType: UTType, index: Int, content: NSExtensionItem) {
+    private func handleMedia(forLiteral item: String, type: SharedMediaType, index: Int, content: NSExtensionItem) {
         sharedMedia.append(SharedMediaFile(
             path: item,
-            mimeType: contentType == .text ? "text/plain": nil,
-            type: contentType == .url ? .url : .text
+            mimeType: type == .text ? "text/plain": nil,
+            type: type
         ))
         if index == (content.attachments?.count ?? 0) - 1 {
             saveAndRedirect()
         }
     }
     
-    private func handleMedia(forFile url: URL, contentType: UTType, index: Int, content: NSExtensionItem) {
-        let fileName = getFileName(from: url, contentType: contentType)
+    private func handleMedia(forFile url: URL, type: SharedMediaType, index: Int, content: NSExtensionItem) {
+        let fileName = getFileName(from: url, type: type)
         let newPath = FileManager.default.containerURL(forSecurityApplicationGroupIdentifier: appGroupId)!.appendingPathComponent(fileName)
         
         if copyFile(at: url, to: newPath) {
-            if contentType == .movie {
+            if type == .video {
                 // Get video thumbnail and duration
                 if let videoInfo = getVideoInfo(from: url) {
                     sharedMedia.append(SharedMediaFile(
@@ -122,14 +114,14 @@ open class RSIShareViewController: SLComposeServiceViewController {
                         mimeType: url.mimeType(),
                         thumbnail: videoInfo.thumbnail,
                         duration: videoInfo.duration,
-                        type: .video
+                        type: type
                     ))
                 }
             } else {
                 sharedMedia.append(SharedMediaFile(
                     path: newPath.absoluteString,
                     mimeType: url.mimeType(),
-                    type: contentType == .image ? .image : .file
+                    type: type
                 ))
             }
         }
@@ -177,18 +169,18 @@ open class RSIShareViewController: SLComposeServiceViewController {
         extensionContext!.completeRequest(returningItems: [], completionHandler: nil)
     }
     
-    private func getFileName(from url: URL, contentType: UTType) -> String {
+    private func getFileName(from url: URL, type: SharedMediaType) -> String {
         var name = url.lastPathComponent
         if name.isEmpty {
-            switch contentType {
+            switch type {
             case .image:
                 name = UUID().uuidString + ".png"
-            case .movie:
+            case .video:
                 name = UUID().uuidString + ".mp4"
             case .text:
                 name = UUID().uuidString + ".txt"
             default:
-                name = ""
+                name = UUID().uuidString
             }
         }
         return name
@@ -253,25 +245,6 @@ extension URL {
         }
         else {
             return "application/octet-stream"
-        }
-    }
-}
-
-extension UTType {
-    public func toMediaType() -> SharedMediaType {
-        switch self {
-        case .image:
-            return .image
-        case .movie:
-            return .video
-        case .text:
-            return .text
-        case .fileURL:
-            return .file
-        case .url:
-            return .url
-        default:
-            return .file
         }
     }
 }

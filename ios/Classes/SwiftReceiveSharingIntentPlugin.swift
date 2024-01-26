@@ -218,10 +218,28 @@ public class SharedMediaFile: Codable {
     }
 }
 
-public enum SharedMediaType: String, Codable {
+public enum SharedMediaType: String, Codable, CaseIterable {
     case image
     case video
     case text
+//     case audio
     case file
     case url
+
+    public var toUTTypeIdentifier: String {
+        switch self {
+        case .image:
+            return "public.image"
+        case .video:
+            return "public.movie"
+        case .text:
+            return "public.text"
+//         case .audio:
+//             return "public.audio"
+        case .file:
+            return "public.file-url"
+        case .url:
+            return "public.url"
+        }
+    }
 }
