@@ -15,6 +15,12 @@ open class RSIShareViewController: SLComposeServiceViewController {
     var hostAppBundleIdentifier = ""
     var appGroupId = ""
     var sharedMedia: [SharedMediaFile] = []
+
+    /// Override this method to return false if you don't want to redirect to host app automatically
+    /// Default is true
+    open func shouldAutoRedirect() -> Bool {
+        return true
+    }
     
     open override func isContentValid() -> Bool {
         return true
@@ -25,6 +31,11 @@ open class RSIShareViewController: SLComposeServiceViewController {
         
         // load group and app id from build info
         loadIds()
+    }
+    
+    // Redirect to host app when user click on Post
+    open override func didSelectPost() {
+        saveAndRedirect(message: contentText)
     }
     
     open override func viewDidAppear(_ animated: Bool) {
@@ -98,7 +109,9 @@ open class RSIShareViewController: SLComposeServiceViewController {
             type: type
         ))
         if index == (content.attachments?.count ?? 0) - 1 {
-            saveAndRedirect()
+            if shouldAutoRedirect() {
+                saveAndRedirect()
+            }
         }
     }
     
@@ -128,15 +141,18 @@ open class RSIShareViewController: SLComposeServiceViewController {
         }
         
         if index == (content.attachments?.count ?? 0) - 1 {
-            saveAndRedirect()
+            if shouldAutoRedirect() {
+                saveAndRedirect()
+            }
         }
     }
     
     
     // Save shared media and redirect to host app
-    private func saveAndRedirect() {
+    private func saveAndRedirect(message: String? = nil) {
         let userDefaults = UserDefaults(suiteName: appGroupId)
         userDefaults?.set(toData(data: sharedMedia), forKey: kUserDefaultsKey)
+        userDefaults?.set(message, forKey: kUserDefaultsMessageKey)
         userDefaults?.synchronize()
         redirectToHostApp()
     }
@@ -187,7 +203,7 @@ open class RSIShareViewController: SLComposeServiceViewController {
         return name
     }
     
-    func copyFile(at srcURL: URL, to dstURL: URL) -> Bool {
+    private func copyFile(at srcURL: URL, to dstURL: URL) -> Bool {
         do {
             if FileManager.default.fileExists(atPath: dstURL.path) {
                 try FileManager.default.removeItem(at: dstURL)
@@ -233,7 +249,7 @@ open class RSIShareViewController: SLComposeServiceViewController {
         return path
     }
     
-    func toData(data: [SharedMediaFile]) -> Data {
+    private func toData(data: [SharedMediaFile]) -> Data {
         let encodedData = try? JSONEncoder().encode(data)
         return encodedData!
     }

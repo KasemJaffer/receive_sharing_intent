@@ -4,6 +4,7 @@ import Photos
 
 public let kSchemePrefix = "ShareMedia"
 public let kUserDefaultsKey = "ShareKey"
+public let kUserDefaultsMessageKey = "ShareMessageKey"
 public let kAppGroupIdKey = "AppGroupId"
 
 public class SwiftReceiveSharingIntentPlugin: NSObject, FlutterPlugin, FlutterStreamHandler {
@@ -113,7 +114,7 @@ public class SwiftReceiveSharingIntentPlugin: NSObject, FlutterPlugin, FlutterSt
         let defaultGroupId = "group.\(Bundle.main.bundleIdentifier!)"
         let userDefaults = UserDefaults(suiteName: appGroupId ?? defaultGroupId)
         
-        
+        let message = userDefaults?.string(forKey: kUserDefaultsMessageKey)
         if let json = userDefaults?.object(forKey: kUserDefaultsKey) as? Data {
             let sharedArray = decode(data: json)
             let sharedMediaFiles: [SharedMediaFile] = sharedArray.compactMap {
@@ -127,6 +128,7 @@ public class SwiftReceiveSharingIntentPlugin: NSObject, FlutterPlugin, FlutterSt
                     mimeType: $0.mimeType,
                     thumbnail: getAbsolutePath(for: $0.thumbnail),
                     duration: $0.duration,
+                    message: message,
                     type: $0.type
                 )
             }
@@ -206,16 +208,24 @@ public class SharedMediaFile: Codable {
     var mimeType: String?
     var thumbnail: String? // video thumbnail
     var duration: Double? // video duration in milliseconds
+    var message: String? // post message
     var type: SharedMediaType
     
     
-    public init(path: String, mimeType: String? = nil, thumbnail: String? = nil, duration: Double? = nil, type: SharedMediaType) {
-        self.path = path
-        self.mimeType = mimeType
-        self.thumbnail = thumbnail
-        self.duration = duration
-        self.type = type
-    }
+    public init(
+        path: String,
+        mimeType: String? = nil,
+        thumbnail: String? = nil,
+        duration: Double? = nil,
+        message: String?=nil,
+        type: SharedMediaType) {
+            self.path = path
+            self.mimeType = mimeType
+            self.thumbnail = thumbnail
+            self.duration = duration
+            self.message = message
+            self.type = type
+        }
 }
 
 public enum SharedMediaType: String, Codable, CaseIterable {

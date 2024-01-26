@@ -247,7 +247,13 @@ end
 import receive_sharing_intent
 
 class ShareViewController: RSIShareViewController {
-  // That's it. You don't need to add any code here :)
+      
+    // Use this method to return false if you don't want to redirect to host app automatically.
+    // Default is true
+    override func shouldAutoRedirect() -> Bool {
+        return false
+    }
+    
 }
 ```
 
