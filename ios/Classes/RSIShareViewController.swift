@@ -10,6 +10,7 @@ import Social
 import MobileCoreServices
 import Photos
 
+@available(swift, introduced: 5.0)
 open class RSIShareViewController: SLComposeServiceViewController {
     var hostAppBundleIdentifier = ""
     var appGroupId = ""
@@ -31,7 +32,7 @@ open class RSIShareViewController: SLComposeServiceViewController {
         
         // This is called after the user selects Post. Do the upload of contentText and/or NSExtensionContext attachments.
         if let content = extensionContext!.inputItems[0] as? NSExtensionItem {
-            if let contents = content.attachments as? [NSItemProvider] {
+            if let contents = content.attachments {
                 for (index, attachment) in (contents).enumerated() {
                     for type in SharedMediaType.allCases {
                         if attachment.hasItemConformingToTypeIdentifier(type.toUTTypeIdentifier) {
@@ -214,8 +215,8 @@ open class RSIShareViewController: SLComposeServiceViewController {
         //        let scale = UIScreen.main.scale
         assetImgGenerate.maximumSize =  CGSize(width: 360, height: 360)
         do {
-            let img = try assetImgGenerate.copyCGImage(at: CMTimeMakeWithSeconds(600, Int32(1.0)), actualTime: nil)
-            try UIImagePNGRepresentation(UIImage(cgImage: img))?.write(to: thumbnailPath)
+            let img = try assetImgGenerate.copyCGImage(at: CMTimeMakeWithSeconds(600, preferredTimescale: 1), actualTime: nil)
+            try UIImage(cgImage: img).pngData()?.write(to: thumbnailPath)
             saved = true
         } catch {
             saved = false
@@ -240,11 +241,18 @@ open class RSIShareViewController: SLComposeServiceViewController {
 
 extension URL {
     public func mimeType() -> String {
-        if let mimeType = UTType(filenameExtension: self.pathExtension)?.preferredMIMEType {
-            return mimeType
+        if #available(iOS 14.0, *) {
+            if let mimeType = UTType(filenameExtension: self.pathExtension)?.preferredMIMEType {
+                return mimeType
+            }
+        } else {
+            if let uti = UTTypeCreatePreferredIdentifierForTag(kUTTagClassFilenameExtension, self.pathExtension as NSString, nil)?.takeRetainedValue() {
+                if let mimetype = UTTypeCopyPreferredTagWithClass(uti, kUTTagClassMIMEType)?.takeRetainedValue() {
+                    return mimetype as String
+                }
+            }
         }
-        else {
-            return "application/octet-stream"
-        }
+        
+        return "application/octet-stream"
     }
 }

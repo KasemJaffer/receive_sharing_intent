@@ -227,6 +227,22 @@ public enum SharedMediaType: String, Codable, CaseIterable {
     case url
 
     public var toUTTypeIdentifier: String {
+        if #available(iOS 14.0, *) {
+            switch self {
+            case .image:
+                return UTType.image.identifier
+            case .video:
+                return UTType.movie.identifier
+            case .text:
+                return UTType.text.identifier
+    //         case .audio:
+    //             return UTType.audio.identifier
+            case .file:
+                return UTType.fileURL.identifier
+            case .url:
+                return UTType.url.identifier
+            }
+        }
         switch self {
         case .image:
             return "public.image"
