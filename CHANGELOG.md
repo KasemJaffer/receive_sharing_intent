@@ -1,3 +1,20 @@
+## 1.6.4
+
+* Added a flag to disable the automatic closing of the share extension after sharing. 
+
+```swift
+class ShareViewController: RSIShareViewController {
+    
+    // Use this method to return false if you don't want to redirect to host app automatically.
+    // Default is true
+    override func shouldAutoRedirect() -> Bool {
+        return false
+    }
+    
+}
+```
+* Added new field `message` to the SharedMediaFile class.
+
 ## 1.6.3
 
 * Updated readme iOS section, rearranged the steps to properly setup the plugin and added a new step #7
