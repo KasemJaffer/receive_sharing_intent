@@ -73,7 +73,7 @@ class ReceiveSharingIntent {
 
 class SharedMediaFile {
   /// Shared file path, url or the text
-  /// NOTE. for iOS only, all files are copied to a temp folder
+  /// NOTE. All files are copied to a temp cache folder
   final String path;
 
   /// Video thumbnail

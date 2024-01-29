@@ -4,9 +4,9 @@ import android.content.Context
 import android.content.Intent
 import android.graphics.Bitmap
 import android.media.MediaMetadataRetriever
-import android.media.ThumbnailUtils
+import android.media.MediaMetadataRetriever.METADATA_KEY_DURATION
+import android.media.MediaMetadataRetriever.OPTION_CLOSEST_SYNC
 import android.net.Uri
-import android.provider.MediaStore
 import io.flutter.embedding.engine.plugins.FlutterPlugin
 import io.flutter.embedding.engine.plugins.activity.ActivityAware
 import io.flutter.embedding.engine.plugins.activity.ActivityPluginBinding
@@ -16,7 +16,6 @@ import io.flutter.plugin.common.MethodCall
 import io.flutter.plugin.common.MethodChannel
 import io.flutter.plugin.common.MethodChannel.MethodCallHandler
 import io.flutter.plugin.common.MethodChannel.Result
-import io.flutter.plugin.common.PluginRegistry.Registrar
 import io.flutter.plugin.common.PluginRegistry.NewIntentListener
 import org.json.JSONArray
 import org.json.JSONObject
@@ -65,25 +64,6 @@ class ReceiveSharingIntentPlugin : FlutterPlugin, ActivityAware, MethodCallHandl
     override fun onCancel(arguments: Any?) {
         eventSinkMedia = null
     }
-
-    // This static function is optional and equivalent to onAttachedToEngine. It supports the old
-    // pre-Flutter-1.12 Android projects. You are encouraged to continue supporting
-    // plugin registration via this function while apps migrate to use the new Android APIs
-    // post-flutter-1.12 via https://flutter.dev/go/android-project-migration.
-    //
-    // It is encouraged to share logic between onAttachedToEngine and registerWith to keep
-    // them functionally equivalent. Only one of onAttachedToEngine or registerWith will be called
-    // depending on the user's project. onAttachedToEngine or registerWith must both be defined
-    // in the same class.
-    companion object {
-        @JvmStatic
-        fun registerWith(registrar: Registrar) {
-            val instance = ReceiveSharingIntentPlugin()
-            instance.applicationContext = registrar.context()
-            instance.setupCallbackChannels(registrar.messenger())
-        }
-    }
-
 
     override fun onMethodCall(call: MethodCall, result: Result) {
         when (call.method) {
@@ -136,13 +116,13 @@ class ReceiveSharingIntentPlugin : FlutterPlugin, ActivityAware, MethodCallHandl
             }
 
             Intent.ACTION_SEND -> {
-                val uri = intent.getParcelableExtra<Uri>(Intent.EXTRA_STREAM)
+                val uri = intent.getParcelableExtra(Intent.EXTRA_STREAM, Uri::class.java)
                 val text = intent.getStringExtra(Intent.EXTRA_TEXT)
                 toJsonObject(uri, text, intent.type)?.let { JSONArray(listOf(it)) }
             }
 
             Intent.ACTION_SEND_MULTIPLE -> {
-                val uris = intent.getParcelableArrayListExtra<Uri>(Intent.EXTRA_STREAM)
+                val uris = intent.getParcelableArrayListExtra(Intent.EXTRA_STREAM, Uri::class.java)
                 val mimeTypes = intent.getStringArrayExtra(Intent.EXTRA_MIME_TYPES)
 
                 uris?.mapIndexedNotNull { index, uri ->
@@ -159,35 +139,31 @@ class ReceiveSharingIntentPlugin : FlutterPlugin, ActivityAware, MethodCallHandl
         val path = uri?.let { FileDirectory.getAbsolutePath(applicationContext, it) }
         val mType = mimeType ?: path?.let { URLConnection.guessContentTypeFromName(path) }
         val type = MediaType.fromMimeType(mType)
+        val (thumbnail, duration) = path?.let { getThumbnailAndDuration(path, type) }
+                ?: Pair(null, null)
         return JSONObject()
                 .put("path", path ?: text)
                 .put("type", type.value)
                 .put("mimeType", mType)
-                .put("thumbnail", path?.let { getThumbnail(path, type) })
-                .put("duration", path?.let { getDuration(path, type) })
+                .put("thumbnail", thumbnail)
+                .put("duration", duration)
     }
 
-    private fun getThumbnail(path: String, type: MediaType): String? {
-        if (type != MediaType.VIDEO) return null // get video thumbnail only
-
-        val videoFile = File(path)
-        val targetFile = File(applicationContext.cacheDir, "${videoFile.name}.png")
-        val bitmap = ThumbnailUtils.createVideoThumbnail(path, MediaStore.Video.Thumbnails.MINI_KIND)
-                ?: return null
+    // Get video thumbnail and duration.
+    private fun getThumbnailAndDuration(path: String, type: MediaType): Pair<String?, Long?> {
+        if (type != MediaType.VIDEO) return Pair(null, null) // get thumbnail and duration for video only
+        val retriever = MediaMetadataRetriever()
+        retriever.setDataSource(path)
+        val duration = retriever.extractMetadata(METADATA_KEY_DURATION)?.toLongOrNull()
+        val bitmap = retriever.getScaledFrameAtTime(-1, OPTION_CLOSEST_SYNC, 360, 360)
+        retriever.release()
+        if (bitmap == null) return Pair(null, null)
+        val targetFile = File(applicationContext.cacheDir, "${File(path).name}.png")
         FileOutputStream(targetFile).use { out ->
             bitmap.compress(Bitmap.CompressFormat.PNG, 100, out)
         }
         bitmap.recycle()
-        return targetFile.path
-    }
-
-    private fun getDuration(path: String, type: MediaType): Long? {
-        if (type != MediaType.VIDEO) return null // get duration for video only
-        val retriever = MediaMetadataRetriever()
-        retriever.setDataSource(path)
-        val duration = retriever.extractMetadata(MediaMetadataRetriever.METADATA_KEY_DURATION)?.toLongOrNull()
-        retriever.release()
-        return duration
+        return Pair(targetFile.path, duration)
     }
 
     enum class MediaType(val value: String) {
