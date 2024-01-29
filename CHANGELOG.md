@@ -1,3 +1,7 @@
+## 1.6.6
+
+* Fix compatibility issue with Android SDK <33
+
 ## 1.6.5
 
 * Update deprecated API usage in Android
