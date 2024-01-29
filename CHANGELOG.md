@@ -1,3 +1,7 @@
+## 1.6.5
+
+* Update deprecated API usage in Android
+
 ## 1.6.4
 
 * Added a flag to disable the automatic closing of the share extension after sharing. 
