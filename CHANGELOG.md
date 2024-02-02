@@ -1,3 +1,7 @@
+## 1.6.7
+
+* Fix sharing url not working on iOS
+
 ## 1.6.6
 
 * Fix compatibility issue with Android SDK <33
