@@ -1,3 +1,7 @@
+## 1.6.8
+
+* Fix file doesn't exist error sometimes on iOS
+
 ## 1.6.7
 
 * Fix sharing url not working on iOS

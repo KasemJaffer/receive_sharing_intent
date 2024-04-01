@@ -8,9 +8,9 @@ Check the provided [example](./example/lib/main.dart) for more info.
 
 
 
-|             | Android | iOS               |
-|-------------|---------|-------------------|
-| **Support** | SDK 19+ | 12.0+ (Swift 5.0) |
+|             | Android                 | iOS               |
+|-------------|-------------------------|-------------------|
+| **Support** | SDK 19+ (Kotlin 1.9.22) | 12.0+ (Swift 5.0) |
 
 
 

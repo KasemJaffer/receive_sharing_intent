@@ -127,20 +127,23 @@ open class RSIShareViewController: SLComposeServiceViewController {
         let newPath = FileManager.default.containerURL(forSecurityApplicationGroupIdentifier: appGroupId)!.appendingPathComponent(fileName)
         
         if copyFile(at: url, to: newPath) {
+            // The path should be decoded because Flutter is not expecting url encoded file names
+            let newPathDecoded = newPath.absoluteString.removingPercentEncoding!;
             if type == .video {
                 // Get video thumbnail and duration
                 if let videoInfo = getVideoInfo(from: url) {
+                    let thumbnailPathDecoded = videoInfo.thumbnail?.removingPercentEncoding;
                     sharedMedia.append(SharedMediaFile(
-                        path: newPath.absoluteString,
+                        path: newPathDecoded,
                         mimeType: url.mimeType(),
-                        thumbnail: videoInfo.thumbnail,
+                        thumbnail: thumbnailPathDecoded,
                         duration: videoInfo.duration,
                         type: type
                     ))
                 }
             } else {
                 sharedMedia.append(SharedMediaFile(
-                    path: newPath.absoluteString,
+                    path: newPathDecoded,
                     mimeType: url.mimeType(),
                     type: type
                 ))
