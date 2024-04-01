@@ -1,6 +1,6 @@
 ## 1.6.8
 
-* Fix file doesn't exist error sometimes on iOS
+* Fix sometimes file doesn't exist error on iOS
 
 ## 1.6.7
 
