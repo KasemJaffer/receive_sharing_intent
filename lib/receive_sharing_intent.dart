@@ -1,15 +1,31 @@
+library receive_sharing_intent;
+
 import 'dart:async';
-import 'dart:convert';
 
+import 'package:flutter/foundation.dart';
 import 'package:flutter/services.dart';
+import 'package:plugin_platform_interface/plugin_platform_interface.dart';
+import 'src/receive_sharing_intent_mobile.dart';
 
-class ReceiveSharingIntent {
-  static const _mChannel =
-      const MethodChannel('receive_sharing_intent/messages');
-  static const _eChannelMedia =
-      const EventChannel("receive_sharing_intent/events-media");
+part 'src/data/shared_media_file.dart';
 
-  static Stream<List<SharedMediaFile>>? _streamMedia;
+abstract class ReceiveSharingIntent extends PlatformInterface {
+  ReceiveSharingIntent() : super(token: _token);
+
+  static final Object _token = Object();
+
+  static ReceiveSharingIntent _instance = ReceiveSharingIntentMobile();
+
+  /// The default instance of [ReceiveSharingIntent] to use.
+  static ReceiveSharingIntent get instance => _instance;
+
+  /// Platform-specific implementations should set this to their own
+  /// platform-specific class that extends [SamplePluginPlatform] when they
+  /// register themselves.
+  static set instance(ReceiveSharingIntent instance) {
+    PlatformInterface.verify(instance, _token);
+    _instance = instance;
+  }
 
   /// Returns a [Future], which completes to one of the following:
   ///
@@ -18,13 +34,8 @@ class ReceiveSharingIntent {
   ///
   /// NOTE. The returned media on iOS (iOS ONLY) is already copied to a temp folder.
   /// So, you need to delete the file after you finish using it
-  static Future<List<SharedMediaFile>> getInitialMedia() async {
-    final json = await _mChannel.invokeMethod('getInitialMedia');
-    if (json == null) return [];
-    final encoded = jsonDecode(json);
-    return encoded
-        .map<SharedMediaFile>((file) => SharedMediaFile.fromMap(file))
-        .toList();
+  Future<List<SharedMediaFile>> getInitialMedia() {
+    throw UnimplementedError('getInitialMedia() has not been implemented.');
   }
 
   /// Sets up a broadcast stream for receiving incoming media share change events.
@@ -43,96 +54,51 @@ class ReceiveSharingIntent {
   ///
   /// If the app was started by a link intent or user activity the stream will
   /// not emit that initial one - query either the `getInitialMedia` instead.
-  static Stream<List<SharedMediaFile>> getMediaStream() {
-    if (_streamMedia == null) {
-      final stream = _eChannelMedia.receiveBroadcastStream().cast<String?>();
-      _streamMedia = stream.transform<List<SharedMediaFile>>(
-        StreamTransformer<String?, List<SharedMediaFile>>.fromHandlers(
-          handleData: (data, sink) {
-            if (data == null) {
-              sink.add(<SharedMediaFile>[]);
-            } else {
-              final encoded = jsonDecode(data);
-              sink.add(encoded
-                  .map<SharedMediaFile>((file) => SharedMediaFile.fromMap(file))
-                  .toList());
-            }
-          },
-        ),
-      );
-    }
-    return _streamMedia!;
+  Stream<List<SharedMediaFile>> getMediaStream() {
+    throw UnimplementedError('getMediaStream() has not been implemented.');
   }
 
   /// Call this method if you already consumed the callback
   /// and don't want the same callback again
-  static Future<dynamic> reset() {
-    return _mChannel.invokeMethod('reset');
+  Future<dynamic> reset() {
+    throw UnimplementedError('reset() has not been implemented.');
+  }
+
+  /// Initializes the plugin and sets the mock values for testing.
+  @visibleForTesting
+  static void setMockValues({
+    required List<SharedMediaFile> initialMedia,
+    required Stream<List<SharedMediaFile>> mediaStream,
+  }) {
+    ReceiveSharingIntent.instance = _ReceiveSharingIntentMock(
+      initialMedia: List.from(initialMedia),
+      mediaStream: mediaStream,
+    );
   }
 }
 
-class SharedMediaFile {
-  /// Shared file path, url or the text
-  /// NOTE. All files are copied to a temp cache folder
-  final String path;
+/// A mock implementation of [ReceiveSharingIntent] for testing.
+class _ReceiveSharingIntentMock extends ReceiveSharingIntent {
+  final List<SharedMediaFile> initialMedia;
+  final Stream<List<SharedMediaFile>> mediaStream;
 
-  /// Video thumbnail
-  final String? thumbnail;
-
-  /// Video duration in milliseconds
-  final int? duration;
-
-  /// Shared media type
-  final SharedMediaType type;
-
-  /// Mime type of the file.
-  /// i.e. image/jpeg, video/mp4, text/plain
-  final String? mimeType;
-
-  /// Post message iOS ONLY
-  final String? message;
-
-  SharedMediaFile({
-    required this.path,
-    required this.type,
-    this.thumbnail,
-    this.duration,
-    this.mimeType,
-    this.message,
+  _ReceiveSharingIntentMock({
+    required this.initialMedia,
+    required this.mediaStream,
   });
 
-  SharedMediaFile.fromMap(Map<String, dynamic> json)
-      : path = json['path'],
-        thumbnail = json['thumbnail'],
-        duration = json['duration'],
-        type = SharedMediaType.fromValue(json['type']),
-        mimeType = json['mimeType'],
-        message = json['message'];
-
-  Map<String, dynamic> toMap() {
-    return {
-      'path': path,
-      'thumbnail': thumbnail,
-      'duration': duration,
-      'type': type.value,
-      'mimeType': mimeType,
-      'message': message,
-    };
+  @override
+  Future<List<SharedMediaFile>> getInitialMedia() async {
+    return initialMedia;
   }
-}
 
-enum SharedMediaType {
-  image('image'),
-  video('video'),
-  text('text'),
-  file('file'),
-  url('url');
+  @override
+  Stream<List<SharedMediaFile>> getMediaStream() {
+    return mediaStream;
+  }
 
-  final String value;
-
-  const SharedMediaType(this.value);
-
-  static SharedMediaType fromValue(String value) {
-    return SharedMediaType.values.firstWhere((e) => e.value == value);
+  @override
+  Future<dynamic> reset() async {
+    return initialMedia.clear();
   }
 }

@@ -1,3 +1,16 @@
+## 1.7.0
+
+* Added `ReceiveSharingIntent.setMockValues` method to set mock values for testing purposes.
+```dart
+ReceiveSharingIntent.setMockValues(
+      initialMedia: [],
+      mediaStream: Stream.empty(),
+    );
+```
+## Breaking change
+
+* Use instance getter i.e. `ReceiveSharingIntent.instance.getInitialMedia()` instead of `ReceiveSharingIntent.getInitialMedia()`
+
 ## 1.6.8
 
 * Fix sometimes file doesn't exist error on iOS

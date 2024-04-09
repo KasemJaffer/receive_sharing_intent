@@ -14,6 +14,11 @@
 		8072EBCB2B6191600035633A /* ShareViewController.swift in Sources */ = {isa = PBXBuildFile; fileRef = 8072EBCA2B6191600035633A /* ShareViewController.swift */; };
 		8072EBCE2B6191600035633A /* MainInterface.storyboard in Resources */ = {isa = PBXBuildFile; fileRef = 8072EBCC2B6191600035633A /* MainInterface.storyboard */; };
 		8072EBD22B6191600035633A /* Share Extension.appex in Embed App Extensions */ = {isa = PBXBuildFile; fileRef = 8072EBC82B6191600035633A /* Share Extension.appex */; settings = {ATTRIBUTES = (RemoveHeadersOnCopy, ); }; };
+		8072EC0A2B714FDD0035633A /* UniformTypeIdentifiers.framework in Frameworks */ = {isa = PBXBuildFile; fileRef = 8072EC092B714FDD0035633A /* UniformTypeIdentifiers.framework */; };
+		8072EC0D2B714FDD0035633A /* Media.xcassets in Resources */ = {isa = PBXBuildFile; fileRef = 8072EC0C2B714FDD0035633A /* Media.xcassets */; };
+		8072EC0F2B714FDD0035633A /* ActionViewController.swift in Sources */ = {isa = PBXBuildFile; fileRef = 8072EC0E2B714FDD0035633A /* ActionViewController.swift */; };
+		8072EC122B714FDD0035633A /* MainInterface.storyboard in Resources */ = {isa = PBXBuildFile; fileRef = 8072EC102B714FDD0035633A /* MainInterface.storyboard */; };
+		8072EC162B714FDD0035633A /* ActionExtension.appex in Embed App Extensions */ = {isa = PBXBuildFile; fileRef = 8072EC082B714FDD0035633A /* ActionExtension.appex */; settings = {ATTRIBUTES = (RemoveHeadersOnCopy, ); }; };
 		9740EEB41CF90195004384FC /* Debug.xcconfig in Resources */ = {isa = PBXBuildFile; fileRef = 9740EEB21CF90195004384FC /* Debug.xcconfig */; };
 		97C146FC1CF9000F007C117D /* Main.storyboard in Resources */ = {isa = PBXBuildFile; fileRef = 97C146FA1CF9000F007C117D /* Main.storyboard */; };
 		97C146FE1CF9000F007C117D /* Assets.xcassets in Resources */ = {isa = PBXBuildFile; fileRef = 97C146FD1CF9000F007C117D /* Assets.xcassets */; };
@@ -29,6 +34,13 @@
 			remoteGlobalIDString = 8072EBC72B6191600035633A;
 			remoteInfo = "Share Extension";
 		};
+		8072EC142B714FDD0035633A /* PBXContainerItemProxy */ = {
+			isa = PBXContainerItemProxy;
+			containerPortal = 97C146E61CF9000F007C117D /* Project object */;
+			proxyType = 1;
+			remoteGlobalIDString = 8072EC072B714FDD0035633A;
+			remoteInfo = ActionExtension;
+		};
 /* End PBXContainerItemProxy section */
 
 /* Begin PBXCopyFilesBuildPhase section */
@@ -38,6 +50,7 @@
 			dstPath = "";
 			dstSubfolderSpec = 13;
 			files = (
+				8072EC162B714FDD0035633A /* ActionExtension.appex in Embed App Extensions */,
 				8072EBD22B6191600035633A /* Share Extension.appex in Embed App Extensions */,
 			);
 			name = "Embed App Extensions";
@@ -74,6 +87,12 @@
 		8072EBCD2B6191600035633A /* Base */ = {isa = PBXFileReference; lastKnownFileType = file.storyboard; name = Base; path = Base.lproj/MainInterface.storyboard; sourceTree = "<group>"; };
 		8072EBCF2B6191600035633A /* Info.plist */ = {isa = PBXFileReference; lastKnownFileType = text.plist.xml; path = Info.plist; sourceTree = "<group>"; };
 		8072EBD72B61937D0035633A /* Share Extension.entitlements */ = {isa = PBXFileReference; lastKnownFileType = text.plist.entitlements; path = "Share Extension.entitlements"; sourceTree = "<group>"; };
+		8072EC082B714FDD0035633A /* ActionExtension.appex */ = {isa = PBXFileReference; explicitFileType = "wrapper.app-extension"; includeInIndex = 0; path = ActionExtension.appex; sourceTree = BUILT_PRODUCTS_DIR; };
+		8072EC092B714FDD0035633A /* UniformTypeIdentifiers.framework */ = {isa = PBXFileReference; lastKnownFileType = wrapper.framework; name = UniformTypeIdentifiers.framework; path = System/Library/Frameworks/UniformTypeIdentifiers.framework; sourceTree = SDKROOT; };
+		8072EC0C2B714FDD0035633A /* Media.xcassets */ = {isa = PBXFileReference; lastKnownFileType = folder.assetcatalog; path = Media.xcassets; sourceTree = "<group>"; };
+		8072EC0E2B714FDD0035633A /* ActionViewController.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = ActionViewController.swift; sourceTree = "<group>"; };
+		8072EC112B714FDD0035633A /* Base */ = {isa = PBXFileReference; lastKnownFileType = file.storyboard; name = Base; path = Base.lproj/MainInterface.storyboard; sourceTree = "<group>"; };
+		8072EC132B714FDD0035633A /* Info.plist */ = {isa = PBXFileReference; lastKnownFileType = text.plist.xml; path = Info.plist; sourceTree = "<group>"; };
 		86483A3EA60EAFD0014233B4 /* Pods-Share Extension.debug.xcconfig */ = {isa = PBXFileReference; includeInIndex = 1; lastKnownFileType = text.xcconfig; name = "Pods-Share Extension.debug.xcconfig"; path = "Pods/Target Support Files/Pods-Share Extension/Pods-Share Extension.debug.xcconfig"; sourceTree = "<group>"; };
 		9740EEB21CF90195004384FC /* Debug.xcconfig */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = text.xcconfig; name = Debug.xcconfig; path = Flutter/Debug.xcconfig; sourceTree = "<group>"; };
 		9740EEB31CF90195004384FC /* Generated.xcconfig */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = text.xcconfig; name = Generated.xcconfig; path = Flutter/Generated.xcconfig; sourceTree = "<group>"; };
@@ -95,6 +114,14 @@
 			);
 			runOnlyForDeploymentPostprocessing = 0;
 		};
+		8072EC052B714FDD0035633A /* Frameworks */ = {
+			isa = PBXFrameworksBuildPhase;
+			buildActionMask = 2147483647;
+			files = (
+				8072EC0A2B714FDD0035633A /* UniformTypeIdentifiers.framework in Frameworks */,
+			);
+			runOnlyForDeploymentPostprocessing = 0;
+		};
 		97C146EB1CF9000F007C117D /* Frameworks */ = {
 			isa = PBXFrameworksBuildPhase;
 			buildActionMask = 2147483647;
@@ -112,6 +139,7 @@
 				DDEE270A5C6F8F4FC31DD568 /* Pods_Runner.framework */,
 				3FAA02ABC7237F22B47E24C8 /* Pods_Sharing_Extension.framework */,
 				51C3942338DC6F9F1BCEAD0E /* Pods_Share_Extension.framework */,
+				8072EC092B714FDD0035633A /* UniformTypeIdentifiers.framework */,
 			);
 			name = Frameworks;
 			sourceTree = "<group>";
@@ -125,6 +153,17 @@
 				8072EBCF2B6191600035633A /* Info.plist */,
 			);
 			path = "Share Extension";
+			sourceTree = "<group>";
+		};
+		8072EC0B2B714FDD0035633A /* ActionExtension */ = {
+			isa = PBXGroup;
+			children = (
+				8072EC0C2B714FDD0035633A /* Media.xcassets */,
+				8072EC0E2B714FDD0035633A /* ActionViewController.swift */,
+				8072EC102B714FDD0035633A /* MainInterface.storyboard */,
+				8072EC132B714FDD0035633A /* Info.plist */,
+			);
+			path = ActionExtension;
 			sourceTree = "<group>";
 		};
 		9740EEB11CF90186004384FC /* Flutter */ = {
@@ -144,6 +183,7 @@
 				9740EEB11CF90186004384FC /* Flutter */,
 				97C146F01CF9000F007C117D /* Runner */,
 				8072EBC92B6191600035633A /* Share Extension */,
+				8072EC0B2B714FDD0035633A /* ActionExtension */,
 				97C146EF1CF9000F007C117D /* Products */,
 				C8C487198026609B8111606A /* Pods */,
 				7FF43440B53BF39933AB4BFD /* Frameworks */,
@@ -155,6 +195,7 @@
 			children = (
 				97C146EE1CF9000F007C117D /* Runner.app */,
 				8072EBC82B6191600035633A /* Share Extension.appex */,
+				8072EC082B714FDD0035633A /* ActionExtension.appex */,
 			);
 			name = Products;
 			sourceTree = "<group>";
@@ -217,6 +258,23 @@
 			productReference = 8072EBC82B6191600035633A /* Share Extension.appex */;
 			productType = "com.apple.product-type.app-extension";
 		};
+		8072EC072B714FDD0035633A /* ActionExtension */ = {
+			isa = PBXNativeTarget;
+			buildConfigurationList = 8072EC1A2B714FDD0035633A /* Build configuration list for PBXNativeTarget "ActionExtension" */;
+			buildPhases = (
+				8072EC042B714FDD0035633A /* Sources */,
+				8072EC052B714FDD0035633A /* Frameworks */,
+				8072EC062B714FDD0035633A /* Resources */,
+			);
+			buildRules = (
+			);
+			dependencies = (
+			);
+			name = ActionExtension;
+			productName = ActionExtension;
+			productReference = 8072EC082B714FDD0035633A /* ActionExtension.appex */;
+			productType = "com.apple.product-type.app-extension";
+		};
 		97C146ED1CF9000F007C117D /* Runner */ = {
 			isa = PBXNativeTarget;
 			buildConfigurationList = 97C147051CF9000F007C117D /* Build configuration list for PBXNativeTarget "Runner" */;
@@ -235,6 +293,7 @@
 			);
 			dependencies = (
 				8072EBD12B6191600035633A /* PBXTargetDependency */,
+				8072EC152B714FDD0035633A /* PBXTargetDependency */,
 			);
 			name = Runner;
 			productName = Runner;
@@ -252,6 +311,9 @@
 				ORGANIZATIONNAME = "The Chromium Authors";
 				TargetAttributes = {
 					8072EBC72B6191600035633A = {
+						CreatedOnToolsVersion = 15.0.1;
+					};
+					8072EC072B714FDD0035633A = {
 						CreatedOnToolsVersion = 15.0.1;
 					};
 					97C146ED1CF9000F007C117D = {
@@ -281,6 +343,7 @@
 			targets = (
 				97C146ED1CF9000F007C117D /* Runner */,
 				8072EBC72B6191600035633A /* Share Extension */,
+				8072EC072B714FDD0035633A /* ActionExtension */,
 			);
 		};
 /* End PBXProject section */
@@ -291,6 +354,15 @@
 			buildActionMask = 2147483647;
 			files = (
 				8072EBCE2B6191600035633A /* MainInterface.storyboard in Resources */,
+			);
+			runOnlyForDeploymentPostprocessing = 0;
+		};
+		8072EC062B714FDD0035633A /* Resources */ = {
+			isa = PBXResourcesBuildPhase;
+			buildActionMask = 2147483647;
+			files = (
+				8072EC0D2B714FDD0035633A /* Media.xcassets in Resources */,
+				8072EC122B714FDD0035633A /* MainInterface.storyboard in Resources */,
 			);
 			runOnlyForDeploymentPostprocessing = 0;
 		};
@@ -413,6 +485,14 @@
 			);
 			runOnlyForDeploymentPostprocessing = 0;
 		};
+		8072EC042B714FDD0035633A /* Sources */ = {
+			isa = PBXSourcesBuildPhase;
+			buildActionMask = 2147483647;
+			files = (
+				8072EC0F2B714FDD0035633A /* ActionViewController.swift in Sources */,
+			);
+			runOnlyForDeploymentPostprocessing = 0;
+		};
 		97C146EA1CF9000F007C117D /* Sources */ = {
 			isa = PBXSourcesBuildPhase;
 			buildActionMask = 2147483647;
@@ -430,6 +510,11 @@
 			target = 8072EBC72B6191600035633A /* Share Extension */;
 			targetProxy = 8072EBD02B6191600035633A /* PBXContainerItemProxy */;
 		};
+		8072EC152B714FDD0035633A /* PBXTargetDependency */ = {
+			isa = PBXTargetDependency;
+			target = 8072EC072B714FDD0035633A /* ActionExtension */;
+			targetProxy = 8072EC142B714FDD0035633A /* PBXContainerItemProxy */;
+		};
 /* End PBXTargetDependency section */
 
 /* Begin PBXVariantGroup section */
@@ -437,6 +522,14 @@
 			isa = PBXVariantGroup;
 			children = (
 				8072EBCD2B6191600035633A /* Base */,
+			);
+			name = MainInterface.storyboard;
+			sourceTree = "<group>";
+		};
+		8072EC102B714FDD0035633A /* MainInterface.storyboard */ = {
+			isa = PBXVariantGroup;
+			children = (
+				8072EC112B714FDD0035633A /* Base */,
 			);
 			name = MainInterface.storyboard;
 			sourceTree = "<group>";
@@ -681,6 +774,131 @@
 			};
 			name = Profile;
 		};
+		8072EC172B714FDD0035633A /* Debug */ = {
+			isa = XCBuildConfiguration;
+			buildSettings = {
+				ASSETCATALOG_COMPILER_GENERATE_SWIFT_ASSET_SYMBOL_EXTENSIONS = YES;
+				CLANG_ANALYZER_NUMBER_OBJECT_CONVERSION = YES_AGGRESSIVE;
+				CLANG_CXX_LANGUAGE_STANDARD = "gnu++20";
+				CLANG_ENABLE_OBJC_WEAK = YES;
+				CLANG_WARN_DEPRECATED_OBJC_IMPLEMENTATIONS = YES;
+				CLANG_WARN_DOCUMENTATION_COMMENTS = YES;
+				CLANG_WARN_OBJC_IMPLICIT_RETAIN_SELF = YES;
+				CLANG_WARN_QUOTED_INCLUDE_IN_FRAMEWORK_HEADER = YES;
+				CLANG_WARN_UNGUARDED_AVAILABILITY = YES_AGGRESSIVE;
+				CODE_SIGN_IDENTITY = "Apple Development";
+				CODE_SIGN_STYLE = Automatic;
+				CURRENT_PROJECT_VERSION = 1;
+				DEVELOPMENT_TEAM = "";
+				ENABLE_USER_SCRIPT_SANDBOXING = YES;
+				GCC_C_LANGUAGE_STANDARD = gnu17;
+				GENERATE_INFOPLIST_FILE = YES;
+				INFOPLIST_FILE = ActionExtension/Info.plist;
+				INFOPLIST_KEY_CFBundleDisplayName = "Describe with Aira";
+				INFOPLIST_KEY_NSHumanReadableCopyright = "Copyright © 2024 The Chromium Authors. All rights reserved.";
+				IPHONEOS_DEPLOYMENT_TARGET = 17.0;
+				LD_RUNPATH_SEARCH_PATHS = (
+					"$(inherited)",
+					"@executable_path/Frameworks",
+					"@executable_path/../../Frameworks",
+				);
+				LOCALIZATION_PREFERS_STRING_CATALOGS = YES;
+				MARKETING_VERSION = 1.0;
+				MTL_ENABLE_DEBUG_INFO = INCLUDE_SOURCE;
+				MTL_FAST_MATH = YES;
+				PRODUCT_BUNDLE_IDENTIFIER = com.kasem.sharing.ActionExtension;
+				PRODUCT_NAME = "$(TARGET_NAME)";
+				SKIP_INSTALL = YES;
+				SWIFT_ACTIVE_COMPILATION_CONDITIONS = "DEBUG $(inherited)";
+				SWIFT_EMIT_LOC_STRINGS = YES;
+				SWIFT_OPTIMIZATION_LEVEL = "-Onone";
+				SWIFT_VERSION = 5.0;
+				TARGETED_DEVICE_FAMILY = "1,2";
+			};
+			name = Debug;
+		};
+		8072EC182B714FDD0035633A /* Release */ = {
+			isa = XCBuildConfiguration;
+			buildSettings = {
+				ASSETCATALOG_COMPILER_GENERATE_SWIFT_ASSET_SYMBOL_EXTENSIONS = YES;
+				CLANG_ANALYZER_NUMBER_OBJECT_CONVERSION = YES_AGGRESSIVE;
+				CLANG_CXX_LANGUAGE_STANDARD = "gnu++20";
+				CLANG_ENABLE_OBJC_WEAK = YES;
+				CLANG_WARN_DEPRECATED_OBJC_IMPLEMENTATIONS = YES;
+				CLANG_WARN_DOCUMENTATION_COMMENTS = YES;
+				CLANG_WARN_OBJC_IMPLICIT_RETAIN_SELF = YES;
+				CLANG_WARN_QUOTED_INCLUDE_IN_FRAMEWORK_HEADER = YES;
+				CLANG_WARN_UNGUARDED_AVAILABILITY = YES_AGGRESSIVE;
+				CODE_SIGN_IDENTITY = "Apple Development";
+				CODE_SIGN_STYLE = Automatic;
+				CURRENT_PROJECT_VERSION = 1;
+				DEVELOPMENT_TEAM = "";
+				ENABLE_USER_SCRIPT_SANDBOXING = YES;
+				GCC_C_LANGUAGE_STANDARD = gnu17;
+				GENERATE_INFOPLIST_FILE = YES;
+				INFOPLIST_FILE = ActionExtension/Info.plist;
+				INFOPLIST_KEY_CFBundleDisplayName = "Describe with Aira";
+				INFOPLIST_KEY_NSHumanReadableCopyright = "Copyright © 2024 The Chromium Authors. All rights reserved.";
+				IPHONEOS_DEPLOYMENT_TARGET = 17.0;
+				LD_RUNPATH_SEARCH_PATHS = (
+					"$(inherited)",
+					"@executable_path/Frameworks",
+					"@executable_path/../../Frameworks",
+				);
+				LOCALIZATION_PREFERS_STRING_CATALOGS = YES;
+				MARKETING_VERSION = 1.0;
+				MTL_FAST_MATH = YES;
+				PRODUCT_BUNDLE_IDENTIFIER = com.kasem.sharing.ActionExtension;
+				PRODUCT_NAME = "$(TARGET_NAME)";
+				SKIP_INSTALL = YES;
+				SWIFT_COMPILATION_MODE = wholemodule;
+				SWIFT_EMIT_LOC_STRINGS = YES;
+				SWIFT_VERSION = 5.0;
+				TARGETED_DEVICE_FAMILY = "1,2";
+			};
+			name = Release;
+		};
+		8072EC192B714FDD0035633A /* Profile */ = {
+			isa = XCBuildConfiguration;
+			buildSettings = {
+				ASSETCATALOG_COMPILER_GENERATE_SWIFT_ASSET_SYMBOL_EXTENSIONS = YES;
+				CLANG_ANALYZER_NUMBER_OBJECT_CONVERSION = YES_AGGRESSIVE;
+				CLANG_CXX_LANGUAGE_STANDARD = "gnu++20";
+				CLANG_ENABLE_OBJC_WEAK = YES;
+				CLANG_WARN_DEPRECATED_OBJC_IMPLEMENTATIONS = YES;
+				CLANG_WARN_DOCUMENTATION_COMMENTS = YES;
+				CLANG_WARN_OBJC_IMPLICIT_RETAIN_SELF = YES;
+				CLANG_WARN_QUOTED_INCLUDE_IN_FRAMEWORK_HEADER = YES;
+				CLANG_WARN_UNGUARDED_AVAILABILITY = YES_AGGRESSIVE;
+				CODE_SIGN_IDENTITY = "Apple Development";
+				CODE_SIGN_STYLE = Automatic;
+				CURRENT_PROJECT_VERSION = 1;
+				DEVELOPMENT_TEAM = "";
+				ENABLE_USER_SCRIPT_SANDBOXING = YES;
+				GCC_C_LANGUAGE_STANDARD = gnu17;
+				GENERATE_INFOPLIST_FILE = YES;
+				INFOPLIST_FILE = ActionExtension/Info.plist;
+				INFOPLIST_KEY_CFBundleDisplayName = "Describe with Aira";
+				INFOPLIST_KEY_NSHumanReadableCopyright = "Copyright © 2024 The Chromium Authors. All rights reserved.";
+				IPHONEOS_DEPLOYMENT_TARGET = 17.0;
+				LD_RUNPATH_SEARCH_PATHS = (
+					"$(inherited)",
+					"@executable_path/Frameworks",
+					"@executable_path/../../Frameworks",
+				);
+				LOCALIZATION_PREFERS_STRING_CATALOGS = YES;
+				MARKETING_VERSION = 1.0;
+				MTL_FAST_MATH = YES;
+				PRODUCT_BUNDLE_IDENTIFIER = com.kasem.sharing.ActionExtension;
+				PRODUCT_NAME = "$(TARGET_NAME)";
+				SKIP_INSTALL = YES;
+				SWIFT_COMPILATION_MODE = wholemodule;
+				SWIFT_EMIT_LOC_STRINGS = YES;
+				SWIFT_VERSION = 5.0;
+				TARGETED_DEVICE_FAMILY = "1,2";
+			};
+			name = Profile;
+		};
 		97C147031CF9000F007C117D /* Debug */ = {
 			isa = XCBuildConfiguration;
 			buildSettings = {
@@ -872,6 +1090,16 @@
 				8072EBD42B6191610035633A /* Debug */,
 				8072EBD52B6191610035633A /* Release */,
 				8072EBD62B6191610035633A /* Profile */,
+			);
+			defaultConfigurationIsVisible = 0;
+			defaultConfigurationName = Release;
+		};
+		8072EC1A2B714FDD0035633A /* Build configuration list for PBXNativeTarget "ActionExtension" */ = {
+			isa = XCConfigurationList;
+			buildConfigurations = (
+				8072EC172B714FDD0035633A /* Debug */,
+				8072EC182B714FDD0035633A /* Release */,
+				8072EC192B714FDD0035633A /* Profile */,
 			);
 			defaultConfigurationIsVisible = 0;
 			defaultConfigurationName = Release;
