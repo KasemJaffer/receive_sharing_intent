@@ -74,6 +74,12 @@ open class RSIShareViewController: SLComposeServiceViewController {
                                                          index: index,
                                                          content: content)
                                     }
+                                    else if let image = data as? UIImage {
+                                        this.handleMedia(forUIImage: image,
+                                                         type: type,
+                                                         index: index,
+                                                         content: content)
+                                    }
                                 }
                             }
                             break
@@ -115,6 +121,23 @@ open class RSIShareViewController: SLComposeServiceViewController {
             mimeType: type == .text ? "text/plain": nil,
             type: type
         ))
+        if index == (content.attachments?.count ?? 0) - 1 {
+            if shouldAutoRedirect() {
+                saveAndRedirect()
+            }
+        }
+    }
+
+    private func handleMedia(forUIImage image: UIImage, type: SharedMediaType, index: Int, content: NSExtensionItem){
+        let tempPath = FileManager.default.containerURL(forSecurityApplicationGroupIdentifier: appGroupId)!.appendingPathComponent("TempImage.png")
+        if self.writeTempFile(image, to: tempPath) {
+            let newPathDecoded = tempPath.absoluteString.removingPercentEncoding!
+            sharedMedia.append(SharedMediaFile(
+                path: newPathDecoded,
+                mimeType: type == .image ? "image/png": nil,
+                type: type
+            ))
+        }
         if index == (content.attachments?.count ?? 0) - 1 {
             if shouldAutoRedirect() {
                 saveAndRedirect()
@@ -211,6 +234,20 @@ open class RSIShareViewController: SLComposeServiceViewController {
             }
         }
         return name
+    }
+
+    private func writeTempFile(_ image: UIImage, to dstURL: URL) -> Bool {
+        do {
+            if FileManager.default.fileExists(atPath: dstURL.path) {
+                try FileManager.default.removeItem(at: dstURL)
+            }
+            let pngData = image.pngData();
+            try pngData?.write(to: dstURL);
+            return true;
+        } catch (let error){
+            print("Cannot write to temp file: \(error)");
+            return false;
+        }
     }
     
     private func copyFile(at srcURL: URL, to dstURL: URL) -> Bool {

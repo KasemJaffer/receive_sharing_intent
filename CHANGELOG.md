@@ -1,3 +1,7 @@
+## 1.8.0
+
+* Added support for cached images on iOS such as shared images from a Screenshot.
+
 ## 1.7.0
 
 * Added `ReceiveSharingIntent.setMockValues` method to set mock values for testing purposes.
