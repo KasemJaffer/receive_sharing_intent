@@ -1,38 +1,39 @@
-<?xml version="1.0" encoding="UTF-8"?>
-<!DOCTYPE plist PUBLIC "-//Apple//DTD PLIST 1.0//EN" "http://www.apple.com/DTDs/PropertyList-1.0.dtd">
+<?xml version="1.0" encoding="UTF-8"?><!DOCTYPE plist PUBLIC "-//Apple//DTD PLIST 1.0//EN"
+    "http://www.apple.com/DTDs/PropertyList-1.0.dtd">
 <plist version="1.0">
-<dict>
-	<key>AppGroupId</key>
+    <dict>
+        <key>AppGroupId</key>
         <string>$(CUSTOM_GROUP_ID)</string>
-    	<key>CFBundleVersion</key>
-    	<string>$(FLUTTER_BUILD_NUMBER)</string>
-    	<key>NSExtension</key>
-    	<dict>
-    		<key>NSExtensionAttributes</key>
+        <key>CFBundleVersion</key>
+        <string>$(FLUTTER_BUILD_NUMBER)</string>
+        <key>NSExtension</key>
+        <dict>
+            <key>NSExtensionAttributes</key>
             <dict>
-                <key>PHSupportedMediaTypes</key>
-                   <array>
-                       <string>Video</string>
-                       <string>Image</string>
-                   </array>
                 <key>NSExtensionActivationRule</key>
-                <dict>
-                    <key>NSExtensionActivationSupportsText</key>
-                    <true/>
-                	<key>NSExtensionActivationSupportsWebURLWithMaxCount</key>
-                	<integer>1</integer>
-                    <key>NSExtensionActivationSupportsImageWithMaxCount</key>
-                    <integer>100</integer>
-                    <key>NSExtensionActivationSupportsMovieWithMaxCount</key>
-                    <integer>100</integer>
-    				<key>NSExtensionActivationSupportsFileWithMaxCount</key>
-    				<integer>1</integer>
-                </dict>
+                <string>SUBQUERY (
+                    extensionItems,
+                    $extensionItem,
+                    SUBQUERY (
+                    $extensionItem.attachments,
+                    $attachment,
+                    ANY $attachment.registeredTypeIdentifiers UTI-CONFORMS-TO "public.file-url" ||
+                    ANY $attachment.registeredTypeIdentifiers UTI-CONFORMS-TO "public.movie" ||
+                    ANY $attachment.registeredTypeIdentifiers UTI-CONFORMS-TO "public.image" ||
+                    ANY $attachment.registeredTypeIdentifiers UTI-CONFORMS-TO "public.url" ||
+                    ANY $attachment.registeredTypeIdentifiers UTI-CONFORMS-TO "public.text" ||
+                    ANY $attachment.registeredTypeIdentifiers UTI-CONFORMS-TO "public.audio" ||
+                    ANY $attachment.registeredTypeIdentifiers UTI-CONFORMS-TO "public.data" ||
+                    ANY $attachment.registeredTypeIdentifiers UTI-CONFORMS-TO "public.vcard" ||
+                    ANY $attachment.registeredTypeIdentifiers UTI-CONFORMS-TO "com.apple.pkpass"
+                    ).@count == $extensionItem.attachments.@count
+                    ).@count &gt; 0
+                </string>
             </dict>
-    		<key>NSExtensionMainStoryboard</key>
-    		<string>MainInterface</string>
-    		<key>NSExtensionPointIdentifier</key>
-    		<string>com.apple.share-services</string>
-    	</dict>
-</dict>
+            <key>NSExtensionMainStoryboard</key>
+            <string>MainInterface</string>
+            <key>NSExtensionPointIdentifier</key>
+            <string>com.apple.share-services</string>
+        </dict>
+    </dict>
 </plist>
