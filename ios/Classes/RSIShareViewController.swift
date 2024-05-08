@@ -15,7 +15,7 @@ open class RSIShareViewController: SLComposeServiceViewController {
     var hostAppBundleIdentifier = ""
     var appGroupId = ""
     var sharedMedia: [SharedMediaFile] = []
-    
+
     /// Override this method to return false if you don't want to redirect to host app automatically
     /// Default is true
     open func shouldAutoRedirect() -> Bool {
@@ -134,7 +134,7 @@ open class RSIShareViewController: SLComposeServiceViewController {
             }
         }
     }
-    
+
     private func handleMedia(forUIImage image: UIImage, type: SharedMediaType, index: Int, content: NSExtensionItem){
         let tempPath = FileManager.default.containerURL(forSecurityApplicationGroupIdentifier: appGroupId)!.appendingPathComponent("TempImage.png")
         if self.writeTempFile(image, to: tempPath) {
@@ -203,41 +203,8 @@ open class RSIShareViewController: SLComposeServiceViewController {
             }
         }
     }
-    
-    /*
-    private func handleMedia(forVCard vCardData: Data, type: SharedMediaType, index: Int, content: NSExtensionItem) {
-        let fileName = "tempContact.vcf"
-        
-        // Get the path to the app's temporary directory
-        if let tempDirectory = FileManager.default.containerURL(forSecurityApplicationGroupIdentifier: appGroupId) {
-            let vCardFilePath = tempDirectory.appendingPathComponent(fileName)
-            
-            do {
-                // Write the vCard data to the file
-                try vCardData.write(to: vCardFilePath)
-                // The path must be decoded because Flutter may not expect URL-encoded file names
-                let pathDecoded = vCardFilePath.absoluteString.removingPercentEncoding!
-                
-                // Append the vCard file to your shared media
-                sharedMedia.append(SharedMediaFile(
-                    path: pathDecoded,
-                    mimeType: "text/vcard",
-                    type: type
-                ))
-                
-                // Check if this is the last attachment to handle
-                if index == (content.attachments?.count ?? 0) - 1 {
-                    if shouldAutoRedirect() {
-                        saveAndRedirect()
-                    }
-                }
-            } catch {
-                print("Failed to write vCard file: \(error)")
-            }
-        }
-    }
-    */
-    
+
+
     // Save shared media and redirect to host app
     private func saveAndRedirect(message: String? = nil) {
         let userDefaults = UserDefaults(suiteName: appGroupId)
@@ -292,7 +259,7 @@ open class RSIShareViewController: SLComposeServiceViewController {
         }
         return name
     }
-    
+
     private func writeTempFile(_ image: UIImage, to dstURL: URL) -> Bool {
         do {
             if FileManager.default.fileExists(atPath: dstURL.path) {
