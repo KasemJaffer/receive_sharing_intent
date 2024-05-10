@@ -51,6 +51,7 @@ class SharedMediaFile {
 }
 
 enum SharedMediaType {
+  contact('contact'),
   image('image'),
   video('video'),
   text('text'),

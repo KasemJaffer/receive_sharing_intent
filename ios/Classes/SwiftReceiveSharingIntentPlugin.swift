@@ -229,6 +229,7 @@ public class SharedMediaFile: Codable {
 }
 
 public enum SharedMediaType: String, Codable, CaseIterable {
+    case contact
     case image
     case video
     case text
@@ -239,6 +240,8 @@ public enum SharedMediaType: String, Codable, CaseIterable {
     public var toUTTypeIdentifier: String {
         if #available(iOS 14.0, *) {
             switch self {
+            case .contact:
+                return UTType.vCard.identifier
             case .image:
                 return UTType.image.identifier
             case .video:
@@ -254,6 +257,8 @@ public enum SharedMediaType: String, Codable, CaseIterable {
             }
         }
         switch self {
+        case .contact:
+            return "public.vcard"
         case .image:
             return "public.image"
         case .video:
