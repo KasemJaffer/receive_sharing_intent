@@ -279,8 +279,7 @@ open class RSIShareViewController: SLComposeServiceViewController {
             if FileManager.default.fileExists(atPath: dstURL.path) {
                 try FileManager.default.removeItem(at: dstURL)
             }
-            let data = vCardData.base64EncodedData()
-            try data.write(to: dstURL);
+            try vCardData.write(to: dstURL);
             return true;
         } catch (let error){
             print("Cannot write to temp file: \(error)");
