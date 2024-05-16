@@ -175,6 +175,9 @@ class ReceiveSharingIntentPlugin : FlutterPlugin, ActivityAware, MethodCallHandl
             fun fromMimeType(mimeType: String?): MediaType {
                 return when {
                     mimeType?.equals("text/x-vcard", true) == true -> FILE
+                    mimeType?.equals("text/calendar", true) == true -> FILE
+                    mimeType?.equals("text/x-vcalendar", true) == true -> FILE
+                    mimeType?.equals("public.ics", true) == true -> FILE
                     mimeType?.startsWith("image") == true -> IMAGE
                     mimeType?.startsWith("video") == true -> VIDEO
                     mimeType?.startsWith("text") == true -> TEXT

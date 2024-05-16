@@ -229,6 +229,9 @@ public class SharedMediaFile: Codable {
 }
 
 public enum SharedMediaType: String, Codable, CaseIterable {
+    case calendar
+    case calendarText
+    case vcalendar
     case contact
     case image
     case video
@@ -240,6 +243,12 @@ public enum SharedMediaType: String, Codable, CaseIterable {
     public var toUTTypeIdentifier: String {
         if #available(iOS 14.0, *) {
             switch self {
+            case .calendar:
+                return UTType.calendarEvent.identifier
+            case .calendarText:
+                return "text.calendar"
+            case .vcalendar:
+                return "text/x-vcalendar"
             case .contact:
                 return UTType.vCard.identifier
             case .image:
@@ -248,8 +257,6 @@ public enum SharedMediaType: String, Codable, CaseIterable {
                 return UTType.movie.identifier
             case .text:
                 return UTType.text.identifier
-    //         case .audio:
-    //             return UTType.audio.identifier
             case .file:
                 return UTType.fileURL.identifier
             case .url:
@@ -257,6 +264,12 @@ public enum SharedMediaType: String, Codable, CaseIterable {
             }
         }
         switch self {
+        case .calendar:
+            return "public.ics"
+        case .calendarText:
+            return "text.calendar"
+        case .vcalendar:
+            return "text/x-vcalendar"
         case .contact:
             return "public.vcard"
         case .image:
@@ -265,8 +278,6 @@ public enum SharedMediaType: String, Codable, CaseIterable {
             return "public.movie"
         case .text:
             return "public.text"
-//         case .audio:
-//             return "public.audio"
         case .file:
             return "public.file-url"
         case .url:
