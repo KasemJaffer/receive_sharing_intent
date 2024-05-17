@@ -54,8 +54,16 @@ open class RSIShareViewController: SLComposeServiceViewController {
                                 }
                                 switch type {
                                 case .contact, .calendar, .calendarText, .vcalendar:
+                                    // if shared as raw data, which is mostly the case for contacts
                                     if let data = data as? Data {
                                         this.handleMedia(forData: data,
+                                                         type: type,
+                                                         index: index,
+                                                         content: content,
+                                                         suggestedName: attachment.suggestedName)
+                                    // if shared as file. Calendar events (.ics) are commonly shared as files
+                                    } else if let url = data as? URL {
+                                        this.handleMedia(forFile: url,
                                                          type: type,
                                                          index: index,
                                                          content: content)
@@ -152,7 +160,7 @@ open class RSIShareViewController: SLComposeServiceViewController {
         }
     }
 
-    private func handleMedia(forData data: Data, type: SharedMediaType, index: Int, content: NSExtensionItem){
+    private func handleMedia(forData data: Data, type: SharedMediaType, index: Int, content: NSExtensionItem, suggestedName: String?){
         let tempFileName: String
         let mimeType: String?
 
@@ -174,7 +182,8 @@ open class RSIShareViewController: SLComposeServiceViewController {
             mimeType = nil
         }
         
-        let tempPath = FileManager.default.containerURL(forSecurityApplicationGroupIdentifier: appGroupId)!.appendingPathComponent(tempFileName)
+        let tempPath = FileManager.default.containerURL(forSecurityApplicationGroupIdentifier: appGroupId)!
+            .appendingPathComponent(suggestedName != nil ? suggestedName! : tempFileName)
         if self.writeTempFileData(data, to: tempPath) {
             let newPathDecoded = tempPath.absoluteString.removingPercentEncoding!
             sharedMedia.append(SharedMediaFile(
