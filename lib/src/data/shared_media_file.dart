@@ -51,6 +51,9 @@ class SharedMediaFile {
 }
 
 enum SharedMediaType {
+  calendar('calendar'),
+  calendarText('calendarText'),
+  vcalendar('vcalendar'),
   contact('contact'),
   image('image'),
   video('video'),

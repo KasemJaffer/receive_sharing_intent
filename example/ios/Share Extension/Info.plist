@@ -11,22 +11,22 @@
     		<key>NSExtensionAttributes</key>
             <dict>
                 <key>NSExtensionActivationRule</key>
-                <string>SUBQUERY (
-                    extensionItems,
-                    $extensionItem,
-                    SUBQUERY (
-                    $extensionItem.attachments,
-                    $attachment,
-                    ANY $attachment.registeredTypeIdentifiers UTI-CONFORMS-TO "public.file-url" ||
-                    ANY $attachment.registeredTypeIdentifiers UTI-CONFORMS-TO "public.movie" ||
-                    ANY $attachment.registeredTypeIdentifiers UTI-CONFORMS-TO "public.image" ||
-                    ANY $attachment.registeredTypeIdentifiers UTI-CONFORMS-TO "public.url" ||
-                    ANY $attachment.registeredTypeIdentifiers UTI-CONFORMS-TO "public.text" ||
-                    ANY $attachment.registeredTypeIdentifiers UTI-CONFORMS-TO "public.audio" ||
-                    ANY $attachment.registeredTypeIdentifiers UTI-CONFORMS-TO "public.data" ||
-                    ANY $attachment.registeredTypeIdentifiers UTI-CONFORMS-TO "public.vcard"
+                <string>
+                    SUBQUERY(extensionItems, $extensionItem,
+                    SUBQUERY($extensionItem.attachments, $attachment,
+                    ANY $attachment.registeredTypeIdentifiers UTI-CONFORMS-TO "public.file-url"
+                    OR ANY $attachment.registeredTypeIdentifiers UTI-CONFORMS-TO "public.movie"
+                    OR ANY $attachment.registeredTypeIdentifiers UTI-CONFORMS-TO "public.image"
+                    OR ANY $attachment.registeredTypeIdentifiers UTI-CONFORMS-TO "public.url"
+                    OR ANY $attachment.registeredTypeIdentifiers UTI-CONFORMS-TO "public.text"
+                    OR ANY $attachment.registeredTypeIdentifiers UTI-CONFORMS-TO "public.audio"
+                    OR ANY $attachment.registeredTypeIdentifiers UTI-CONFORMS-TO "public.data"
+                    OR ANY $attachment.registeredTypeIdentifiers UTI-CONFORMS-TO "public.vcard"
+                    OR ANY $attachment.registeredTypeIdentifiers UTI-CONFORMS-TO "text.calendar"
+                    OR ANY $attachment.registeredTypeIdentifiers UTI-CONFORMS-TO "text/x-vcalendar"
+                    OR ANY $attachment.registeredTypeIdentifiers UTI-CONFORMS-TO "public.ics"
                     ).@count == $extensionItem.attachments.@count
-                    ).@count &gt; 0
+                    ).@count > 0
                 </string>
             </dict>
     		<key>NSExtensionMainStoryboard</key>
