@@ -257,6 +257,8 @@ public enum SharedMediaType: String, Codable, CaseIterable {
                 return UTType.movie.identifier
             case .text:
                 return UTType.text.identifier
+    //         case .audio:
+    //             return UTType.audio.identifier
             case .file:
                 return UTType.fileURL.identifier
             case .url:
@@ -278,6 +280,8 @@ public enum SharedMediaType: String, Codable, CaseIterable {
             return "public.movie"
         case .text:
             return "public.text"
+//         case .audio:
+//             return "public.audio"
         case .file:
             return "public.file-url"
         case .url:
