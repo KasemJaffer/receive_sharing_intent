@@ -144,7 +144,9 @@ class ReceiveSharingIntentPlugin : FlutterPlugin, ActivityAware, MethodCallHandl
         val (thumbnail, duration) = path?.let { getThumbnailAndDuration(path, type) }
                 ?: Pair(null, null)
         return JSONObject()
-                .put("path", path ?: text)
+                .put("path", path ?: text) // path is misleading, it can be text
+                .put("localPath", path)
+                .put("text", text)
                 .put("type", type.value)
                 .put("mimeType", mType)
                 .put("thumbnail", thumbnail)
