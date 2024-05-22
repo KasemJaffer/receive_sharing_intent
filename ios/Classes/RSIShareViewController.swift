@@ -53,7 +53,7 @@ open class RSIShareViewController: SLComposeServiceViewController {
                                     return
                                 }
                                 switch type {
-                                case .contact, .calendar, .calendarText, .vcalendar:
+                                case .contact, .calendar, .calendarText, .vcalendar, .text:
                                     // if shared as raw data, which is mostly the case for contacts
                                     if let data = data as? Data {
                                         this.handleMedia(forData: data,
@@ -67,9 +67,8 @@ open class RSIShareViewController: SLComposeServiceViewController {
                                                          type: type,
                                                          index: index,
                                                          content: content)
-                                    }
-                                case .text:
-                                    if let text = data as? String {
+                                    // text content is shared
+                                    } else if let text = data as? String {
                                         this.handleMedia(forLiteral: text,
                                                          type: type,
                                                          index: index,
@@ -222,7 +221,8 @@ open class RSIShareViewController: SLComposeServiceViewController {
                 sharedMedia.append(SharedMediaFile(
                     path: newPathDecoded,
                     mimeType: url.mimeType(),
-                    type: type
+                    type: type,
+                    isFile: true
                 ))
             }
         }
