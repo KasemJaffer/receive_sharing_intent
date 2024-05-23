@@ -53,6 +53,13 @@ open class RSIShareViewController: SLComposeServiceViewController {
                                     return
                                 }
                                 switch type {
+                                case .contact:
+                                    if let contactData = data as? Data {
+                                        this.handleMedia(forVCard: contactData,
+                                                         type: type,
+                                                         index: index,
+                                                         content: content)
+                                    }
                                 case .text:
                                     if let text = data as? String {
                                         this.handleMedia(forLiteral: text,
@@ -144,6 +151,23 @@ open class RSIShareViewController: SLComposeServiceViewController {
             }
         }
     }
+
+    private func handleMedia(forVCard vCardData: Data, type: SharedMediaType, index: Int, content: NSExtensionItem){
+        let tempPath = FileManager.default.containerURL(forSecurityApplicationGroupIdentifier: appGroupId)!.appendingPathComponent("TempContact.vcf")
+        if self.writeTempFileVCard(vCardData, to: tempPath) {
+            let newPathDecoded = tempPath.absoluteString.removingPercentEncoding!
+            sharedMedia.append(SharedMediaFile(
+                path: newPathDecoded,
+                mimeType: type == .contact ? "text/vcard": nil,
+                type: type
+            ))
+        }
+        if index == (content.attachments?.count ?? 0) - 1 {
+            if shouldAutoRedirect() {
+                saveAndRedirect()
+            }
+        }
+    }
     
     private func handleMedia(forFile url: URL, type: SharedMediaType, index: Int, content: NSExtensionItem) {
         let fileName = getFileName(from: url, type: type)
@@ -179,8 +203,8 @@ open class RSIShareViewController: SLComposeServiceViewController {
             }
         }
     }
-    
-    
+
+
     // Save shared media and redirect to host app
     private func saveAndRedirect(message: String? = nil) {
         let userDefaults = UserDefaults(suiteName: appGroupId)
@@ -243,6 +267,19 @@ open class RSIShareViewController: SLComposeServiceViewController {
             }
             let pngData = image.pngData();
             try pngData?.write(to: dstURL);
+            return true;
+        } catch (let error){
+            print("Cannot write to temp file: \(error)");
+            return false;
+        }
+    }
+    
+    private func writeTempFileVCard(_ vCardData: Data, to dstURL: URL) -> Bool {
+        do {
+            if FileManager.default.fileExists(atPath: dstURL.path) {
+                try FileManager.default.removeItem(at: dstURL)
+            }
+            try vCardData.write(to: dstURL);
             return true;
         } catch (let error){
             print("Cannot write to temp file: \(error)");
