@@ -53,22 +53,15 @@ open class RSIShareViewController: SLComposeServiceViewController {
                                     return
                                 }
                                 switch type {
-                                case .contact, .calendar, .calendarText, .vcalendar, .text:
-                                    // if shared as raw data, which is mostly the case for contacts
-                                    if let data = data as? Data {
-                                        this.handleMedia(forData: data,
-                                                         type: type,
-                                                         index: index,
-                                                         content: content,
-                                                         suggestedName: attachment.suggestedName)
-                                    // if shared as file. Calendar events (.ics) are commonly shared as files
-                                    } else if let url = data as? URL {
-                                        this.handleMedia(forFile: url,
+                                case .contact:
+                                    if let contactData = data as? Data {
+                                        this.handleMedia(forVCard: contactData,
                                                          type: type,
                                                          index: index,
                                                          content: content)
-                                    // text content is shared
-                                    } else if let text = data as? String {
+                                    }
+                                case .text:
+                                    if let text = data as? String {
                                         this.handleMedia(forLiteral: text,
                                                          type: type,
                                                          index: index,
@@ -159,35 +152,13 @@ open class RSIShareViewController: SLComposeServiceViewController {
         }
     }
 
-    private func handleMedia(forData data: Data, type: SharedMediaType, index: Int, content: NSExtensionItem, suggestedName: String?){
-        let tempFileName: String
-        let mimeType: String?
-
-        switch type {
-        case .contact:
-            tempFileName = "TempContact.vcf"
-            mimeType = "public.vcard"
-        case .calendar:
-            tempFileName = "TempCalendar.ics"
-            mimeType = "public.ics"
-        case .calendarText:
-            tempFileName = "TempCalendarText.ics"
-            mimeType = "text.calendar"
-        case .vcalendar:
-            tempFileName = "TempVCalendar.vcs"
-            mimeType = "text/x-vcalendar"
-        default:
-            tempFileName = "TempFile.tmp"
-            mimeType = nil
-        }
-
-        let tempPath = FileManager.default.containerURL(forSecurityApplicationGroupIdentifier: appGroupId)!
-            .appendingPathComponent(suggestedName != nil ? suggestedName! : tempFileName)
-        if self.writeTempFileData(data, to: tempPath) {
+    private func handleMedia(forVCard vCardData: Data, type: SharedMediaType, index: Int, content: NSExtensionItem){
+        let tempPath = FileManager.default.containerURL(forSecurityApplicationGroupIdentifier: appGroupId)!.appendingPathComponent("TempContact.vcf")
+        if self.writeTempFileVCard(vCardData, to: tempPath) {
             let newPathDecoded = tempPath.absoluteString.removingPercentEncoding!
             sharedMedia.append(SharedMediaFile(
                 path: newPathDecoded,
-                mimeType: mimeType,
+                mimeType: type == .contact ? "text/vcard": nil,
                 type: type
             ))
         }
@@ -221,8 +192,7 @@ open class RSIShareViewController: SLComposeServiceViewController {
                 sharedMedia.append(SharedMediaFile(
                     path: newPathDecoded,
                     mimeType: url.mimeType(),
-                    type: type,
-                    isFile: true
+                    type: type
                 ))
             }
         }
@@ -304,12 +274,12 @@ open class RSIShareViewController: SLComposeServiceViewController {
         }
     }
     
-    private func writeTempFileData(_ data: Data, to dstURL: URL) -> Bool {
+    private func writeTempFileVCard(_ vCardData: Data, to dstURL: URL) -> Bool {
         do {
             if FileManager.default.fileExists(atPath: dstURL.path) {
                 try FileManager.default.removeItem(at: dstURL)
             }
-            try data.write(to: dstURL);
+            try vCardData.write(to: dstURL);
             return true;
         } catch (let error){
             print("Cannot write to temp file: \(error)");
