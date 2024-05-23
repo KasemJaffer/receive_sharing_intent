@@ -5,6 +5,8 @@ class SharedMediaFile {
   /// NOTE. All files are copied to a temp cache folder
   final String path;
 
+  final bool? isFile;
+
   /// Video thumbnail
   final String? thumbnail;
 
@@ -23,6 +25,7 @@ class SharedMediaFile {
 
   SharedMediaFile({
     required this.path,
+    this.isFile,
     required this.type,
     this.thumbnail,
     this.duration,
@@ -32,6 +35,7 @@ class SharedMediaFile {
 
   SharedMediaFile.fromMap(Map<String, dynamic> json)
       : path = json['path'],
+        isFile = json['isFile'],
         thumbnail = json['thumbnail'],
         duration = json['duration'],
         type = SharedMediaType.fromValue(json['type']),
@@ -41,6 +45,7 @@ class SharedMediaFile {
   Map<String, dynamic> toMap() {
     return {
       'path': path,
+      'isFile': isFile,
       'thumbnail': thumbnail,
       'duration': duration,
       'type': type.value,
