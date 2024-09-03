@@ -232,6 +232,15 @@ open class RSIShareViewController: SLComposeServiceViewController {
             default:
                 name = UUID().uuidString
             }
+        } else {
+            let components = name.components(separatedBy: ".")
+            if components.count > 1 {
+                let fileExtension = components.last!
+                let baseName = components.dropLast().joined(separator: ".")
+                name = baseName + "-" + UUID().uuidString + "." + fileExtension
+            } else {
+                name = name + "-" + UUID().uuidString
+            }
         }
         return name
     }
