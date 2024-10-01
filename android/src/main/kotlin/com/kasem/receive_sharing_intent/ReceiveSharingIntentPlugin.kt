@@ -24,6 +24,7 @@ import org.json.JSONObject
 import java.io.File
 import java.io.FileOutputStream
 import java.net.URLConnection
+import android.util.Log
 
 private const val MESSAGES_CHANNEL = "receive_sharing_intent/messages"
 private const val EVENTS_CHANNEL_MEDIA = "receive_sharing_intent/events-media"
@@ -153,19 +154,31 @@ class ReceiveSharingIntentPlugin : FlutterPlugin, ActivityAware, MethodCallHandl
 
     // Get video thumbnail and duration.
     private fun getThumbnailAndDuration(path: String, type: MediaType): Pair<String?, Long?> {
-        if (type != MediaType.VIDEO) return Pair(null, null) // get thumbnail and duration for video only
+        var result = Pair(null, null)
         val retriever = MediaMetadataRetriever()
-        retriever.setDataSource(path)
-        val duration = retriever.extractMetadata(METADATA_KEY_DURATION)?.toLongOrNull()
-        val bitmap = retriever.getScaledFrameAtTime(-1, OPTION_CLOSEST_SYNC, 360, 360)
-        retriever.release()
-        if (bitmap == null) return Pair(null, null)
-        val targetFile = File(applicationContext.cacheDir, "${File(path).name}.png")
-        FileOutputStream(targetFile).use { out ->
-            bitmap.compress(Bitmap.CompressFormat.PNG, 100, out)
+        try {
+            Log.i("ReceiveSharingIntentPlugin", "File path: $path")
+            if (type != MediaType.VIDEO) return result // get thumbnail and duration for video only
+            retriever.setDataSource(path)
+            val duration = retriever.extractMetadata(METADATA_KEY_DURATION)?.toLongOrNull()
+            val bitmap = retriever.getScaledFrameAtTime(-1, OPTION_CLOSEST_SYNC, 360, 360)
+            if (bitmap != null) {
+                val targetFile = File(applicationContext.cacheDir, "${File(path).name}.png")
+                FileOutputStream(targetFile).use { out ->
+                    bitmap.compress(Bitmap.CompressFormat.PNG, 100, out)
+                }
+                bitmap.recycle()
+                return Pair(targetFile.path, duration)
+            }
+        } catch (e: Exception) {
+            Log.i("ReceiveSharingIntentPlugin", "Exception at getThumbnailAndDuration: ")
+            e.printStackTrace()
+        } finally {
+            if (retriever != null) {
+                retriever.release()
+            }
         }
-        bitmap.recycle()
-        return Pair(targetFile.path, duration)
+        return result
     }
 
     enum class MediaType(val value: String) {
