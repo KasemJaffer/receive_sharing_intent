@@ -54,7 +54,13 @@ open class RSIShareViewController: SLComposeServiceViewController {
                                 }
                                 switch type {
                                 case .text:
-                                    if let text = data as? String {
+                                    if let url = data as? URL {
+                                        this.handleMedia(forFile: url,
+                                                         type: type,
+                                                         index: index,
+                                                         content: content)
+                                    }
+                                    else if let text = data as? String {
                                         this.handleMedia(forLiteral: text,
                                                          type: type,
                                                          index: index,
