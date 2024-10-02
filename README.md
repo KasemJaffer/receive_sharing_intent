@@ -185,16 +185,16 @@ Make sure the deployment target for Runner.app and the share extension is the sa
 <key>AppGroupId</key>
 <string>$(CUSTOM_GROUP_ID)</string>
 <key>CFBundleURLTypes</key>
-	<array>
-		<dict>
-			<key>CFBundleTypeRole</key>
-			<string>Editor</string>
-			<key>CFBundleURLSchemes</key>
-			<array>
-				<string>ShareMedia-$(PRODUCT_BUNDLE_IDENTIFIER)</string>
-			</array>
-		</dict>
-	</array>
+<array>
+	<dict>
+		<key>CFBundleTypeRole</key>
+		<string>Editor</string>
+		<key>CFBundleURLSchemes</key>
+		<array>
+			<string>ShareMedia-$(PRODUCT_BUNDLE_IDENTIFIER)</string>
+		</array>
+	</dict>
+</array>
 
 <key>NSPhotoLibraryUsageDescription</key>
 <string>To upload photos, please allow permission to access your photo library.</string>
