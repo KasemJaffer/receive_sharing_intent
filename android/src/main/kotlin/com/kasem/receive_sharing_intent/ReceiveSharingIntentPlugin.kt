@@ -139,12 +139,14 @@ class ReceiveSharingIntentPlugin : FlutterPlugin, ActivityAware, MethodCallHandl
     // content can only be uri or string
     private fun toJsonObject(uri: Uri?, text: String?, mimeType: String?): JSONObject? {
         val path = uri?.let { FileDirectory.getAbsolutePath(applicationContext, it) }
+        val isFile = !path.isNullOrEmpty() && text.isNullOrEmpty()
         val mType = mimeType ?: path?.let { URLConnection.guessContentTypeFromName(path) }
         val type = MediaType.fromMimeType(mType)
         val (thumbnail, duration) = path?.let { getThumbnailAndDuration(path, type) }
                 ?: Pair(null, null)
         return JSONObject()
                 .put("path", path ?: text)
+                .put("isFile", isFile)
                 .put("type", type.value)
                 .put("mimeType", mType)
                 .put("thumbnail", thumbnail)
@@ -174,6 +176,10 @@ class ReceiveSharingIntentPlugin : FlutterPlugin, ActivityAware, MethodCallHandl
         companion object {
             fun fromMimeType(mimeType: String?): MediaType {
                 return when {
+                    mimeType?.equals("text/x-vcard", true) == true -> FILE
+                    mimeType?.equals("text/calendar", true) == true -> FILE
+                    mimeType?.equals("text/x-vcalendar", true) == true -> FILE
+                    mimeType?.equals("public.ics", true) == true -> FILE
                     mimeType?.startsWith("image") == true -> IMAGE
                     mimeType?.startsWith("video") == true -> VIDEO
                     mimeType?.startsWith("text") == true -> TEXT
