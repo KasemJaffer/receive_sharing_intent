@@ -269,7 +269,7 @@ open class RSIShareViewController: SLComposeServiceViewController {
         return true
     }
     
-    private func getVideoInfo(from url: URL) -> (thumbnail: String?, duration: Double)? {
+    private func getVideoInfo(from url: URL) -> (thumbnail: String?, duration: Double?)? {
         let asset = AVAsset(url: url)
         let duration = (CMTimeGetSeconds(asset.duration) * 1000).rounded()
         let thumbnailPath = getThumbnailPath(for: url)
@@ -291,7 +291,7 @@ open class RSIShareViewController: SLComposeServiceViewController {
             saved = false
         }
         
-        return saved ? (thumbnail: thumbnailPath.absoluteString, duration: duration): nil
+        return saved ? (thumbnail: thumbnailPath.absoluteString, duration: duration): (nil,nil)
     }
     
     private func getThumbnailPath(for url: URL) -> URL {
