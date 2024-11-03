@@ -55,7 +55,8 @@ enum SharedMediaType {
   video('video'),
   text('text'),
   file('file'),
-  url('url');
+  url('url'),
+  mailto('mailto');
 
   final String value;
 

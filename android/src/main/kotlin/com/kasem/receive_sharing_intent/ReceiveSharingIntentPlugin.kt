@@ -105,6 +105,19 @@ class ReceiveSharingIntentPlugin : FlutterPlugin, ActivityAware, MethodCallHandl
                 latestMedia = value
                 eventSinkMedia?.success(latestMedia?.toString())
             }
+
+            // Opening email contact
+            intent.scheme?.startsWith("mailto") == true &&
+                    intent.action == Intent.ACTION_SENDTO -> {
+                val value = JSONArray(
+                        listOf(JSONObject()
+                                .put("path", intent.data?.schemeSpecificPart)
+                                .put("type", MediaType.MAILTO.value))
+                )
+                if (initial) initialMedia = value
+                latestMedia = value
+                eventSinkMedia?.success(latestMedia?.toString())
+            }
         }
     }
 
@@ -169,7 +182,7 @@ class ReceiveSharingIntentPlugin : FlutterPlugin, ActivityAware, MethodCallHandl
     }
 
     enum class MediaType(val value: String) {
-        IMAGE("image"), VIDEO("video"), TEXT("text"), FILE("file"), URL("url");
+        IMAGE("image"), VIDEO("video"), TEXT("text"), FILE("file"), URL("url"), MAILTO("mailto");
 
         companion object {
             fun fromMimeType(mimeType: String?): MediaType {
