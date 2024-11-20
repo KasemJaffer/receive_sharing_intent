@@ -103,6 +103,8 @@ object FileDirectory {
                     Log.i("FileDirectory", "File name: $fileName")
                     targetFile = File(context.cacheDir, fileName)
                 }
+            } catch (e: Exception) {
+                Log.e("FileDirectory", "Error querying content resolver", e)
             } finally {
                 cursor?.close()
             }
@@ -120,10 +122,16 @@ object FileDirectory {
                 targetFile = File(context.cacheDir, "${prefix}_${Date().time}.$type")
             }
 
-            context.contentResolver.openInputStream(uri)?.use { input ->
-                FileOutputStream(targetFile).use { fileOut ->
-                    input.copyTo(fileOut)
+            val modifiedUri = selectionArgs?.let { args -> uri.buildUpon().appendPath(args.first()).build() } ?: uri
+            try {
+                context.contentResolver.openInputStream(modifiedUri)?.use { input ->
+                    FileOutputStream(targetFile).use { fileOut ->
+                        input.copyTo(fileOut)
+                    }
                 }
+            } catch (e: Exception) {
+                Log.e("FileDirectory", "Error accessing file", e)
+                return null
             }
             return targetFile.path
         }
@@ -138,6 +146,8 @@ object FileDirectory {
                 val columnIndex = cursor.getColumnIndexOrThrow(column)
                 return cursor.getString(columnIndex)
             }
+        } catch (e: Exception) {
+            Log.e("FileDirectory", "Error querying content resolver", e)
         } finally {
             cursor?.close()
         }
