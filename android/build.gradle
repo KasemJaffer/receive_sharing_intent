@@ -5,10 +5,10 @@ buildscript {
         mavenCentral()
     }
 
-    dependencies {
-        classpath 'com.android.tools.build:gradle:7.3.1'
-        classpath "org.jetbrains.kotlin:kotlin-gradle-plugin:$kotlin_version"
-    }
+    // dependencies {
+    //     classpath 'com.android.tools.build:gradle:7.3.1'
+    //     classpath "org.jetbrains.kotlin:kotlin-gradle-plugin:$kotlin_version"
+    // }
 }
 
 plugins {
@@ -29,6 +29,15 @@ rootProject.allprojects {
 android {
     if (project.android.hasProperty("namespace")) {
         namespace 'com.kasem.receive_sharing_intent'
+    }
+
+    compileOptions {
+      sourceCompatibility JavaVersion.VERSION_17
+      targetCompatibility JavaVersion.VERSION_17
+    }
+
+    kotlinOptions {
+      jvmTarget = '17'
     }
 
     sourceSets {
