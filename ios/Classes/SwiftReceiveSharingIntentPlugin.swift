@@ -116,27 +116,29 @@ public class SwiftReceiveSharingIntentPlugin: NSObject, FlutterPlugin, FlutterSt
         
         let message = userDefaults?.string(forKey: kUserDefaultsMessageKey)
         if let json = userDefaults?.object(forKey: kUserDefaultsKey) as? Data {
-            let sharedArray = decode(data: json)
-            let sharedMediaFiles: [SharedMediaFile] = sharedArray.compactMap {
-                guard let path = $0.type == .text || $0.type == .url ? $0.path
-                        : getAbsolutePath(for: $0.path) else {
-                    return nil
+            if let sharedArray = decode(data: json) {
+                let sharedMediaFiles: [SharedMediaFile] = sharedArray.compactMap {
+                    guard let path = $0.type == .text || $0.type == .url ? $0.path
+                            : getAbsolutePath(for: $0.path) else {
+                        return nil
+                    }
+                    
+                    return SharedMediaFile(
+                        path: path,
+                        mimeType: $0.mimeType,
+                        thumbnail: getAbsolutePath(for: $0.thumbnail),
+                        duration: $0.duration,
+                        message: message,
+                        type: $0.type
+                    )
                 }
-                
-                return SharedMediaFile(
-                    path: path,
-                    mimeType: $0.mimeType,
-                    thumbnail: getAbsolutePath(for: $0.thumbnail),
-                    duration: $0.duration,
-                    message: message,
-                    type: $0.type
-                )
+                latestMedia = sharedMediaFiles
+                if(setInitialData) {
+                    initialMedia = latestMedia
+                }
+                eventSinkMedia?(toJson(data: latestMedia))
             }
-            latestMedia = sharedMediaFiles
-            if(setInitialData) {
-                initialMedia = latestMedia
-            }
-            eventSinkMedia?(toJson(data: latestMedia))
+            
         }
         return true
     }
@@ -187,9 +189,11 @@ public class SwiftReceiveSharingIntentPlugin: NSObject, FlutterPlugin, FlutterSt
         return (url, orientation)
     }
     
-    private func decode(data: Data) -> [SharedMediaFile] {
+    private func decode(data: Data) -> [SharedMediaFile]? {
+        let info = String(data: data, encoding: .utf8) ?? "";
+        print(">>> SharedMediaFile info:\(info)")
         let encodedData = try? JSONDecoder().decode([SharedMediaFile].self, from: data)
-        return encodedData!
+        return encodedData
     }
     
     private func toJson(data: [SharedMediaFile]?) -> String? {
