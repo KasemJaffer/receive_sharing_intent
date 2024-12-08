@@ -129,7 +129,8 @@ public class SwiftReceiveSharingIntentPlugin: NSObject, FlutterPlugin, FlutterSt
                     thumbnail: getAbsolutePath(for: $0.thumbnail),
                     duration: $0.duration,
                     message: message,
-                    type: $0.type
+                    type: $0.type,
+                    isFile: $0.isFile
                 )
             }
             latestMedia = sharedMediaFiles
@@ -210,6 +211,7 @@ public class SharedMediaFile: Codable {
     var duration: Double? // video duration in milliseconds
     var message: String? // post message
     var type: SharedMediaType
+    var isFile: Bool?
     
     
     public init(
@@ -218,17 +220,23 @@ public class SharedMediaFile: Codable {
         thumbnail: String? = nil,
         duration: Double? = nil,
         message: String?=nil,
-        type: SharedMediaType) {
+        type: SharedMediaType,
+        isFile: Bool?=nil) {
             self.path = path
             self.mimeType = mimeType
             self.thumbnail = thumbnail
             self.duration = duration
             self.message = message
             self.type = type
+            self.isFile = isFile
         }
 }
 
 public enum SharedMediaType: String, Codable, CaseIterable {
+    case calendar
+    case calendarText
+    case vcalendar
+    case contact
     case image
     case video
     case text
@@ -239,6 +247,14 @@ public enum SharedMediaType: String, Codable, CaseIterable {
     public var toUTTypeIdentifier: String {
         if #available(iOS 14.0, *) {
             switch self {
+            case .calendar:
+                return UTType.calendarEvent.identifier
+            case .calendarText:
+                return "text.calendar"
+            case .vcalendar:
+                return "text/x-vcalendar"
+            case .contact:
+                return UTType.vCard.identifier
             case .image:
                 return UTType.image.identifier
             case .video:
@@ -254,6 +270,14 @@ public enum SharedMediaType: String, Codable, CaseIterable {
             }
         }
         switch self {
+        case .calendar:
+            return "public.ics"
+        case .calendarText:
+            return "text.calendar"
+        case .vcalendar:
+            return "text/x-vcalendar"
+        case .contact:
+            return "public.vcard"
         case .image:
             return "public.image"
         case .video:
