@@ -100,6 +100,24 @@ Add the following filters to your [android/app/src/main/AndroidManifest.xml](./e
                 <data android:mimeType="video/*" />
             </intent-filter>
 
+            <!--TODO: Add this filter, if you want to support sharing only certain file types, e.g. doc, pdf, png and mp4-->
+            <intent-filter>
+                <action android:name="android.intent.action.SEND" />
+                <category android:name="android.intent.category.DEFAULT" />
+                <data android:mimeType="application/msword" />
+                <data android:mimeType="application/pdf" />
+                <data android:mimeType="image/png" />
+                <data android:mimeType="video/mp4" />
+            </intent-filter>
+            <intent-filter>
+                <action android:name="android.intent.action.SEND_MULTIPLE" />
+                <category android:name="android.intent.category.DEFAULT" />
+                <data android:mimeType="application/msword" />
+                <data android:mimeType="application/pdf" />
+                <data android:mimeType="image/png" />
+                <data android:mimeType="video/mp4" />
+            </intent-filter>
+
             <!--TODO: Add this filter, if you want to support sharing any type of files-->
             <intent-filter>
                 <action android:name="android.intent.action.SEND" />
