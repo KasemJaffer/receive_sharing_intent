@@ -272,6 +272,10 @@ class ShareViewController: RSIShareViewController {
 
 * Error: Invalid Bundle. The bundle at 'Runner.app/Plugins/Sharing Extension.appex' contains disallowed file 'Frameworks'
     * Fix: https://stackoverflow.com/a/25789145/2061365
+ 
+* Error: PBXFileSystemSynchronizedRootGroup Error when running `pod install` in `ios/`
+* Error: No such module 'receive_sharing_intent' despite moving `Embed Foundation Extension` to the top of `Thin Binary`.
+    * Fix: Right click on the share extension folder and select Convert to Group.
 
 
 
