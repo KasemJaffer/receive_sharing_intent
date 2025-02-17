@@ -5,10 +5,11 @@
 //  Created by Kasem Mohamed on 2024-01-25.
 //
 
-import UIKit
-import Social
+import AVFoundation
 import MobileCoreServices
 import Photos
+import Social
+import UIKit
 
 @available(swift, introduced: 5.0)
 open class RSIShareViewController: SLComposeServiceViewController {
@@ -274,12 +275,14 @@ open class RSIShareViewController: SLComposeServiceViewController {
             if FileManager.default.fileExists(atPath: dstURL.path) {
                 try FileManager.default.removeItem(at: dstURL)
             }
-            let pngData = image.pngData();
-            try pngData?.write(to: dstURL);
-            return true;
-        } catch (let error){
-            print("Cannot write to temp file: \(error)");
-            return false;
+            if let pngData = UIImagePNGRepresentation(image) {
+                try pngData.write(to: dstURL)
+                return true
+            }
+            return false
+        } catch (let error) {
+            print("Cannot write to temp file: \(error)")
+            return false
         }
     }
 
@@ -311,8 +314,11 @@ open class RSIShareViewController: SLComposeServiceViewController {
         //        let scale = UIScreen.main.scale
         assetImgGenerate.maximumSize = CGSize(width: 360, height: 360)
         do {
-            let img = try assetImgGenerate.copyCGImage(at: CMTimeMakeWithSeconds(600, preferredTimescale: 1), actualTime: nil)
-            try UIImage(cgImage: img).pngData()?.write(to: thumbnailPath)
+            let time = CMTimeMake(600, 1)
+            let img = try assetImgGenerate.copyCGImage(at: time, actualTime: nil)
+            if let pngData = UIImagePNGRepresentation(UIImage(cgImage: img)) {
+                try pngData.write(to: thumbnailPath)
+            }
             saved = true
         } catch {
             saved = false
