@@ -55,6 +55,7 @@ enum SharedMediaType {
   video('video'),
   text('text'),
   file('file'),
+  pdf('pdf'),
   url('url');
 
   final String value;
