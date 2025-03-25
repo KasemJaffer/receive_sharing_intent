@@ -1,3 +1,7 @@
+## 1.8.1
+
+* Fixed sharing not working on iOS 18
+
 ## 1.8.0
 
 * Added support for cached images on iOS such as shared images from a Screenshot.

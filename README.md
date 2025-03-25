@@ -28,7 +28,6 @@ dependencies:
 
 ## Android
 
-
 Add the following filters to your [android/app/src/main/AndroidManifest.xml](./example/android/app/src/main/AndroidManifest.xml):
 
 ```xml

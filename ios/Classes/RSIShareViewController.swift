@@ -195,14 +195,25 @@ open class RSIShareViewController: SLComposeServiceViewController {
         loadIds()
         let url = URL(string: "\(kSchemePrefix)-\(hostAppBundleIdentifier):share")
         var responder = self as UIResponder?
-        let selectorOpenURL = sel_registerName("openURL:")
         
-        while (responder != nil) {
-            if (responder?.responds(to: selectorOpenURL))! {
-                _ = responder?.perform(selectorOpenURL, with: url)
+        if #available(iOS 18.0, *) {
+            while responder != nil {
+                if let application = responder as? UIApplication {
+                    application.open(url!, options: [:], completionHandler: nil)
+                }
+                responder = responder?.next
             }
-            responder = responder!.next
+        } else {
+            let selectorOpenURL = sel_registerName("openURL:")
+            
+            while (responder != nil) {
+                if (responder?.responds(to: selectorOpenURL))! {
+                    _ = responder?.perform(selectorOpenURL, with: url)
+                }
+                responder = responder!.next
+            }
         }
+
         extensionContext!.completeRequest(returningItems: [], completionHandler: nil)
     }
     
