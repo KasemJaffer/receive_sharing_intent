@@ -1,12 +1,15 @@
 buildscript {
-    ext.kotlin_version = '1.9.22'
+    // ext.kotlin_version = '1.9.22'
+    ext.kotlin_version = '2.1.10'
     repositories {
         google()
         mavenCentral()
+        jcenter()
     }
 
     dependencies {
-        classpath 'com.android.tools.build:gradle:7.3.1'
+        // classpath 'com.android.tools.build:gradle:7.3.1'
+        classpath 'com.android.tools.build:gradle:8.9.0'
         classpath "org.jetbrains.kotlin:kotlin-gradle-plugin:$kotlin_version"
     }
 }
@@ -17,12 +20,13 @@ plugins {
 }
 
 group 'com.kasem.receive_sharing_intent'
-version '1.6.6'
+version '1.8.1'
 
 rootProject.allprojects {
     repositories {
         google()
         mavenCentral()
+        jcenter()
     }
 }
 
@@ -31,18 +35,19 @@ android {
         namespace 'com.kasem.receive_sharing_intent'
     }
 
+    // sourceSets {
+    //     main.java.srcDirs += 'src/main/kotlin'
+    // }
+
     compileOptions {
-        sourceCompatibility = JavaVersion.VERSION_1_8
-        targetCompatibility = JavaVersion.VERSION_1_8
+        sourceCompatibility = JavaVersion.VERSION_17
+        targetCompatibility = JavaVersion.VERSION_17
     }
 
     kotlinOptions {
-        jvmTarget = '1.8'
+        jvmTarget = JavaVersion.VERSION_17.toString()
     }
 
-    sourceSets {
-        main.java.srcDirs += 'src/main/kotlin'
-    }
     defaultConfig {
         compileSdk 34
         minSdkVersion 19
