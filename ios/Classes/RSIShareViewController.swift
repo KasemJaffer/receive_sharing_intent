@@ -42,7 +42,7 @@ open class RSIShareViewController: SLComposeServiceViewController {
         super.viewDidAppear(animated)
         
         // This is called after the user selects Post. Do the upload of contentText and/or NSExtensionContext attachments.
-        if let content = extensionContext!.inputItems[0] as? NSExtensionItem {
+        if let content = self.extensionContext!.inputItems[0] as? NSExtensionItem {
             if let contents = content.attachments {
                 for (index, attachment) in (contents).enumerated() {
                     for type in SharedMediaType.allCases {
@@ -214,7 +214,7 @@ open class RSIShareViewController: SLComposeServiceViewController {
             }
         }
 
-        extensionContext!.completeRequest(returningItems: [], completionHandler: nil)
+        self.extensionContext!.completeRequest(returningItems: [], completionHandler: nil)
     }
     
     private func dismissWithError() {
@@ -227,7 +227,7 @@ open class RSIShareViewController: SLComposeServiceViewController {
         
         alert.addAction(action)
         present(alert, animated: true, completion: nil)
-        extensionContext!.completeRequest(returningItems: [], completionHandler: nil)
+        self.extensionContext!.completeRequest(returningItems: [], completionHandler: nil)
     }
     
     private func getFileName(from url: URL, type: SharedMediaType) -> String {
