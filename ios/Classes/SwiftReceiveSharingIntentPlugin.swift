@@ -16,6 +16,12 @@ public class SwiftReceiveSharingIntentPlugin: NSObject, FlutterPlugin, FlutterSt
     
     private var eventSinkMedia: FlutterEventSink?
     
+    private static func isRunningInAppExtension() -> Bool {
+        let bundleURL = Bundle.main.bundleURL
+        let bundlePathExtension = bundleURL.pathExtension
+        return bundlePathExtension == "appex"
+    }
+    
     // Singleton is required for calling functions directly from AppDelegate
     // - it is required if the developer is using also another library, which requires to call "application(_:open:options:)"
     // -> see Example app
@@ -28,7 +34,14 @@ public class SwiftReceiveSharingIntentPlugin: NSObject, FlutterPlugin, FlutterSt
         let chargingChannelMedia = FlutterEventChannel(name: kEventsChannelMedia, binaryMessenger: registrar.messenger())
         chargingChannelMedia.setStreamHandler(instance)
         
-        registrar.addApplicationDelegate(instance)
+        guard isRunningInAppExtension() == false else {
+            return
+        }
+
+        let selector = NSSelectorFromString("addApplicationDelegate:")
+        if registrar.responds(to: selector) {
+            registrar.perform(selector, with: instance)
+        }
     }
     
     public func handle(_ call: FlutterMethodCall, result: @escaping FlutterResult) {
