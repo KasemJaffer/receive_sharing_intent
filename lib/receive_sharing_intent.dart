@@ -1,5 +1,3 @@
-library receive_sharing_intent;
-
 import 'dart:async';
 
 import 'package:flutter/foundation.dart';

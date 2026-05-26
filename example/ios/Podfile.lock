@@ -1,22 +1,16 @@
 PODS:
   - Flutter (1.0.0)
-  - receive_sharing_intent (1.8.1):
-    - Flutter
 
 DEPENDENCIES:
   - Flutter (from `Flutter`)
-  - receive_sharing_intent (from `.symlinks/plugins/receive_sharing_intent/ios`)
 
 EXTERNAL SOURCES:
   Flutter:
     :path: Flutter
-  receive_sharing_intent:
-    :path: ".symlinks/plugins/receive_sharing_intent/ios"
 
 SPEC CHECKSUMS:
   Flutter: cabc95a1d2626b1b06e7179b784ebcf0c0cde467
-  receive_sharing_intent: 7521374403060df40fe889fae745d27a56df9132
 
-PODFILE CHECKSUM: 13593d4269a2046b85ae1b7e2e6c57a2c4853871
+PODFILE CHECKSUM: 2982a3651e13569772221ec0616a8c39d7736e3a
 
 COCOAPODS: 1.16.2

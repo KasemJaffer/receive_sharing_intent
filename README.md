@@ -257,7 +257,6 @@ class ShareViewController: RSIShareViewController {
 - Error: No such module 'receive_sharing_intent'
   - Fix: Go to Build Phases of your Runner target and move `Embed Foundation Extension` to the top of `Thin Binary`.
 - Error: App does not build after adding Share Extension?
-
   - Fix: Check Build Settings of your share extension and remove everything that tries to import Cocoapods from your main project. i.e. remove everything under `Linking/Other Linker Flags`
 
 - You might need to disable bitcode for the extension target

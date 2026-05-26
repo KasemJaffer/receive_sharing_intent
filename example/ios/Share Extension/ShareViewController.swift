@@ -1,12 +1,12 @@
-
 //
 //  ShareViewController.swift
-//  Sharing Extension
+//  Share Extension
 //
-//  Created by Kasem Mohamed on 2019-05-30.
-//  Copyright © 2019 The Chromium Authors. All rights reserved.
+//  Created by Kasem Mohamed on 26/05/26.
 //
+
 import receive_sharing_intent
+import Social
 
 class ShareViewController: RSIShareViewController {
     

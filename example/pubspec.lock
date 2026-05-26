@@ -21,10 +21,10 @@ packages:
     dependency: "direct main"
     description:
       name: cupertino_icons
-      sha256: ba631d1c7f7bef6b729a622b7b752645a2d076dba9976925b8f25725a30e1ee6
+      sha256: "41e005c33bd814be4d3096aff55b1908d419fde52ca656c8c47719ec745873cd"
       url: "https://pub.dev"
     source: hosted
-    version: "1.0.8"
+    version: "1.0.9"
   flutter:
     dependency: "direct main"
     description: flutter
@@ -42,10 +42,10 @@ packages:
     dependency: transitive
     description:
       name: lints
-      sha256: a5e2b223cb7c9c8efdc663ef484fdd95bb243bff242ef5b13e26883547fce9a0
+      sha256: "12f842a479589fea194fe5c5a3095abc7be0c1f2ddfa9a0e76aed1dbd26a87df"
       url: "https://pub.dev"
     source: hosted
-    version: "6.0.0"
+    version: "6.1.0"
   material_color_utilities:
     dependency: transitive
     description:
@@ -91,5 +91,5 @@ packages:
     source: hosted
     version: "2.2.0"
 sdks:
-  dart: ">=3.10.0-0 <4.0.0"
-  flutter: ">=1.10.0"
+  dart: ">=3.10.0 <4.0.0"
+  flutter: ">=3.41.0"
