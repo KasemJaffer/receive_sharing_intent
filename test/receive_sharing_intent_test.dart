@@ -29,8 +29,9 @@ void main() {
 
     // Test getMediaStream
     final emittedMediaFiles = <List<SharedMediaFile>>[];
-    final subscription =
-        ReceiveSharingIntent.instance.getMediaStream().listen((event) {
+    final subscription = ReceiveSharingIntent.instance.getMediaStream().listen((
+      event,
+    ) {
       emittedMediaFiles.add(event);
     });
 

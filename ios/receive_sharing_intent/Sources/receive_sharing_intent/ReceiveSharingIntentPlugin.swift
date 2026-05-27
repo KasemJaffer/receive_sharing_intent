@@ -7,7 +7,7 @@ public let kUserDefaultsKey = "ShareKey"
 public let kUserDefaultsMessageKey = "ShareMessageKey"
 public let kAppGroupIdKey = "AppGroupId"
 
-public class SwiftReceiveSharingIntentPlugin: NSObject, FlutterPlugin, FlutterStreamHandler {
+public class ReceiveSharingIntentPlugin: NSObject, FlutterPlugin, FlutterStreamHandler, FlutterSceneLifeCycleDelegate {
     static let kMessagesChannel = "receive_sharing_intent/messages"
     static let kEventsChannelMedia = "receive_sharing_intent/events-media"
     
@@ -19,7 +19,7 @@ public class SwiftReceiveSharingIntentPlugin: NSObject, FlutterPlugin, FlutterSt
     // Singleton is required for calling functions directly from AppDelegate
     // - it is required if the developer is using also another library, which requires to call "application(_:open:options:)"
     // -> see Example app
-    public static let instance = SwiftReceiveSharingIntentPlugin()
+    public static let instance = ReceiveSharingIntentPlugin()
     
     public static func register(with registrar: FlutterPluginRegistrar) {
         let channel = FlutterMethodChannel(name: kMessagesChannel, binaryMessenger: registrar.messenger())
@@ -29,6 +29,7 @@ public class SwiftReceiveSharingIntentPlugin: NSObject, FlutterPlugin, FlutterSt
         chargingChannelMedia.setStreamHandler(instance)
         
         registrar.addApplicationDelegate(instance)
+        registrar.addSceneDelegate(instance)
     }
     
     public func handle(_ call: FlutterMethodCall, result: @escaping FlutterResult) {
@@ -103,6 +104,53 @@ public class SwiftReceiveSharingIntentPlugin: NSObject, FlutterPlugin, FlutterSt
     public func application(_ application: UIApplication, continue userActivity: NSUserActivity, restorationHandler: @escaping ([Any]) -> Void) -> Bool {
         if let url = userActivity.webpageURL {
             if (hasMatchingSchemePrefix(url: url)) {
+                return handleUrl(url: url, setInitialData: true)
+            }
+        }
+        return false
+    }
+    
+    // MARK: - UIScene lifecycle (Flutter 3.38+ / UIScene-based apps)
+    
+    // Replaces application(_:didFinishLaunchingWithOptions:) for scene-based apps.
+    public func scene(
+        _ scene: UIScene,
+        willConnectTo session: UISceneSession,
+        options connectionOptions: UIScene.ConnectionOptions?
+    ) -> Bool {
+        if let urlContext = connectionOptions?.urlContexts.first {
+            if hasMatchingSchemePrefix(url: urlContext.url) {
+                return handleUrl(url: urlContext.url, setInitialData: true)
+            }
+            return true
+        }
+        if let userActivity = connectionOptions?.userActivities.first,
+           let url = userActivity.webpageURL {
+            if hasMatchingSchemePrefix(url: url) {
+                return handleUrl(url: url, setInitialData: true)
+            }
+            return true
+        }
+        return true
+    }
+    
+    // Replaces application(_:open:options:) for scene-based apps.
+    public func scene(
+        _ scene: UIScene,
+        openURLContexts URLContexts: Set<UIOpenURLContext>
+    ) -> Bool {
+        if let url = URLContexts.first?.url {
+            if hasMatchingSchemePrefix(url: url) {
+                return handleUrl(url: url, setInitialData: false)
+            }
+        }
+        return false
+    }
+    
+    // Replaces application(_:continue:restorationHandler:) for scene-based apps.
+    public func scene(_ scene: UIScene, continue userActivity: NSUserActivity) -> Bool {
+        if let url = userActivity.webpageURL {
+            if hasMatchingSchemePrefix(url: url) {
                 return handleUrl(url: url, setInitialData: true)
             }
         }
@@ -232,7 +280,7 @@ public enum SharedMediaType: String, Codable, CaseIterable {
     case image
     case video
     case text
-//     case audio
+    // case audio
     case file
     case url
 
@@ -245,8 +293,8 @@ public enum SharedMediaType: String, Codable, CaseIterable {
                 return UTType.movie.identifier
             case .text:
                 return UTType.text.identifier
-    //         case .audio:
-    //             return UTType.audio.identifier
+            // case .audio:
+            //     return UTType.audio.identifier
             case .file:
                 return UTType.fileURL.identifier
             case .url:
@@ -260,8 +308,8 @@ public enum SharedMediaType: String, Codable, CaseIterable {
             return "public.movie"
         case .text:
             return "public.text"
-//         case .audio:
-//             return "public.audio"
+        // case .audio:
+        //     return "public.audio"
         case .file:
             return "public.file-url"
         case .url:

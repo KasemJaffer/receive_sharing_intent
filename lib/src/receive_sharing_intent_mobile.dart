@@ -11,8 +11,9 @@ class ReceiveSharingIntentMobile extends ReceiveSharingIntent {
   final mChannel = const MethodChannel('receive_sharing_intent/messages');
 
   @visibleForTesting
-  final eChannelMedia =
-      const EventChannel("receive_sharing_intent/events-media");
+  final eChannelMedia = const EventChannel(
+    "receive_sharing_intent/events-media",
+  );
 
   static Stream<List<SharedMediaFile>>? _streamMedia;
 
@@ -37,9 +38,13 @@ class ReceiveSharingIntentMobile extends ReceiveSharingIntent {
               sink.add(<SharedMediaFile>[]);
             } else {
               final encoded = jsonDecode(data);
-              sink.add(encoded
-                  .map<SharedMediaFile>((file) => SharedMediaFile.fromMap(file))
-                  .toList());
+              sink.add(
+                encoded
+                    .map<SharedMediaFile>(
+                      (file) => SharedMediaFile.fromMap(file),
+                    )
+                    .toList(),
+              );
             }
           },
         ),

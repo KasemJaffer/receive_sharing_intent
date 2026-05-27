@@ -30,7 +30,7 @@ private const val EVENTS_CHANNEL_MEDIA = "receive_sharing_intent/events-media"
 private const val EVENTS_CHANNEL_TEXT = "receive_sharing_intent/events-text"
 
 class ReceiveSharingIntentPlugin : FlutterPlugin, ActivityAware, MethodCallHandler,
-        EventChannel.StreamHandler, NewIntentListener {
+    EventChannel.StreamHandler, NewIntentListener {
 
     private var initialMedia: JSONArray? = null
     private var latestMedia: JSONArray? = null
@@ -97,9 +97,11 @@ class ReceiveSharingIntentPlugin : FlutterPlugin, ActivityAware, MethodCallHandl
             // Opening URL
             intent.action == Intent.ACTION_VIEW -> {
                 val value = JSONArray(
-                        listOf(JSONObject()
-                                .put("path", intent.dataString)
-                                .put("type", MediaType.URL.value))
+                    listOf(
+                        JSONObject()
+                            .put("path", intent.dataString)
+                            .put("type", MediaType.URL.value)
+                    )
                 )
                 if (initial) initialMedia = value
                 latestMedia = value
@@ -142,18 +144,21 @@ class ReceiveSharingIntentPlugin : FlutterPlugin, ActivityAware, MethodCallHandl
         val mType = mimeType ?: path?.let { URLConnection.guessContentTypeFromName(path) }
         val type = MediaType.fromMimeType(mType)
         val (thumbnail, duration) = path?.let { getThumbnailAndDuration(path, type) }
-                ?: Pair(null, null)
+            ?: Pair(null, null)
         return JSONObject()
-                .put("path", path ?: text)
-                .put("type", type.value)
-                .put("mimeType", mType)
-                .put("thumbnail", thumbnail)
-                .put("duration", duration)
+            .put("path", path ?: text)
+            .put("type", type.value)
+            .put("mimeType", mType)
+            .put("thumbnail", thumbnail)
+            .put("duration", duration)
     }
 
     // Get video thumbnail and duration.
     private fun getThumbnailAndDuration(path: String, type: MediaType): Pair<String?, Long?> {
-        if (type != MediaType.VIDEO) return Pair(null, null) // get thumbnail and duration for video only
+        if (type != MediaType.VIDEO) return Pair(
+            null,
+            null
+        ) // get thumbnail and duration for video only
         val retriever = MediaMetadataRetriever()
         retriever.setDataSource(path)
         val duration = retriever.extractMetadata(METADATA_KEY_DURATION)?.toLongOrNull()
@@ -212,8 +217,9 @@ class ReceiveSharingIntentPlugin : FlutterPlugin, ActivityAware, MethodCallHandl
         else -> @Suppress("DEPRECATION") getParcelableExtra(key) as? T
     }
 
-    inline fun <reified T : Parcelable> Intent.parcelableArrayList(key: String): ArrayList<T>? = when {
-        Build.VERSION.SDK_INT >= 33 -> getParcelableArrayListExtra(key, T::class.java)
-        else -> @Suppress("DEPRECATION") getParcelableArrayListExtra(key)
-    }
+    inline fun <reified T : Parcelable> Intent.parcelableArrayList(key: String): ArrayList<T>? =
+        when {
+            Build.VERSION.SDK_INT >= 33 -> getParcelableArrayListExtra(key, T::class.java)
+            else -> @Suppress("DEPRECATION") getParcelableArrayListExtra(key)
+        }
 }

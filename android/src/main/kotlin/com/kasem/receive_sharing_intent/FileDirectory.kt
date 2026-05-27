@@ -45,7 +45,9 @@ object FileDirectory {
                 return try {
                     val id = DocumentsContract.getDocumentId(uri)
                     val contentUri = ContentUris.withAppendedId(
-                            Uri.parse("content://downloads/public_downloads"), java.lang.Long.valueOf(id))
+                        Uri.parse("content://downloads/public_downloads"),
+                        java.lang.Long.valueOf(id)
+                    )
 
                     getDataColumn(context, contentUri, null, null)
                 } catch (exception: Exception) {
@@ -87,8 +89,10 @@ object FileDirectory {
      * @param selectionArgs (Optional) Selection arguments used in the query.
      * @return The value of the _data column, which is typically a file path.
      */
-    private fun getDataColumn(context: Context, uri: Uri, selection: String?,
-                              selectionArgs: Array<String>?): String? {
+    private fun getDataColumn(
+        context: Context, uri: Uri, selection: String?,
+        selectionArgs: Array<String>?
+    ): String? {
 
         if (uri.authority != null) {
             var cursor: Cursor? = null
@@ -96,7 +100,8 @@ object FileDirectory {
             val projection = arrayOf(column)
             var targetFile: File? = null
             try {
-                cursor = context.contentResolver.query(uri, projection, selection, selectionArgs, null)
+                cursor =
+                    context.contentResolver.query(uri, projection, selection, selectionArgs, null)
                 if (cursor != null && cursor.moveToFirst()) {
                     val columnIndex = cursor.getColumnIndexOrThrow(column)
                     val fileName = cursor.getString(columnIndex)

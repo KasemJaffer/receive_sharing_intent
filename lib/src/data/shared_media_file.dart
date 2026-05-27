@@ -1,4 +1,4 @@
-part of receive_sharing_intent;
+part of '../../receive_sharing_intent.dart';
 
 class SharedMediaFile {
   /// Shared file path, url or the text
@@ -31,12 +31,12 @@ class SharedMediaFile {
   });
 
   SharedMediaFile.fromMap(Map<String, dynamic> json)
-      : path = json['path'],
-        thumbnail = json['thumbnail'],
-        duration = json['duration'],
-        type = SharedMediaType.fromValue(json['type']),
-        mimeType = json['mimeType'],
-        message = json['message'];
+    : path = json['path'],
+      thumbnail = json['thumbnail'],
+      duration = json['duration'],
+      type = SharedMediaType.fromValue(json['type']),
+      mimeType = json['mimeType'],
+      message = json['message'];
 
   Map<String, dynamic> toMap() {
     return {

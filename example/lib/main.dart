@@ -6,8 +6,10 @@ import 'package:receive_sharing_intent/receive_sharing_intent.dart';
 void main() => runApp(MyApp());
 
 class MyApp extends StatefulWidget {
+  const MyApp({super.key});
+
   @override
-  _MyAppState createState() => _MyAppState();
+  State<MyApp> createState() => _MyAppState();
 }
 
 class _MyAppState extends State<MyApp> {
@@ -19,16 +21,19 @@ class _MyAppState extends State<MyApp> {
     super.initState();
 
     // Listen to media sharing coming from outside the app while the app is in the memory.
-    _intentSub = ReceiveSharingIntent.instance.getMediaStream().listen((value) {
-      setState(() {
-        _sharedFiles.clear();
-        _sharedFiles.addAll(value);
+    _intentSub = ReceiveSharingIntent.instance.getMediaStream().listen(
+      (value) {
+        setState(() {
+          _sharedFiles.clear();
+          _sharedFiles.addAll(value);
 
-        print(_sharedFiles.map((f) => f.toMap()));
-      });
-    }, onError: (err) {
-      print("getIntentDataStream error: $err");
-    });
+          print(_sharedFiles.map((f) => f.toMap()));
+        });
+      },
+      onError: (err) {
+        print("getIntentDataStream error: $err");
+      },
+    );
 
     // Get the media sharing coming from outside the app while the app is closed.
     ReceiveSharingIntent.instance.getInitialMedia().then((value) {
@@ -51,19 +56,19 @@ class _MyAppState extends State<MyApp> {
 
   @override
   Widget build(BuildContext context) {
-    const textStyleBold = const TextStyle(fontWeight: FontWeight.bold);
+    const textStyleBold = TextStyle(fontWeight: FontWeight.bold);
     return MaterialApp(
       home: Scaffold(
-        appBar: AppBar(
-          title: const Text('Plugin example app'),
-        ),
+        appBar: AppBar(title: const Text('Plugin example app')),
         body: Center(
           child: Column(
             children: <Widget>[
               Text("Shared files:", style: textStyleBold),
-              Text(_sharedFiles
-                  .map((f) => f.toMap())
-                  .join(",\n****************\n")),
+              Text(
+                _sharedFiles
+                    .map((f) => f.toMap())
+                    .join(",\n****************\n"),
+              ),
             ],
           ),
         ),
