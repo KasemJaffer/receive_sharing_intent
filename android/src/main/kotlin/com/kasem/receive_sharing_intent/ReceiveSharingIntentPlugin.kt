@@ -9,6 +9,7 @@ import android.media.MediaMetadataRetriever.OPTION_CLOSEST_SYNC
 import android.net.Uri
 import android.os.Parcelable
 import android.os.Build
+import android.util.Log
 import io.flutter.embedding.engine.plugins.FlutterPlugin
 import io.flutter.embedding.engine.plugins.activity.ActivityAware
 import io.flutter.embedding.engine.plugins.activity.ActivityPluginBinding
@@ -138,11 +139,29 @@ class ReceiveSharingIntentPlugin : FlutterPlugin, ActivityAware, MethodCallHandl
 
     // content can only be uri or string
     private fun toJsonObject(uri: Uri?, text: String?, mimeType: String?): JSONObject? {
-        val path = uri?.let { FileDirectory.getAbsolutePath(applicationContext, it) }
+        // Resolving the path may throw for some providers (e.g. Google Photos).
+        // Previously the exception propagated out of handleIntent and the whole
+        // share was lost (initialMedia == null).
+        val path = try {
+            uri?.let { FileDirectory.getAbsolutePath(applicationContext, it) }
+        } catch (e: Exception) {
+            Log.w("ReceiveSharingIntent", "getAbsolutePath failed: $e")
+            null
+        }
         val mType = mimeType ?: path?.let { URLConnection.guessContentTypeFromName(path) }
         val type = MediaType.fromMimeType(mType)
-        val (thumbnail, duration) = path?.let { getThumbnailAndDuration(path, type) }
-                ?: Pair(null, null)
+        // Thumbnail/duration are optional. MediaMetadataRetriever.setDataSource can
+        // throw (e.g. "setDataSource failed: status = 0xFFFFFFEA") for videos it
+        // cannot read; that must not abort the share. Fall back to a null thumbnail.
+        val (thumbnail, duration) = try {
+            path?.let { getThumbnailAndDuration(path, type) } ?: Pair(null, null)
+        } catch (e: Exception) {
+            Log.w("ReceiveSharingIntent", "getThumbnailAndDuration failed: $e")
+            Pair<String?, Long?>(null, null)
+        }
+        // Drop the item only when there is neither a usable path nor text, instead
+        // of emitting an entry with an empty path.
+        if (path == null && text == null) return null
         return JSONObject()
                 .put("path", path ?: text)
                 .put("type", type.value)
