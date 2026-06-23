@@ -7,7 +7,7 @@ public let kUserDefaultsKey = "ShareKey"
 public let kUserDefaultsMessageKey = "ShareMessageKey"
 public let kAppGroupIdKey = "AppGroupId"
 
-public class SwiftReceiveSharingIntentPlugin: NSObject, FlutterPlugin, FlutterStreamHandler {
+public class ReceiveSharingIntentPlugin: NSObject, FlutterPlugin, FlutterStreamHandler, FlutterSceneLifeCycleDelegate {
     static let kMessagesChannel = "receive_sharing_intent/messages"
     static let kEventsChannelMedia = "receive_sharing_intent/events-media"
     
@@ -19,7 +19,7 @@ public class SwiftReceiveSharingIntentPlugin: NSObject, FlutterPlugin, FlutterSt
     // Singleton is required for calling functions directly from AppDelegate
     // - it is required if the developer is using also another library, which requires to call "application(_:open:options:)"
     // -> see Example app
-    public static let instance = SwiftReceiveSharingIntentPlugin()
+    public static let instance = ReceiveSharingIntentPlugin()
     
     public static func register(with registrar: FlutterPluginRegistrar) {
         let channel = FlutterMethodChannel(name: kMessagesChannel, binaryMessenger: registrar.messenger())
@@ -28,7 +28,11 @@ public class SwiftReceiveSharingIntentPlugin: NSObject, FlutterPlugin, FlutterSt
         let chargingChannelMedia = FlutterEventChannel(name: kEventsChannelMedia, binaryMessenger: registrar.messenger())
         chargingChannelMedia.setStreamHandler(instance)
         
+        // Register for UIApplicationDelegate events (apps not yet migrated to UIScene).
         registrar.addApplicationDelegate(instance)
+        // Register for UISceneDelegate events (required by upcoming iOS versions).
+        // https://docs.flutter.dev/release/breaking-changes/uiscenedelegate#migrate-a-flutter-plugin
+        registrar.addSceneDelegate(instance)
     }
     
     public func handle(_ call: FlutterMethodCall, result: @escaping FlutterResult) {
@@ -105,6 +109,53 @@ public class SwiftReceiveSharingIntentPlugin: NSObject, FlutterPlugin, FlutterSt
             if (hasMatchingSchemePrefix(url: url)) {
                 return handleUrl(url: url, setInitialData: true)
             }
+        }
+        return false
+    }
+
+    // MARK: - UISceneDelegate
+    //
+    // Newer iOS versions deliver lifecycle events through a UISceneDelegate instead
+    // of the UIApplicationDelegate. By conforming to `FlutterSceneLifeCycleDelegate`
+    // and registering with `registrar.addSceneDelegate(_:)`, Flutter forwards the
+    // scene events below to this plugin.
+    // Reference: https://docs.flutter.dev/release/breaking-changes/uiscenedelegate#migrate-a-flutter-plugin
+
+    // Equivalent of `application(_:didFinishLaunchingWithOptions:)`.
+    // After migrating to UIScene the launch options are nil, so the URL/activity the
+    // app was launched with is delivered here through `connectionOptions` instead.
+    public func scene(
+        _ scene: UIScene,
+        willConnectTo session: UISceneSession,
+        options connectionOptions: UIScene.ConnectionOptions?
+    ) -> Bool {
+        if let url = connectionOptions?.urlContexts.first?.url {
+            if (hasMatchingSchemePrefix(url: url)) {
+                return handleUrl(url: url, setInitialData: true)
+            }
+            return true
+        }
+        // Handle universal links the app was launched with.
+        for userActivity in connectionOptions?.userActivities ?? [] {
+            if let url = userActivity.webpageURL, hasMatchingSchemePrefix(url: url) {
+                return handleUrl(url: url, setInitialData: true)
+            }
+        }
+        return true
+    }
+
+    // Equivalent of `application(_:open:options:)` (warm start).
+    public func scene(_ scene: UIScene, openURLContexts URLContexts: Set<UIOpenURLContext>) -> Bool {
+        if let url = URLContexts.first?.url, hasMatchingSchemePrefix(url: url) {
+            return handleUrl(url: url, setInitialData: false)
+        }
+        return false
+    }
+
+    // Equivalent of `application(_:continue:restorationHandler:)`.
+    public func scene(_ scene: UIScene, continue userActivity: NSUserActivity) -> Bool {
+        if let url = userActivity.webpageURL, hasMatchingSchemePrefix(url: url) {
+            return handleUrl(url: url, setInitialData: true)
         }
         return false
     }
