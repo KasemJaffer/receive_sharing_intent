@@ -9,16 +9,15 @@
 import receive_sharing_intent
 
 class ShareViewController: RSIShareViewController {
-    
-    // Use this method to return false if you don't want to redirect to host app automatically.
-    // Default is true
+
+    // Return false to show the built-in compose UI (Cancel / Send buttons,
+    // an editable message field and a media preview) instead of redirecting
+    // automatically. Return true to skip the UI and jump straight to the app.
     override func shouldAutoRedirect() -> Bool {
         return false
     }
-    
-    // Use this to change label of Post button
-    override func presentationAnimationDidFinish() {
-        super.presentationAnimationDidFinish()
-        navigationController?.navigationBar.topItem?.rightBarButtonItem?.title = "Send"
-    }
+
+    // Optionally customise the built-in compose UI:
+    override var placeholder: String { "Add a caption…" }
+    override var sendButtonTitle: String { "Send to Example" }
 }

@@ -14,11 +14,4 @@ class ActionViewController: RSIShareViewController {
     override func shouldAutoRedirect() -> Bool {
         return true
     }
-
-    // Use this to change label of Post button
-    override func presentationAnimationDidFinish() {
-        super.presentationAnimationDidFinish()
-        // TODO: Localize button title
-        // navigationController?.navigationBar.topItem?.rightBarButtonItem?.title = "Ask Aira Access AI"
-    }
 }

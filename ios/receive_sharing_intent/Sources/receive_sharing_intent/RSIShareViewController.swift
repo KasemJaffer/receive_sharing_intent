@@ -6,42 +6,106 @@
 //
 
 import UIKit
-import Social
 import MobileCoreServices
 import Photos
 
+// NOTE: This controller used to subclass `SLComposeServiceViewController` from
+// the (now deprecated) Social framework. Apple's modern Share Extension is just
+// a plain `UIViewController`. To keep the same features that the old compose
+// sheet offered, this class hosts a `RSIComposeView` (Cancel / Send buttons, an
+// editable message field with placeholder, and a
+// media preview). The UI is only shown when `shouldAutoRedirect()` returns
+// `false`; otherwise the shared content is processed and we redirect straight
+// into the host app with no UI at all.
 @available(swift, introduced: 5.0)
-open class RSIShareViewController: SLComposeServiceViewController {
+open class RSIShareViewController: UIViewController, RSIComposeViewDelegate {
     var hostAppBundleIdentifier = ""
     var appGroupId = ""
     var sharedMedia: [SharedMediaFile] = []
+
+    // MARK: - Public, overridable compose UI API
 
     /// Override this method to return false if you don't want to redirect to host app automatically
     /// Default is true
     open func shouldAutoRedirect() -> Bool {
         return true
     }
-    
-    open override func isContentValid() -> Bool {
-        return true
-    }
-    
-    open override func viewDidLoad() {
-        super.viewDidLoad()
-        
-        // load group and app id from build info
-        loadIds()
-    }
-    
-    // Redirect to host app when user click on Post
-    open override func didSelectPost() {
+
+    /// Placeholder shown in the message field while it is empty.
+    open var placeholder: String { return "Add a message…" }
+
+    /// Title of the confirm button (top right).
+    open var sendButtonTitle: String { return "Send" }
+
+    /// Height of the compact bottom sheet (iOS 16+). Lower values bring the sheet
+    /// closer to the bottom of the screen. Override to customise.
+    open var preferredSheetHeight: CGFloat { return 200 }
+
+    /// The text the user typed in the message field.
+    open var contentText: String { return composeView?.text ?? "" }
+
+    /// Override to enable/disable the Send button based on your own validation.
+    /// Default is always valid.
+    open func isContentValid() -> Bool { return true }
+
+    /// Called when the user taps Send. Default saves the message and redirects.
+    open func didSelectPost() {
         saveAndRedirect(message: contentText)
     }
-    
+
+    /// Called when the user taps Cancel. Default cancels the extension request.
+    open func didSelectCancel() {
+        cancel()
+    }
+
+    // MARK: - Built-in compose UI
+
+    /// The built-in compose UI, present only when `shouldAutoRedirect()` is false.
+    private var composeView: RSIComposeView?
+
+    /// Preview to display in the compose UI (first media item), applied on the
+    /// main thread once loading finishes.
+    private var pendingPreviewImage: UIImage?
+
+    // MARK: - Lifecycle
+
+    open override func viewDidLoad() {
+        super.viewDidLoad()
+
+        // load group and app id from build info
+        loadIds()
+
+        if !shouldAutoRedirect() {
+            setupComposeUI()
+        }
+    }
+
+    open override func viewWillAppear(_ animated: Bool) {
+        super.viewWillAppear(animated)
+
+        if shouldAutoRedirect() {
+            view.backgroundColor = .clear
+            // The share extension is presented inside a system sheet container whose
+            // background is opaque. Clear the ancestor backgrounds so only our own
+            // dim layer + bottom card are visible (and the host shows through).
+            var ancestor = view.superview
+            while let current = ancestor {
+                current.backgroundColor = .clear
+                current.isOpaque = false
+                ancestor = current.superview
+            }
+        }
+    }
+
     open override func viewDidAppear(_ animated: Bool) {
         super.viewDidAppear(animated)
-        
-        // This is called after the user selects Post. Do the upload of contentText and/or NSExtensionContext attachments.
+
+        // Focus the message field so the keyboard comes up as the sheet opens.
+        if !shouldAutoRedirect() {
+            composeView?.focusTextView()
+        }
+
+        // Process the shared content from the NSExtensionContext attachments.
         if let content = extensionContext!.inputItems[0] as? NSExtensionItem {
             if let contents = content.attachments {
                 for (index, attachment) in (contents).enumerated() {
@@ -90,11 +154,6 @@ open class RSIShareViewController: SLComposeServiceViewController {
         }
     }
     
-    open override func configurationItems() -> [Any]! {
-        // To add configuration options via table cells at the bottom of the sheet, return an array of SLComposeSheetConfigurationItem here.
-        return []
-    }
-    
     private func loadIds() {
         // loading Share extension App Id
         let shareExtensionAppBundleIdentifier = Bundle.main.bundleIdentifier!
@@ -121,11 +180,7 @@ open class RSIShareViewController: SLComposeServiceViewController {
             mimeType: type == .text ? "text/plain": nil,
             type: type
         ))
-        if index == (content.attachments?.count ?? 0) - 1 {
-            if shouldAutoRedirect() {
-                saveAndRedirect()
-            }
-        }
+        completeAttachment(index: index, content: content)
     }
 
     private func handleMedia(forUIImage image: UIImage, type: SharedMediaType, index: Int, content: NSExtensionItem){
@@ -138,11 +193,8 @@ open class RSIShareViewController: SLComposeServiceViewController {
                 type: type
             ))
         }
-        if index == (content.attachments?.count ?? 0) - 1 {
-            if shouldAutoRedirect() {
-                saveAndRedirect()
-            }
-        }
+        if pendingPreviewImage == nil { pendingPreviewImage = image }
+        completeAttachment(index: index, content: content)
     }
     
     private func handleMedia(forFile url: URL, type: SharedMediaType, index: Int, content: NSExtensionItem) {
@@ -163,6 +215,10 @@ open class RSIShareViewController: SLComposeServiceViewController {
                         duration: videoInfo.duration,
                         type: type
                     ))
+                    if pendingPreviewImage == nil, let thumb = videoInfo.thumbnail,
+                       let thumbURL = URL(string: thumb) {
+                        pendingPreviewImage = UIImage(contentsOfFile: thumbURL.path)
+                    }
                 }
             } else {
                 sharedMedia.append(SharedMediaFile(
@@ -170,19 +226,83 @@ open class RSIShareViewController: SLComposeServiceViewController {
                     mimeType: url.mimeType(),
                     type: type
                 ))
+                if type == .image, pendingPreviewImage == nil {
+                    pendingPreviewImage = UIImage(contentsOfFile: newPath.path)
+                }
             }
         }
         
-        if index == (content.attachments?.count ?? 0) - 1 {
-            if shouldAutoRedirect() {
-                saveAndRedirect()
+        completeAttachment(index: index, content: content)
+    }
+
+    /// Called after each attachment finishes loading. When the last attachment is
+    /// done we either redirect automatically or hand control to the compose UI.
+    private func completeAttachment(index: Int, content: NSExtensionItem) {
+        guard index == (content.attachments?.count ?? 0) - 1 else { return }
+        if shouldAutoRedirect() {
+            saveAndRedirect()
+        } else {
+            DispatchQueue.main.async { [weak self] in
+                self?.didFinishLoadingContent()
             }
         }
     }
     
     
+    // MARK: - Built-in compose UI
+
+    private func setupComposeUI() {
+        let configuration = RSIComposeView.Configuration(
+            placeholder: placeholder,
+            sendButtonTitle: sendButtonTitle,
+        )
+        let composeView = RSIComposeView(configuration: configuration)
+        composeView.delegate = self
+        composeView.translatesAutoresizingMaskIntoConstraints = false
+        view.addSubview(composeView)
+        NSLayoutConstraint.activate([
+            composeView.topAnchor.constraint(equalTo: view.topAnchor),
+            composeView.bottomAnchor.constraint(equalTo: view.bottomAnchor),
+            composeView.leadingAnchor.constraint(equalTo: view.leadingAnchor),
+            composeView.trailingAnchor.constraint(equalTo: view.trailingAnchor),
+        ])
+        self.composeView = composeView
+        updateSendEnabled()
+    }
+
+    /// Called on the main thread once all shared content finished loading.
+    private func didFinishLoadingContent() {
+        guard !shouldAutoRedirect() else { return }
+        composeView?.setPreviewImage(pendingPreviewImage)
+        updateSendEnabled()
+    }
+
+    private func updateSendEnabled() {
+        guard let composeView = composeView else { return }
+        composeView.setSendEnabled(isContentValid())
+    }
+
+    /// Cancels the share extension request.
+    open func cancel() {
+        extensionContext?.cancelRequest(withError: NSError(domain: "RSIShareViewController", code: 0, userInfo: [NSLocalizedDescriptionKey: "User cancelled"]))
+    }
+
+    // MARK: - RSIComposeViewDelegate
+
+    open func composeViewDidSelectPost(_ composeView: RSIComposeView) {
+        didSelectPost()
+    }
+
+    open func composeViewDidSelectCancel(_ composeView: RSIComposeView) {
+        didSelectCancel()
+    }
+
+    open func composeViewDidChangeText(_ composeView: RSIComposeView) {
+        updateSendEnabled()
+    }
+
     // Save shared media and redirect to host app
-    private func saveAndRedirect(message: String? = nil) {
+    open func saveAndRedirect(message: String? = nil) {
         let userDefaults = UserDefaults(suiteName: appGroupId)
         userDefaults?.set(toData(data: sharedMedia), forKey: kUserDefaultsKey)
         userDefaults?.set(message, forKey: kUserDefaultsMessageKey)
