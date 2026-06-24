@@ -1,3 +1,31 @@
+## 1.9.0
+
+### Breaking changes
+
+* **Requires Flutter 3.38 or newer.**
+* **iOS**: Apps must now adopt a `SceneDelegate` for the new `UIScene` lifecycle — see the README and the [official guide](https://docs.flutter.dev/release/breaking-changes/uiscenedelegate#migrate-a-flutter-plugin).
+* **iOS**: Now uses **Swift Package Manager only** (the CocoaPods podspec was removed). Enable it with `flutter config --enable-swift-package-manager` and link the `receive-sharing-intent` product in your Share Extension.
+* **iOS**: The Share Extension compose UI was rebuilt (see below). `presentationAnimationDidFinish()`, `navigationTitle` and `characterLimit` were removed — use the new override hooks instead.
+* **iOS**: Minimum deployment target raised to iOS 13.0.
+
+### iOS — new Share Extension compose UI
+
+* `RSIShareViewController` no longer subclasses the deprecated `SLComposeServiceViewController`; it's now a plain `UIViewController` following Apple's modern model.
+* `shouldAutoRedirect() == true` (default): no UI is shown — the old flash of the dimmed white system sheet is gone and the extension redirects straight into the host app.
+* `shouldAutoRedirect() == false`: a built-in compose sheet (`RSIComposeView`) is shown — a bottom card with a grabber, circular close button, "Send" button, an auto-focused message field and a thumbnail preview of the first shared item. Tapping the dimmed backdrop cancels.
+* Customise it by overriding `placeholder`, `sendButtonTitle`, `contentText`, `isContentValid()`, `didSelectPost()`, `didSelectCancel()`, `cancel()` or `saveAndRedirect(message:)`.
+
+### iOS — other
+
+* Adopted Apple's `UIScene` lifecycle: the plugin conforms to `FlutterSceneLifeCycleDelegate`, registers via `addSceneDelegate`, and handles shared URLs through the scene delegate.
+* Consolidated into a single `ReceiveSharingIntentPlugin` Swift class (the Objective-C bridge is gone). `SwiftReceiveSharingIntentPlugin` remains as a backward-compatible type alias.
+
+### Android
+
+* Migrated to Flutter's Built-in Kotlin: the plugin no longer applies the Kotlin Gradle Plugin (KGP) itself — Flutter's Gradle plugin applies `kotlin-android` automatically. This silences the upcoming KGP deprecation warning and keeps the plugin building on future Flutter versions.
+* Upgraded Android Gradle Plugin to 9.2.1, Gradle to 9.4.1 and Kotlin to 2.4.0.
+* Bumped `compileSdk` to 37, raised `minSdk` to 21 and migrated to the modern Kotlin `compilerOptions` DSL (JVM target 17).
+
 ## 1.8.1
 
 * Fixed sharing not working on iOS 18

@@ -8,9 +8,9 @@ Check the provided [example](./example/lib/main.dart) for more info.
 
 
 
-|             | Android                 | iOS               |
-|-------------|-------------------------|-------------------|
-| **Support** | SDK 19+ (Kotlin 1.9.22) | 12.0+ (Swift 5.0) |
+|             | Android                | iOS               |
+|-------------|------------------------|-------------------|
+| **Support** | SDK 21+ (Kotlin 2.4.0) | 13.0+ (Swift 5.0) |
 
 
 
@@ -214,22 +214,29 @@ Make sure the deployment target for Runner.app and the share extension is the sa
 ```
 
 
-#### 5. Add the following to your [ios/Podfile](./example/ios/Podfile):
-```ruby
-...
-target 'Runner' do
-  use_frameworks!
-  use_modular_headers!
+#### 5. Make the plugin available to the Share Extension (Swift Package Manager)
 
-  flutter_install_all_ios_pods File.dirname(File.realpath(__FILE__))
+This plugin is distributed as a **Swift Package** (SPM only — there is no CocoaPods
+podspec). Make sure Swift Package Manager is enabled for your project:
 
-  # Share Extension is name of Extension which you created which is in this case 'Share Extension'
-  target 'Share Extension' do
-    inherit! :search_paths
-  end
-end
-...
+```sh
+flutter config --enable-swift-package-manager
 ```
+
+Flutter automatically adds the plugin to your **Runner** target. Your **Share
+Extension** target also needs access to the `receive_sharing_intent` module
+(it provides `RSIShareViewController`). Add it in Xcode:
+
+* Select the **Share Extension** target → **General** tab.
+* Under **Frameworks and Libraries**, click **+**.
+* Choose the **`receive-sharing-intent`** library from the
+  `receive_sharing_intent` Swift package and add it.
+
+> If you previously used CocoaPods, remove the `ios/Podfile` and run
+> `pod deintegrate` in the `ios/` directory, then remove the
+> `#include "Pods/..."` lines from `ios/Flutter/Debug.xcconfig` and
+> `ios/Flutter/Release.xcconfig`. See the
+> [example project](./example/ios) for a fully SPM-only setup.
 
 #### 6. Add Runner and Share Extension in the same group
 
@@ -244,9 +251,9 @@ end
 
 
 ```swift
-// If you get no such module 'receive_sharing_intent' error. 
+// If you get no such module 'receive_sharing_intent' error.
 // Go to Build Phases of your Runner target and
-// move `Embed Foundation Extension` to the top of `Thin Binary`. 
+// move `Embed Foundation Extension` to the top of `Thin Binary`.
 import receive_sharing_intent
 
 class ShareViewController: RSIShareViewController {
@@ -260,15 +267,121 @@ class ShareViewController: RSIShareViewController {
 }
 ```
 
+```xml
+<key>NSExtensionPrincipalClass</key>
+<string>$(PRODUCT_MODULE_NAME).ShareViewController</string>
+```
+
+The example's **Action Extension** ("Share to RSI") demonstrates this direct-open
+mode; the **Share Extension** demonstrates the compose-dialog mode.
+
+##### Auto-redirect vs. the built-in compose UI
+
+`RSIShareViewController` is a plain `UIViewController` (it no longer subclasses
+the deprecated `SLComposeServiceViewController`). Its behaviour depends on
+`shouldAutoRedirect()`:
+
+* **`true` (default)** — no UI is shown. The shared content is processed and the
+  extension immediately redirects into your host app. There is no white compose
+  card and no dimmed system sheet behind it.
+* **`false`** — a built-in compose sheet is shown: a bottom card with a circular
+  close button, a "Send" button, an auto-focused message field (the keyboard
+  comes up automatically), and a thumbnail preview of the first shared item.
+  Tapping the dimmed background cancels the share.
+
+You can customise the built-in compose UI by overriding these `open` members:
+
+```swift
+class ShareViewController: RSIShareViewController {
+
+    override func shouldAutoRedirect() -> Bool { false }
+
+    // Placeholder shown in the empty message field.
+    override var placeholder: String { "Add a caption…" }
+
+    // Title of the confirm button (can be a long label).
+    override var sendButtonTitle: String { "Send to Example" }
+
+    // Gate the Send button on your own validation. Default: always valid.
+    override func isContentValid() -> Bool { !contentText.isEmpty }
+
+    // Called when the user taps Send. Default saves the message and redirects.
+    override func didSelectPost() { saveAndRedirect(message: contentText) }
+
+    // Called when the user taps Cancel / taps the dimmed background.
+    // Default cancels the extension request.
+    override func didSelectCancel() { cancel() }
+}
+```
+
+The typed message is available via `contentText` and is forwarded to your Flutter
+app as a shared text item.
+
+> **Migration note:** the compose UI previously came from the system
+> `SLComposeServiceViewController`. That API is deprecated, so the plugin now
+> ships its own equivalent UI (implemented in `RSIComposeView`). The
+> `contentText`, `isContentValid()` and `didSelectPost()` hooks are preserved.
+> The old `navigationTitle` and `characterLimit` overrides were removed.
+
+#### 9. Adopt `UISceneDelegate` (required for upcoming iOS versions)
+
+Newer iOS versions deliver lifecycle events (including shared URLs) through a
+`UISceneDelegate` instead of the `AppDelegate`. This plugin already adopts the
+scene lifecycle (it conforms to `FlutterSceneLifeCycleDelegate` and registers
+itself with `addSceneDelegate`), so it keeps working automatically once your app
+adopts a scene delegate. Follow Flutter's official
+[UISceneDelegate migration guide](https://docs.flutter.dev/release/breaking-changes/uiscenedelegate),
+summarized below.
+
+b. Add a `SceneDelegate` that subclasses `FlutterSceneDelegate` (see
+[example/ios/Runner/SceneDelegate.swift](./example/ios/Runner/SceneDelegate.swift)).
+For a typical app this can be empty — the plugin handles the shared URLs itself.
+Only override `scene(_:openURLContexts:)` if your app uses multiple libraries
+that handle incoming URLs and you need to disambiguate between them:
+
+```swift
+import Flutter
+import UIKit
+import receive_sharing_intent
+
+class SceneDelegate: FlutterSceneDelegate {
+    // Optional - only needed when multiple libraries handle incoming URLs.
+    // Called on a cold start when the scene connects. The shared URL (if any)
+    // is delivered here via connectionOptions instead of the launchOptions.
+    override func scene(
+        _ scene: UIScene,
+        willConnectTo session: UISceneSession,
+        options connectionOptions: UIScene.ConnectionOptions
+    ) {
+        // Work-around to prevent other libraries like flutter_branch_sdk from absorbing links meant to be handled by receive_sharing_intent.
+        _ = ReceiveSharingIntentPlugin.instance.scene(scene, willConnectTo: session, options: connectionOptions)
+        super.scene(scene, willConnectTo: session, options: connectionOptions)
+    }
+
+    // Called while the app is already running (warm start).
+    override func scene(_ scene: UIScene, openURLContexts URLContexts: Set<UIOpenURLContext>) {
+        // Work-around to prevent other libraries like flutter_branch_sdk from absorbing links meant to be handled by receive_sharing_intent.
+        if ReceiveSharingIntentPlugin.instance.scene(scene, openURLContexts: URLContexts) {
+            return
+        }
+        // Proceed url handling for other Flutter libraries like uni_links
+        super.scene(scene, openURLContexts: URLContexts)
+    }
+}
+```
+
+> This plugin is distributed via Swift Package Manager only, so make sure SPM is
+> enabled (`flutter config --enable-swift-package-manager`).
+
 #### Compiling issues and their fixes
 
-* Error: No such module 'receive_sharing_intent'
-  * Fix: Go to Build Phases of your Runner target and move `Embed Foundation Extension` to the top of `Thin Binary`.
-  
-* Error: App does not build after adding Share Extension?
-  * Fix: Check Build Settings of your share extension and remove everything that tries to import Cocoapods from your main project. i.e. remove everything under `Linking/Other Linker Flags` 
+* Error: No such module 'receive_sharing_intent' (in the Share Extension)
+  * Fix: Add the `receive-sharing-intent` library to the Share Extension target under
+    **General → Frameworks and Libraries** (see step 5).
 
-* You might need to disable bitcode for the extension target
+* Error: Unable to resolve module dependency: 'receive_sharing_intent'
+  * Fix: Ensure Swift Package Manager is enabled and the Share Extension target links the
+    `receive-sharing-intent` Swift package product (see step 5).
 
 * Error: Invalid Bundle. The bundle at 'Runner.app/Plugins/Sharing Extension.appex' contains disallowed file 'Frameworks'
     * Fix: https://stackoverflow.com/a/25789145/2061365
