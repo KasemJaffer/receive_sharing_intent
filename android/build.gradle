@@ -15,11 +15,10 @@ buildscript {
 
 plugins {
     id "com.android.library"
-    id "kotlin-android"
 }
 
 group 'com.kasem.receive_sharing_intent'
-version '1.6.6'
+version '1.9.0'
 
 rootProject.allprojects {
     repositories {
