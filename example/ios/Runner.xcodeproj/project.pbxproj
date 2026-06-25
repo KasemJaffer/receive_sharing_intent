@@ -7,12 +7,12 @@
 	objects = {
 
 /* Begin PBXBuildFile section */
-		AABBCCDD0000000000000022 /* receive-sharing-intent in Frameworks */ = {isa = PBXBuildFile; productRef = AABBCCDD0000000000000021 /* receive-sharing-intent */; };
-		AABBCCDD0000000000000012 /* receive-sharing-intent in Frameworks */ = {isa = PBXBuildFile; productRef = AABBCCDD0000000000000011 /* receive-sharing-intent */; };
 		1498D2341E8E89220040F4C2 /* GeneratedPluginRegistrant.m in Sources */ = {isa = PBXBuildFile; fileRef = 1498D2331E8E89220040F4C2 /* GeneratedPluginRegistrant.m */; };
 		3B3967161E833CAA004F5970 /* AppFrameworkInfo.plist in Resources */ = {isa = PBXBuildFile; fileRef = 3B3967151E833CAA004F5970 /* AppFrameworkInfo.plist */; };
 		74858FAF1ED2DC5600515810 /* AppDelegate.swift in Sources */ = {isa = PBXBuildFile; fileRef = 74858FAE1ED2DC5600515810 /* AppDelegate.swift */; };
 		78A318202AECB46A00862997 /* FlutterGeneratedPluginSwiftPackage in Frameworks */ = {isa = PBXBuildFile; productRef = 78A3181F2AECB46A00862997 /* FlutterGeneratedPluginSwiftPackage */; };
+		805E57812FEDC2C1005B1777 /* FlutterGeneratedPluginSwiftPackage in Frameworks */ = {isa = PBXBuildFile; productRef = 805E57802FEDC2C1005B1777 /* FlutterGeneratedPluginSwiftPackage */; };
+		805E57832FEDC2CA005B1777 /* FlutterGeneratedPluginSwiftPackage in Frameworks */ = {isa = PBXBuildFile; productRef = 805E57822FEDC2CA005B1777 /* FlutterGeneratedPluginSwiftPackage */; };
 		8072EBCB2B6191600035633A /* ShareViewController.swift in Sources */ = {isa = PBXBuildFile; fileRef = 8072EBCA2B6191600035633A /* ShareViewController.swift */; };
 		8072EBCE2B6191600035633A /* MainInterface.storyboard in Resources */ = {isa = PBXBuildFile; fileRef = 8072EBCC2B6191600035633A /* MainInterface.storyboard */; };
 		8072EBD22B6191600035633A /* Share Extension.appex in Embed App Extensions */ = {isa = PBXBuildFile; fileRef = 8072EBC82B6191600035633A /* Share Extension.appex */; settings = {ATTRIBUTES = (RemoveHeadersOnCopy, ); }; };
@@ -78,7 +78,6 @@
 		74858FAD1ED2DC5600515810 /* Runner-Bridging-Header.h */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.h; path = "Runner-Bridging-Header.h"; sourceTree = "<group>"; };
 		74858FAE1ED2DC5600515810 /* AppDelegate.swift */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.swift; path = AppDelegate.swift; sourceTree = "<group>"; };
 		784666492D4C4C64000A1A5F /* FlutterFramework */ = {isa = PBXFileReference; lastKnownFileType = wrapper; name = FlutterFramework; path = Flutter/ephemeral/Packages/.packages/FlutterFramework; sourceTree = "<group>"; };
-		78DABEA22ED26510000E7860 /* receive_sharing_intent */ = {isa = PBXFileReference; lastKnownFileType = wrapper; name = receive_sharing_intent; path = ../../ios/receive_sharing_intent; sourceTree = "<group>"; };
 		78E0A7A72DC9AD7400C4905E /* FlutterGeneratedPluginSwiftPackage */ = {isa = PBXFileReference; lastKnownFileType = wrapper; name = FlutterGeneratedPluginSwiftPackage; path = Flutter/ephemeral/Packages/FlutterGeneratedPluginSwiftPackage; sourceTree = "<group>"; };
 		7AFA3C8E1D35360C0083082E /* Release.xcconfig */ = {isa = PBXFileReference; lastKnownFileType = text.xcconfig; name = Release.xcconfig; path = Flutter/Release.xcconfig; sourceTree = "<group>"; };
 		8072EBC82B6191600035633A /* Share Extension.appex */ = {isa = PBXFileReference; explicitFileType = "wrapper.app-extension"; includeInIndex = 0; path = "Share Extension.appex"; sourceTree = BUILT_PRODUCTS_DIR; };
@@ -100,6 +99,7 @@
 		97C147001CF9000F007C117D /* Base */ = {isa = PBXFileReference; lastKnownFileType = file.storyboard; name = Base; path = Base.lproj/LaunchScreen.storyboard; sourceTree = "<group>"; };
 		97C147021CF9000F007C117D /* Info.plist */ = {isa = PBXFileReference; lastKnownFileType = text.plist.xml; path = Info.plist; sourceTree = "<group>"; };
 		AABBCCDD0000000000000002 /* SceneDelegate.swift */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.swift; path = SceneDelegate.swift; sourceTree = "<group>"; };
+		78DABEA22ED26510000E7860 /* receive_sharing_intent */ = {isa = PBXFileReference; lastKnownFileType = wrapper; name = receive_sharing_intent; path = ../../ios/receive_sharing_intent; sourceTree = "<group>"; };
 /* End PBXFileReference section */
 
 /* Begin PBXFrameworksBuildPhase section */
@@ -107,7 +107,7 @@
 			isa = PBXFrameworksBuildPhase;
 			buildActionMask = 2147483647;
 			files = (
-				AABBCCDD0000000000000012 /* receive-sharing-intent in Frameworks */,
+				805E57812FEDC2C1005B1777 /* FlutterGeneratedPluginSwiftPackage in Frameworks */,
 			);
 			runOnlyForDeploymentPostprocessing = 0;
 		};
@@ -116,7 +116,7 @@
 			buildActionMask = 2147483647;
 			files = (
 				8072EC0A2B714FDD0035633A /* UniformTypeIdentifiers.framework in Frameworks */,
-				AABBCCDD0000000000000022 /* receive-sharing-intent in Frameworks */,
+				805E57832FEDC2CA005B1777 /* FlutterGeneratedPluginSwiftPackage in Frameworks */,
 			);
 			runOnlyForDeploymentPostprocessing = 0;
 		};
@@ -240,6 +240,7 @@
 			name = "Share Extension";
 			packageProductDependencies = (
 				AABBCCDD0000000000000011 /* receive-sharing-intent */,
+				805E57802FEDC2C1005B1777 /* FlutterGeneratedPluginSwiftPackage */,
 			);
 			productName = "Share Extension";
 			productReference = 8072EBC82B6191600035633A /* Share Extension.appex */;
@@ -260,6 +261,7 @@
 			name = ActionExtension;
 			packageProductDependencies = (
 				AABBCCDD0000000000000021 /* receive-sharing-intent */,
+				805E57822FEDC2CA005B1777 /* FlutterGeneratedPluginSwiftPackage */,
 			);
 			productName = ActionExtension;
 			productReference = 8072EC082B714FDD0035633A /* ActionExtension.appex */;
@@ -329,8 +331,7 @@
 			);
 			mainGroup = 97C146E51CF9000F007C117D;
 			packageReferences = (
-				781AD8BC2B33823900A9FFBB /* XCLocalSwiftPackageReference "FlutterGeneratedPluginSwiftPackage" */,
-				AABBCCDD0000000000000010 /* XCLocalSwiftPackageReference "receive_sharing_intent" */,
+				781AD8BC2B33823900A9FFBB /* XCLocalSwiftPackageReference "Flutter/ephemeral/Packages/FlutterGeneratedPluginSwiftPackage" */,
 			);
 			productRefGroup = 97C146EF1CF9000F007C117D /* Products */;
 			projectDirPath = "";
@@ -1064,13 +1065,9 @@
 /* End XCConfigurationList section */
 
 /* Begin XCLocalSwiftPackageReference section */
-		781AD8BC2B33823900A9FFBB /* XCLocalSwiftPackageReference "FlutterGeneratedPluginSwiftPackage" */ = {
+		781AD8BC2B33823900A9FFBB /* XCLocalSwiftPackageReference "Flutter/ephemeral/Packages/FlutterGeneratedPluginSwiftPackage" */ = {
 			isa = XCLocalSwiftPackageReference;
 			relativePath = Flutter/ephemeral/Packages/FlutterGeneratedPluginSwiftPackage;
-		};
-		AABBCCDD0000000000000010 /* XCLocalSwiftPackageReference "receive_sharing_intent" */ = {
-			isa = XCLocalSwiftPackageReference;
-			relativePath = "Flutter/ephemeral/Packages/.packages/receive_sharing_intent";
 		};
 /* End XCLocalSwiftPackageReference section */
 
@@ -1079,13 +1076,13 @@
 			isa = XCSwiftPackageProductDependency;
 			productName = FlutterGeneratedPluginSwiftPackage;
 		};
-		AABBCCDD0000000000000011 /* receive-sharing-intent */ = {
+		805E57802FEDC2C1005B1777 /* FlutterGeneratedPluginSwiftPackage */ = {
 			isa = XCSwiftPackageProductDependency;
-			productName = "receive-sharing-intent";
+			productName = FlutterGeneratedPluginSwiftPackage;
 		};
-		AABBCCDD0000000000000021 /* receive-sharing-intent */ = {
+		805E57822FEDC2CA005B1777 /* FlutterGeneratedPluginSwiftPackage */ = {
 			isa = XCSwiftPackageProductDependency;
-			productName = "receive-sharing-intent";
+			productName = FlutterGeneratedPluginSwiftPackage;
 		};
 /* End XCSwiftPackageProductDependency section */
 	};

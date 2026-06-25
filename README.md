@@ -229,13 +229,14 @@ Extension** target also needs access to the `receive_sharing_intent` module
 
 * Select the **Share Extension** target → **General** tab.
 * Under **Frameworks and Libraries**, click **+**.
-* Choose the **`receive-sharing-intent`** library from the
+* Choose the **`FlutterGeneratedPluginSwiftPackage`** library from the
   `receive_sharing_intent` Swift package and add it.
 
 > If you previously used CocoaPods, remove the `ios/Podfile` and run
 > `pod deintegrate` in the `ios/` directory, then remove the
-> `#include "Pods/..."` lines from `ios/Flutter/Debug.xcconfig` and
-> `ios/Flutter/Release.xcconfig`. See the
+> `#include "Pods/..."` lines from `ios/Flutter/Debug.xcconfig`,
+> `ios/Flutter/Release.xcconfig` and any references to 
+> **`receive-sharing-intent`** in `project.pbxproj`. See the
 > [example project](./example/ios) for a fully SPM-only setup.
 
 #### 6. Add Runner and Share Extension in the same group
