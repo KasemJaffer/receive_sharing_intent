@@ -120,6 +120,7 @@ object FileDirectory {
                 targetFile = File(context.cacheDir, "${prefix}_${Date().time}.$type")
             }
 
+            val uri = selectionArgs?.let { args -> uri.buildUpon().appendPath(args.first()).build() } ?: uri
             context.contentResolver.openInputStream(uri)?.use { input ->
                 FileOutputStream(targetFile).use { fileOut ->
                     input.copyTo(fileOut)
