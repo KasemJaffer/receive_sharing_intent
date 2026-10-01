@@ -95,14 +95,26 @@ object FileDirectory {
             val column = "_display_name"
             val projection = arrayOf(column)
             var targetFile: File? = null
+            // Some providers (e.g. Google Photos'
+            // com.google.android.apps.photos.contentprovider) do not expose the
+            // "_display_name" column. getColumnIndexOrThrow would throw here and the
+            // exception propagates out of handleIntent, leaving initialMedia == null
+            // (shared file silently lost). Use getColumnIndex with a guard and wrap
+            // the query so we fall through to the generated-name fallback below.
             try {
                 cursor = context.contentResolver.query(uri, projection, selection, selectionArgs, null)
                 if (cursor != null && cursor.moveToFirst()) {
-                    val columnIndex = cursor.getColumnIndexOrThrow(column)
-                    val fileName = cursor.getString(columnIndex)
-                    Log.i("FileDirectory", "File name: $fileName")
-                    targetFile = File(context.cacheDir, fileName)
+                    val columnIndex = cursor.getColumnIndex(column)
+                    if (columnIndex >= 0) {
+                        val fileName = cursor.getString(columnIndex)
+                        if (!fileName.isNullOrEmpty()) {
+                            Log.i("FileDirectory", "File name: $fileName")
+                            targetFile = File(context.cacheDir, fileName)
+                        }
+                    }
                 }
+            } catch (e: Exception) {
+                Log.w("FileDirectory", "query _display_name failed: $e")
             } finally {
                 cursor?.close()
             }
@@ -120,12 +132,20 @@ object FileDirectory {
                 targetFile = File(context.cacheDir, "${prefix}_${Date().time}.$type")
             }
 
-            context.contentResolver.openInputStream(uri)?.use { input ->
-                FileOutputStream(targetFile).use { fileOut ->
-                    input.copyTo(fileOut)
+            // Copying may throw for cloud-backed / not-yet-downloaded items. Guard it
+            // so one failed item does not abort the whole intent (other shared files
+            // can still be delivered).
+            return try {
+                context.contentResolver.openInputStream(uri)?.use { input ->
+                    FileOutputStream(targetFile).use { fileOut ->
+                        input.copyTo(fileOut)
+                    }
                 }
+                targetFile.path
+            } catch (e: Exception) {
+                Log.w("FileDirectory", "copy uri failed: $e")
+                null
             }
-            return targetFile.path
         }
 
         var cursor: Cursor? = null
