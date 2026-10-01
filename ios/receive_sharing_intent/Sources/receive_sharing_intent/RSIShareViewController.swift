@@ -144,6 +144,15 @@ open class RSIShareViewController: UIViewController, RSIComposeViewDelegate {
                                                          index: index,
                                                          content: content)
                                     }
+                                    else if let imageData = data as? Data, let image = UIImage(data: imageData) {
+                                        // Screenshot shared from the preview sheet (not yet saved
+                                        // to Photos): iOS delivers the payload as in-memory Data
+                                        // instead of a URL or UIImage.
+                                        this.handleMedia(forUIImage: image,
+                                                         type: type,
+                                                         index: index,
+                                                         content: content)
+                                    }
                                 }
                             }
                             break
