@@ -1,191 +1,111 @@
 package com.kasem.receive_sharing_intent
 
-import android.content.ContentUris
 import android.content.Context
 import android.database.Cursor
 import android.net.Uri
-import android.os.Build
-import android.os.Environment
-import android.provider.DocumentsContract
-import android.provider.MediaStore
+import android.provider.OpenableColumns
+import android.util.Log
+import android.webkit.MimeTypeMap
 import java.io.File
 import java.io.FileOutputStream
 import java.util.*
-import android.webkit.MimeTypeMap
-import android.util.Log
 
 
 object FileDirectory {
 
     /**
-     * Get a file path from a Uri. This will get the the path for Storage Access
-     * Framework Documents, as well as the _data field for the MediaStore and
-     * other file-based ContentProviders.
+     * Get a file path the app can read for a shared Uri.
+     *
+     * A content:// item is copied into cacheDir. The sending app grants read
+     * access to that exact Uri and nothing else: a path or another Uri derived
+     * from it (the MediaStore _data column, /storage/emulated/0/... for an
+     * external-storage document, the MediaStore collection behind a media
+     * document, content://downloads/public_downloads behind a downloads
+     * document) lies outside the app's sandbox. Under scoped storage the app
+     * can't open such a path (EACCES), and opening the collection Uri throws
+     * "Multiple items". Any other scheme (file://) is returned as its path.
      *
      * @param context The context.
-     * @param uri The Uri to query.
-     * @author paulburke
+     * @param uri The Uri to resolve.
+     * @return A readable file path, or null when the item couldn't be copied.
      */
     fun getAbsolutePath(context: Context, uri: Uri): String? {
-
-        // DocumentProvider
-        if (DocumentsContract.isDocumentUri(context, uri)) {
-            // ExternalStorageProvider
-            if (isExternalStorageDocument(uri)) {
-                val docId = DocumentsContract.getDocumentId(uri)
-                val split = docId.split(":".toRegex()).dropLastWhile { it.isEmpty() }.toTypedArray()
-                val type = split[0]
-
-                return if ("primary".equals(type, ignoreCase = true)) {
-                    Environment.getExternalStorageDirectory().toString() + "/" + split[1]
-                } else {
-                    getDataColumn(context, uri, null, null)
-                }
-            } else if (isDownloadsDocument(uri)) {
-                return try {
-                    val id = DocumentsContract.getDocumentId(uri)
-                    val contentUri = ContentUris.withAppendedId(
-                            Uri.parse("content://downloads/public_downloads"), java.lang.Long.valueOf(id))
-
-                    getDataColumn(context, contentUri, null, null)
-                } catch (exception: Exception) {
-                    getDataColumn(context, uri, null, null)
-                }
-            } else if (isMediaDocument(uri)) {
-                val docId = DocumentsContract.getDocumentId(uri)
-                val split = docId.split(":".toRegex()).dropLastWhile { it.isEmpty() }.toTypedArray()
-                val type = split[0]
-
-                var contentUri: Uri? = null
-                when (type) {
-                    "image" -> contentUri = MediaStore.Images.Media.EXTERNAL_CONTENT_URI
-                    "video" -> contentUri = MediaStore.Video.Media.EXTERNAL_CONTENT_URI
-                    "audio" -> contentUri = MediaStore.Audio.Media.EXTERNAL_CONTENT_URI
-                }
-
-                if (contentUri == null) return null
-
-                val selection = "_id=?"
-                val selectionArgs = arrayOf(split[1])
-                return getDataColumn(context, contentUri, selection, selectionArgs)
-            }// MediaProvider
-            // DownloadsProvider
-        } else if ("content".equals(uri.scheme, ignoreCase = true)) {
-            return getDataColumn(context, uri, null, null)
+        if ("content".equals(uri.scheme, ignoreCase = true)) {
+            return copyToCacheDir(context, uri)
         }
-
         return uri.path
     }
 
     /**
-     * Get the value of the data column for this Uri. This is useful for
-     * MediaStore Uris, and other file-based ContentProviders.
+     * Copy a content:// item into cacheDir under its display name, or under a
+     * generated IMG_/VID_/FILE_ name when the provider doesn't expose one.
      *
      * @param context The context.
-     * @param uri The Uri to query.
-     * @param selection (Optional) Filter used in the query.
-     * @param selectionArgs (Optional) Selection arguments used in the query.
-     * @return The value of the _data column, which is typically a file path.
+     * @param uri The content:// Uri granted by the sending app.
+     * @return The copy's path, or null when the provider fails to open the item.
      */
-    private fun getDataColumn(context: Context, uri: Uri, selection: String?,
-                              selectionArgs: Array<String>?): String? {
-
-        if (uri.authority != null) {
-            var cursor: Cursor? = null
-            val column = "_display_name"
-            val projection = arrayOf(column)
-            var targetFile: File? = null
-            // Some providers (e.g. Google Photos'
-            // com.google.android.apps.photos.contentprovider) do not expose the
-            // "_display_name" column. getColumnIndexOrThrow would throw here and the
-            // exception propagates out of handleIntent, leaving initialMedia == null
-            // (shared file silently lost). Use getColumnIndex with a guard and wrap
-            // the query so we fall through to the generated-name fallback below.
-            try {
-                cursor = context.contentResolver.query(uri, projection, selection, selectionArgs, null)
-                if (cursor != null && cursor.moveToFirst()) {
-                    val columnIndex = cursor.getColumnIndex(column)
-                    if (columnIndex >= 0) {
-                        val fileName = cursor.getString(columnIndex)
-                        if (!fileName.isNullOrEmpty()) {
-                            Log.i("FileDirectory", "File name: $fileName")
-                            targetFile = File(context.cacheDir, fileName)
-                        }
+    private fun copyToCacheDir(context: Context, uri: Uri): String? {
+        var cursor: Cursor? = null
+        val column = OpenableColumns.DISPLAY_NAME
+        val projection = arrayOf(column)
+        var targetFile: File? = null
+        // Some providers (e.g. Google Photos'
+        // com.google.android.apps.photos.contentprovider) do not expose the
+        // "_display_name" column. getColumnIndexOrThrow would throw here and the
+        // exception propagates out of handleIntent, leaving initialMedia == null
+        // (shared file silently lost). Use getColumnIndex with a guard and wrap
+        // the query so we fall through to the generated-name fallback below.
+        try {
+            cursor = context.contentResolver.query(uri, projection, null, null, null)
+            if (cursor != null && cursor.moveToFirst()) {
+                val columnIndex = cursor.getColumnIndex(column)
+                if (columnIndex >= 0) {
+                    val fileName = cursor.getString(columnIndex)
+                    if (!fileName.isNullOrEmpty()) {
+                        Log.i("FileDirectory", "File name: $fileName")
+                        targetFile = File(context.cacheDir, fileName)
                     }
                 }
-            } catch (e: Exception) {
-                Log.w("FileDirectory", "query _display_name failed: $e")
-            } finally {
-                cursor?.close()
             }
+        } catch (e: Exception) {
+            Log.w("FileDirectory", "query _display_name failed: uri=$uri $e")
+        } finally {
+            cursor?.close()
+        }
 
-            if (targetFile == null) {
-                val mimeType = context.contentResolver.getType(uri)
-                val prefix = with(mimeType ?: "") {
-                    when {
-                        startsWith("image") -> "IMG"
-                        startsWith("video") -> "VID"
-                        else -> "FILE"
-                    }
+        if (targetFile == null) {
+            val mimeType = context.contentResolver.getType(uri)
+            val prefix = with(mimeType ?: "") {
+                when {
+                    startsWith("image") -> "IMG"
+                    startsWith("video") -> "VID"
+                    else -> "FILE"
                 }
-                val type = MimeTypeMap.getSingleton().getExtensionFromMimeType(mimeType)
-                targetFile = File(context.cacheDir, "${prefix}_${Date().time}.$type")
             }
+            val type = MimeTypeMap.getSingleton().getExtensionFromMimeType(mimeType)
+            targetFile = File(context.cacheDir, "${prefix}_${Date().time}.$type")
+        }
 
-            // Copying may throw for cloud-backed / not-yet-downloaded items. Guard it
-            // so one failed item does not abort the whole intent (other shared files
-            // can still be delivered).
-            return try {
-                context.contentResolver.openInputStream(uri)?.use { input ->
+        // Copying may throw for cloud-backed / not-yet-downloaded items. Guard it
+        // so one failed item does not abort the whole intent (other shared files
+        // can still be delivered).
+        return try {
+            val stream = context.contentResolver.openInputStream(uri)
+            if (stream == null) {
+                // Without this the path of a file that was never written went out.
+                Log.w("FileDirectory", "copy uri failed: uri=$uri provider returned no stream")
+                null
+            } else {
+                stream.use { input ->
                     FileOutputStream(targetFile).use { fileOut ->
                         input.copyTo(fileOut)
                     }
                 }
                 targetFile.path
-            } catch (e: Exception) {
-                Log.w("FileDirectory", "copy uri failed: $e")
-                null
             }
+        } catch (e: Exception) {
+            Log.w("FileDirectory", "copy uri failed: uri=$uri $e")
+            null
         }
-
-        var cursor: Cursor? = null
-        val column = "_data"
-        val projection = arrayOf(column)
-
-        try {
-            cursor = context.contentResolver.query(uri, projection, selection, selectionArgs, null)
-            if (cursor != null && cursor.moveToFirst()) {
-                val columnIndex = cursor.getColumnIndexOrThrow(column)
-                return cursor.getString(columnIndex)
-            }
-        } finally {
-            cursor?.close()
-        }
-        return null
-    }
-
-
-    /**
-     * @param uri The Uri to check.
-     * @return Whether the Uri authority is ExternalStorageProvider.
-     */
-    fun isExternalStorageDocument(uri: Uri): Boolean {
-        return "com.android.externalstorage.documents" == uri.authority
-    }
-
-    /**
-     * @param uri The Uri to check.
-     * @return Whether the Uri authority is DownloadsProvider.
-     */
-    fun isDownloadsDocument(uri: Uri): Boolean {
-        return "com.android.providers.downloads.documents" == uri.authority
-    }
-
-    /**
-     * @param uri The Uri to check.
-     * @return Whether the Uri authority is MediaProvider.
-     */
-    fun isMediaDocument(uri: Uri): Boolean {
-        return "com.android.providers.media.documents" == uri.authority
     }
 }
