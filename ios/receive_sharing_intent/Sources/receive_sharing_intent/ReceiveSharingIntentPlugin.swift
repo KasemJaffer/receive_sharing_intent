@@ -124,6 +124,8 @@ public class ReceiveSharingIntentPlugin: NSObject, FlutterPlugin, FlutterStreamH
     // Equivalent of `application(_:didFinishLaunchingWithOptions:)`.
     // After migrating to UIScene the launch options are nil, so the URL/activity the
     // app was launched with is delivered here through `connectionOptions` instead.
+    // Returning true tells Flutter the connection was handled, and Flutter then skips
+    // deep linking for it, so only return true when this plugin handled a share URL.
     public func scene(
         _ scene: UIScene,
         willConnectTo session: UISceneSession,
@@ -133,7 +135,7 @@ public class ReceiveSharingIntentPlugin: NSObject, FlutterPlugin, FlutterStreamH
             if (hasMatchingSchemePrefix(url: url)) {
                 return handleUrl(url: url, setInitialData: true)
             }
-            return true
+            return false
         }
         // Handle universal links the app was launched with.
         for userActivity in connectionOptions?.userActivities ?? [] {
@@ -141,7 +143,7 @@ public class ReceiveSharingIntentPlugin: NSObject, FlutterPlugin, FlutterStreamH
                 return handleUrl(url: url, setInitialData: true)
             }
         }
-        return true
+        return false
     }
 
     // Equivalent of `application(_:open:options:)` (warm start).
