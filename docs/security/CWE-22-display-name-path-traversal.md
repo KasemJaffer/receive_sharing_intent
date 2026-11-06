@@ -2,10 +2,8 @@
 
 **Researcher:** Edward "Actuator" Warren, [actuator.sh](https://actuator.sh/)  
 **Component:** Android implementation of the Flutter/Dart `receive_sharing_intent` package  
-**Affected releases:** 1.4.1 through 1.9.0 inclusive, based on researcher provenance analysis  
-**Last unaffected:** 1.4.0+2  
+**Affected releases:** 1.4.1 through 1.9.0 inclusive
 **CVE:** **CVE-2026-60117** (provisionally allocated by VulnCheck on July 9, 2026; public CVE publication status not established by this advisory)  
-**Researcher-proposed CVSS v3.1:** 7.7 High (`AV:L/AC:L/PR:N/UI:N/S:U/C:N/I:H/A:H`), subject to review  
 **Fixed version:** No patched release known as of November 6, 2026; this pull-request branch proposes remediation
 
 ## Summary
