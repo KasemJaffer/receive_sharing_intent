@@ -30,12 +30,6 @@ For example, a provider-supplied display name `../databases/proof.txt` escapes t
 
 The regression is attributed to [commit c61c0e7](https://github.com/KasemJaffer/receive_sharing_intent/commit/c61c0e75ec518c0c6a68c57252cff8801247c8ee), "Preserve original file name", dated August 27, 2020. The preceding published version was `1.4.0+2`, and the introducing release was `1.4.1`. The direct file construction remained in upstream `master` as inspected on November 6, 2026.
 
-## Demonstrated versus potential impact
-
-The researcher reports a benign marker-file demonstration confirming attacker-directed writes inside a receiving app's private sandbox. This upstream advisory intentionally **omits the separately coordinated consuming application**, whose report is handled on a different disclosure track.
-
-Potential downstream effects include tampering with trusted SQLite databases, shared preferences and other application-controlled files, depending on the consumer's behavior. Arbitrary code execution, account takeover, and additional downstream exploit chains are **not demonstrated** in this advisory. The CVSS score above is proposed, not CNA-assigned.
-
 ## Fix implemented in this pull request
 
 1. Treat `_display_name` as a filename, not a filesystem path: normalize `/` and `\` separators and retain only the final basename.
@@ -44,7 +38,6 @@ Potential downstream effects include tampering with trusted SQLite databases, sh
 4. Add JVM/JUnit tests for benign names, relative and absolute traversal, Windows-style separators, invalid names, and symlink escapes.
 
 Affected consumers should update after maintainers review and publish a patched release. Limiting exported share entry points may reduce attack surface in some apps but does not resolve the library defect.
-
 
 Version provenance can be independently reproduced:
 
