@@ -45,11 +45,6 @@ Potential downstream effects include tampering with trusted SQLite databases, sh
 
 Affected consumers should update after maintainers review and publish a patched release. Limiting exported share entry points may reduce attack surface in some apps but does not resolve the library defect.
 
-## Verification
-
-The isolated Kotlin path-resolution helper previously passed 25,017 local JVM checks, including randomized filenames and symlinks. The JUnit tests in `android/src/test/kotlin/com/kasem/receive_sharing_intent/SharedCacheFileTest.kt` should be run by maintainers using the Android module's `testDebugUnitTest` task. A full Android/Flutter integration build and real-device share-intent regression were **not run** in this submission environment.
-
-
 
 Version provenance can be independently reproduced:
 
