@@ -4,9 +4,9 @@
 **Component:** Android implementation of the Flutter/Dart `receive_sharing_intent` package  
 **Affected releases:** 1.4.1 through 1.9.0 inclusive, based on researcher provenance analysis  
 **Last unaffected:** 1.4.0+2  
-**CVE:** Pending VulnCheck CNA assignment  
+**CVE:** **CVE-2026-60117** (provisionally allocated by VulnCheck on July 9, 2026; public CVE publication status not established by this advisory)  
 **Researcher-proposed CVSS v3.1:** 7.7 High (`AV:L/AC:L/PR:N/UI:N/S:U/C:N/I:H/A:H`), subject to review  
-**Fixed version:** None released as of submission of this proposed patch
+**Fixed version:** No patched release known as of November 6, 2026; this pull-request branch proposes remediation
 
 ## Summary
 
@@ -53,7 +53,7 @@ The isolated Kotlin path-resolution helper previously passed 25,017 local JVM ch
 
 ## Attribution and coordination
 
-Reported by **Edward "Actuator" Warren** ([actuator.sh](https://actuator.sh/)). Upstream library CVE coordination was requested through VulnCheck; the CVE identifier and severity have not been finalized. The separate application-level report should not be combined with this upstream advisory.
+Reported by **Edward "Actuator" Warren** ([actuator.sh](https://actuator.sh/)). In email dated **July 9, 2026**, VulnCheck's Wade Sparks confirmed that maintainer outreach had been initiated for the vulnerability affecting v1.9.0 and that **CVE-2026-60117** was **provisionally allocated** to track the issue. VulnCheck stated that its coordinated vulnerability disclosure policy allows 120 days from initial outreach before disclosure by the CVD parties, placing the stated deadline on **November 6, 2026**. Later correspondence dated November 4, 2026 indicated that the finding still appeared unpatched after codebase analysis. These communications document coordination and status, **not confirmation that an official CVE record was published or that a patched release exists**. The CVSS severity remains researcher-proposed. The separate application-level report should not be combined with this upstream advisory.
 
 Version provenance can be independently reproduced:
 
