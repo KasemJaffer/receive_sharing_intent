@@ -107,9 +107,10 @@ object FileDirectory {
                     val columnIndex = cursor.getColumnIndex(column)
                     if (columnIndex >= 0) {
                         val fileName = cursor.getString(columnIndex)
-                        if (!fileName.isNullOrEmpty()) {
-                            Log.i("FileDirectory", "File name: $fileName")
-                            targetFile = File(context.cacheDir, fileName)
+                        // Treat provider-controlled display names as filenames, never paths.
+                        targetFile = SharedCacheFile.fromDisplayName(context.cacheDir, fileName)
+                        if (targetFile != null) {
+                            Log.i("FileDirectory", "File name: ${targetFile.name}")
                         }
                     }
                 }
