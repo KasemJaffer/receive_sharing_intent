@@ -51,9 +51,7 @@ Affected consumers should update after maintainers review and publish a patched 
 
 The isolated Kotlin path-resolution helper previously passed 25,017 local JVM checks, including randomized filenames and symlinks. The JUnit tests in `android/src/test/kotlin/com/kasem/receive_sharing_intent/SharedCacheFileTest.kt` should be run by maintainers using the Android module's `testDebugUnitTest` task. A full Android/Flutter integration build and real-device share-intent regression were **not run** in this submission environment.
 
-## Attribution and coordination
 
-Reported by **Edward "Actuator" Warren** ([actuator.sh](https://actuator.sh/)). In email dated **July 9, 2026**, VulnCheck's Wade Sparks confirmed that maintainer outreach had been initiated for the vulnerability affecting v1.9.0 and that **CVE-2026-60117** was **provisionally allocated** to track the issue. VulnCheck stated that its coordinated vulnerability disclosure policy allows 120 days from initial outreach before disclosure by the CVD parties, placing the stated deadline on **November 6, 2026**. Later correspondence dated November 4, 2026 indicated that the finding still appeared unpatched after codebase analysis. These communications document coordination and status, **not confirmation that an official CVE record was published or that a patched release exists**. The CVSS severity remains researcher-proposed. The separate application-level report should not be combined with this upstream advisory.
 
 Version provenance can be independently reproduced:
 
